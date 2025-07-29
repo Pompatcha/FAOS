@@ -1,6 +1,6 @@
-import type { Metadata } from "next";
+import type { Metadata } from 'next'
 // import { Sarabun } from "next/font/google";
-import "./globals.css";
+import './globals.css'
 
 // const sarabun = Sarabun({
 //   variable: "--font-sarabun",
@@ -9,19 +9,19 @@ import "./globals.css";
 // });
 
 export const metadata: Metadata = {
-  title: "",
-  description: "",
-};
+  title: '',
+  description: '',
+}
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode;
+  children: React.ReactNode
 }>) {
   return (
-    <html lang="th">
+    <html lang='th'>
       <body className={`antialiased`}>{children}</body>
       {/* <body className={`${sarabun.className} antialiased`}>{children}</body> */}
     </html>
-  );
+  )
 }
