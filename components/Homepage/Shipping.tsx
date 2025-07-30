@@ -6,6 +6,9 @@ const Shipping: FC = () => {
       <span className='text-xl font-bold text-white'>Shipping and Policy</span>
 
       {/* <span className='text-white'>
+        Lorem ipsum dolor sit amet consectetur adipisicing elit. Nostrum alias
+        consequuntur architecto modi dolorem minima iusto harum id culpa
+        expedita.
       </span> */}
     </div>
   )

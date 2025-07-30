@@ -1,3 +1,5 @@
+'use client'
+
 import { Certification } from '@/components/Homepage/Certification'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
@@ -8,14 +10,14 @@ import { Research } from '@/components/Homepage/Research'
 import { AuthPanel } from '@/components/LoginPanel'
 import { Benefit } from '@/components/Homepage/Benefit'
 import { Shipping } from '@/components/Homepage/Shipping'
+import { Payment } from '@/components/Homepage/Payment'
+import { FacebookProvider, Page } from 'react-facebook'
 
 export default function Home() {
   return (
-    <div className='flex flex-col items-center gap-5 bg-[#dda700]'>
-      <div className='flex flex-col'>
-        <Header />
-        <Menu />
-      </div>
+    <div className='flex flex-col items-center bg-[#dda700]'>
+      <Header />
+      <Menu />
 
       <div className='flex w-full gap-5 p-5'>
         <div className='flex flex-1 flex-col gap-5'>
@@ -39,15 +41,24 @@ export default function Home() {
             <HeaderImageSlider />
           </div>
 
-          <div className='flex w-full flex-col rounded-lg bg-[#bfa046] p-5 text-center shadow'>
+          <div className='flex w-full flex-col rounded-lg bg-[#bfa046] p-2.5 text-center shadow'>
             <span className='text-2xl font-bold text-[#00332f]'>
               🌿 FAOS Premium Organic Collection – Premium Olive Oil and Real
               Honey 🌿
             </span>
           </div>
 
-          <div className='flex w-full flex-col rounded-lg bg-white p-5'>
-            <span>
+          <div className='flex w-full items-center rounded-lg bg-white p-5'>
+            <div className='flex w-[20%] flex-col items-center gap-2.5'>
+              <img
+                src='https://i.ibb.co/351rJLyB/IMG-8438.jpg'
+                className='size-28 rounded-full object-cover'
+              />
+              <span className='text-center font-bold'>
+                Patcharin Chanaphukdee
+              </span>
+            </div>
+            <span className='w-full text-xl'>
               Created for Health, Elegance and Well-Being. Elevate patient care
               and hospitality with the FAOS Collection, a luxurious blend of
               Thai-Greek heritage, organic purity and health innovation.
@@ -56,24 +67,25 @@ export default function Home() {
             </span>
           </div>
 
-          <div className='flex w-full flex-col rounded-lg bg-[#bfa046] p-5 text-center shadow'>
+          <div className='flex w-full flex-col rounded-lg bg-[#bfa046] p-2.5 text-center shadow'>
             <span className='text-2xl font-bold text-[#00332f]'>
               🌿 🏥 Why FAOS is Needed for Private Hospitals 🏥
             </span>
           </div>
 
           <div className='flex w-full flex-col rounded-lg bg-white p-5'>
-            <span>
-              ✅ Hospital-grade Safety: Complies with hygiene and food handling
-              standards.
+            <span className='text-xl'>
+              <span className='font-bold'>✅ Hospital-grade Safety:</span>{' '}
+              Complies with hygiene and food handling standards.
             </span>
-            <span>
-              ✅ Luxury Branding: Enhances the hospital&apos;s premium image and
-              patient experience.
+            <span className='text-xl'>
+              <span className='font-bold'>✅ Luxury Branding:</span> Enhances
+              the hospital&apos;s premium image and patient experience.
             </span>
-            <span>
-              ✅ Sustainably Sourced: Environmentally conscious practices that
-              reflect healthcare&apos;s commitment to the planet.
+            <span className='text-xl'>
+              <span className='font-bold'>✅ Sustainably Sourced:</span>{' '}
+              Environmentally conscious practices that reflect healthcare&apos;s
+              commitment to the planet.
             </span>
           </div>
 
@@ -84,7 +96,11 @@ export default function Home() {
           <div className='grid w-full grid-cols-3'>
             <FollowUs />
             <Research />
-            <Shipping />
+
+            <div className='flex flex-col gap-2.5'>
+              <Shipping />
+              <Payment />
+            </div>
           </div>
 
           <Footer />
@@ -92,6 +108,15 @@ export default function Home() {
 
         <div className='sticky top-5 h-fit w-80 flex-shrink-0'>
           <AuthPanel />
+
+          <div className='mt-5'>
+            <FacebookProvider appId='your-app-id'>
+              <Page
+                href='https://www.facebook.com/FAOShertitagefood'
+                tabs='timeline'
+              />
+            </FacebookProvider>
+          </div>
         </div>
       </div>
     </div>

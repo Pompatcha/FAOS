@@ -9,19 +9,19 @@ const Certification: FC = () => {
 
       <div className='flex gap-5'>
         <img
-          className='size-28 object-contain'
+          className='size-28 object-contain duration-300 hover:scale-102'
           src='https://seajoy.com/images/company-news/AB_eurofeuille.png'
         />
         <img
-          className='size-28 object-contain'
+          className='size-28 object-contain duration-300 hover:scale-102'
           src='https://1.bp.blogspot.com/-lofZ1ZddkjA/VrRvD8Y24KI/AAAAAAAACpM/QsG8-zh5pY8/s1600/iso_icon.png'
         />
         <img
-          className='size-28 object-contain'
+          className='size-28 object-contain duration-300 hover:scale-102'
           src='https://vectorseek.com/wp-content/uploads/2023/09/Bio-nach-EG-Oko-Verordnung-Logo-Vector.svg-.png'
         />
         <img
-          className='size-28 object-contain'
+          className='size-28 object-contain duration-300 hover:scale-102'
           src='https://iasiso-australia.com/wp-content/uploads/2023/02/HACCP-Training-705x662.png'
         />
       </div>

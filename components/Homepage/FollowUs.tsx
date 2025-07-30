@@ -6,7 +6,7 @@ const FollowUs: FC = () => {
     <div className='flex w-full flex-col items-center gap-2.5 text-white'>
       <span className='text-xl font-bold'>Follow Us</span>
 
-      <div className='flex w-1/2 items-center justify-center gap-2.5 rounded-lg bg-[#ffffff26] py-1 text-white'>
+      <div className='flex w-[80%] items-center justify-center gap-2.5 rounded-lg bg-[#ffffff26] py-1 text-white'>
         <SocialIcon
           url='https://www.facebook.com/'
           style={{ width: 25, height: 25 }}
@@ -14,7 +14,7 @@ const FollowUs: FC = () => {
         <span>Facebook</span>
       </div>
 
-      <div className='flex w-1/2 items-center justify-center gap-2.5 rounded-lg bg-[#ffffff26] py-1 text-white'>
+      <div className='flex w-[80%] items-center justify-center gap-2.5 rounded-lg bg-[#ffffff26] py-1 text-white'>
         <SocialIcon
           url='https://www.instagram.com/'
           style={{ width: 25, height: 25 }}
@@ -22,7 +22,7 @@ const FollowUs: FC = () => {
         <span>Instagram</span>
       </div>
 
-      <div className='flex w-1/2 items-center justify-center gap-2.5 rounded-lg bg-[#ffffff26] py-1 text-white'>
+      <div className='flex w-[80%] items-center justify-center gap-2.5 rounded-lg bg-[#ffffff26] py-1 text-white'>
         <SocialIcon
           url='https://www.whatsapp.com/'
           style={{ width: 25, height: 25 }}
@@ -30,7 +30,7 @@ const FollowUs: FC = () => {
         <span>WhatsApp</span>
       </div>
 
-      <div className='flex w-1/2 items-center justify-center gap-2.5 rounded-lg bg-[#ffffff26] py-1 text-white'>
+      <div className='flex w-[80%] items-center justify-center gap-2.5 rounded-lg bg-[#ffffff26] py-1 text-white'>
         <SocialIcon
           url='https://www.tiktok.com/'
           style={{ width: 25, height: 25 }}
@@ -38,7 +38,7 @@ const FollowUs: FC = () => {
         <span>TikTok</span>
       </div>
 
-      <div className='flex w-1/2 items-center justify-center gap-2.5 rounded-lg bg-[#ffffff26] py-1 text-white'>
+      <div className='flex w-[80%] items-center justify-center gap-2.5 rounded-lg bg-[#ffffff26] py-1 text-white'>
         <SocialIcon
           url='https://www.line.me/'
           style={{ width: 25, height: 25 }}
