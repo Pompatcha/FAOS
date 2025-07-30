@@ -1,7 +1,19 @@
 import { FC } from 'react'
 
-const Benefit: FC = () => {
-  const benefits = [
+interface BenefitItem {
+  id: number
+  title: string
+  image: string
+}
+
+interface BenefitSectionProps {
+  title: string
+  items: BenefitItem[]
+  hasHoverEffect?: boolean
+}
+
+const BENEFIT_DATA = {
+  oliveOil: [
     {
       id: 1,
       title: 'High olive oil consumption associated with longevity',
@@ -22,17 +34,16 @@ const Benefit: FC = () => {
     },
     {
       id: 4,
-      title: 'mediterranean diet food with olive oil',
+      title: 'Mediterranean diet food with olive oil',
       image:
         'https://www.tasteofhome.com/wp-content/uploads/2018/01/Dad-s-Greek-Salad_EXPS_TOHAM25_189184_P2_MD_03_01_7b-e1724861544942.jpg',
     },
-  ]
-
-  const benefitsHoney = [
+  ],
+  honey: [
     {
       id: 1,
       title:
-        'A creamy, tropical delight sweetened naturally with premium “PEARL” FIR honey.',
+        'A creamy, tropical delight sweetened naturally with premium "PEARL" FIR honey.',
       image:
         'https://theviewfromgreatisland.com/wp-content/uploads/2020/06/honey-ice-cream-6.jpg',
     },
@@ -44,24 +55,23 @@ const Benefit: FC = () => {
     },
     {
       id: 3,
-      title: 'Using Natrual Honey for Beautiful Skin, Hair, and Anti-Aging',
+      title: 'Using Natural Honey for Beautiful Skin, Hair, and Anti-Aging',
       image:
         'https://greekreporter.com/wp-content/uploads/2020/10/Honey_Greece_Greek_honey_credit_GR_AP.jpg',
     },
-  ]
-
-  const benefitsWine = [
+  ],
+  wine: [
     {
       id: 1,
       title:
-        'Greek Wine paring with Pad Thai (The Health Benefits of Brown Rice Pad Thai Noodles)',
+        'Greek Wine pairing with Pad Thai (The Health Benefits of Brown Rice Pad Thai Noodles)',
       image:
         'https://www.lucariscrystal.com/wp-content/uploads/2019/10/eve5.jpg',
     },
     {
       id: 2,
       title:
-        'Food for thought: Thailand Tom yum kung gets the nod from UNESCO paring with Greek wine',
+        'Food for thought: Thailand Tom yum kung gets the nod from UNESCO pairing with Greek wine',
       image:
         'https://www.lucariscrystal.com/wp-content/uploads/2019/10/eve6.jpg',
     },
@@ -77,138 +87,97 @@ const Benefit: FC = () => {
       image:
         'https://i.guim.co.uk/img/media/442a6c969b976cb9a2597da7bd6ecceeb7568c94/163_0_4721_3428/master/4721.jpg?width=465&dpr=1&s=none&crop=none',
     },
+  ],
+}
+
+const BenefitCard: FC<{ item: BenefitItem; hasHoverEffect?: boolean }> = ({
+  item,
+  hasHoverEffect = false,
+}) => {
+  const hoverClasses = hasHoverEffect ? 'hover:scale-102 hover:shadow-xl' : ''
+
+  return (
+    <div
+      className={`overflow-hidden rounded-xl bg-white shadow-lg transition-all duration-300 ${hoverClasses}`}
+    >
+      <img
+        src={item.image}
+        alt={item.title}
+        className='h-[250px] w-full object-cover'
+      />
+      <div className='mt-2.5 px-5 pb-5'>
+        <h3 className='text-lg leading-tight font-semibold text-gray-800'>
+          {item.title}
+        </h3>
+        <button className='inline-flex items-center font-medium text-blue-600 transition-colors duration-200 hover:text-blue-800'>
+          Read more
+          <svg
+            className='ml-1 h-4 w-4 transition-transform duration-200 group-hover:translate-x-1'
+            fill='none'
+            stroke='currentColor'
+            viewBox='0 0 24 24'
+          >
+            <path
+              strokeLinecap='round'
+              strokeLinejoin='round'
+              strokeWidth={2}
+              d='M9 5l7 7-7 7'
+            />
+          </svg>
+        </button>
+      </div>
+    </div>
+  )
+}
+
+const BenefitSection: FC<BenefitSectionProps> = ({
+  title,
+  items,
+  hasHoverEffect = false,
+}) => (
+  <section className='mx-auto w-full max-w-6xl p-6'>
+    <h2 className='mb-8 text-center text-2xl font-bold'>{title}</h2>
+    <div className='grid grid-cols-2 gap-5'>
+      {items.map((item) => (
+        <BenefitCard
+          key={item.id}
+          item={item}
+          hasHoverEffect={hasHoverEffect}
+        />
+      ))}
+    </div>
+  </section>
+)
+
+const Benefit: FC = () => {
+  const sections = [
+    {
+      title: 'The Benefit of Olive Oil',
+      items: BENEFIT_DATA.oliveOil,
+      hasHoverEffect: true,
+    },
+    {
+      title: 'The Benefit of Honey & Healthy Menu',
+      items: BENEFIT_DATA.honey,
+      hasHoverEffect: true,
+    },
+    {
+      title: 'The Benefit of Wine & Thai Food pairing',
+      items: BENEFIT_DATA.wine,
+      hasHoverEffect: true,
+    },
   ]
 
   return (
     <div className='flex w-full flex-col gap-2.5'>
-      <div className='mx-auto w-full max-w-6xl p-6'>
-        <h2 className='mb-8 text-center text-2xl font-bold'>
-          The Benefit of Olive Oil
-        </h2>
-
-        <div className='grid grid-cols-2 gap-5'>
-          {benefits.map((benefit) => (
-            <div
-              key={benefit.id}
-              className='overflow-hidden rounded-xl border border-gray-100 bg-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl'
-            >
-              <img
-                src={benefit?.image}
-                className='h-[250px] w-full object-cover'
-              />
-
-              <div className='mt-2.5 px-5 pb-5'>
-                <h3 className='text-lg leading-tight font-semibold text-gray-800'>
-                  {benefit.title}
-                </h3>
-
-                <button className='inline-flex items-center font-medium text-blue-600 transition-colors duration-200 hover:text-blue-800'>
-                  Read more
-                  <svg
-                    className='ml-1 h-4 w-4 transition-transform duration-200 group-hover:translate-x-1'
-                    fill='none'
-                    stroke='currentColor'
-                    viewBox='0 0 24 24'
-                  >
-                    <path
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth={2}
-                      d='M9 5l7 7-7 7'
-                    />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className='mx-auto w-full max-w-6xl p-6'>
-        <h2 className='mb-8 text-center text-2xl font-bold'>
-          The Benefit of Honey & Healthy Menu
-        </h2>
-
-        <div className='grid grid-cols-2 gap-5'>
-          {benefitsHoney.map((benefit) => (
-            <div
-              key={benefit.id}
-              className='overflow-hidden rounded-xl border border-gray-100 bg-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl'
-            >
-              <img
-                src={benefit?.image}
-                className='h-[250px] w-full object-cover'
-              />
-
-              <div className='mt-2.5 px-5 pb-5'>
-                <h3 className='text-lg leading-tight font-semibold text-gray-800'>
-                  {benefit.title}
-                </h3>
-
-                <button className='inline-flex items-center font-medium text-blue-600 transition-colors duration-200 hover:text-blue-800'>
-                  Read more
-                  <svg
-                    className='ml-1 h-4 w-4 transition-transform duration-200 group-hover:translate-x-1'
-                    fill='none'
-                    stroke='currentColor'
-                    viewBox='0 0 24 24'
-                  >
-                    <path
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth={2}
-                      d='M9 5l7 7-7 7'
-                    />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className='mx-auto w-full max-w-6xl p-6'>
-        <h2 className='mb-8 text-center text-2xl font-bold'>
-          The Benefit of Wine & Thai Food pairing
-        </h2>
-
-        <div className='grid grid-cols-2 gap-5'>
-          {benefitsWine.map((benefit) => (
-            <div
-              key={benefit.id}
-              className='overflow-hidden rounded-xl border border-gray-100 bg-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl'
-            >
-              <img
-                src={benefit?.image}
-                className='h-[250px] w-full object-cover'
-              />
-
-              <div className='mt-2.5 px-5 pb-5'>
-                <h3 className='text-lg leading-tight font-semibold text-gray-800'>
-                  {benefit.title}
-                </h3>
-
-                <button className='inline-flex items-center font-medium text-blue-600 transition-colors duration-200 hover:text-blue-800'>
-                  Read more
-                  <svg
-                    className='ml-1 h-4 w-4 transition-transform duration-200 group-hover:translate-x-1'
-                    fill='none'
-                    stroke='currentColor'
-                    viewBox='0 0 24 24'
-                  >
-                    <path
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth={2}
-                      d='M9 5l7 7-7 7'
-                    />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+      {sections.map((section, index) => (
+        <BenefitSection
+          key={index}
+          title={section.title}
+          items={section.items}
+          hasHoverEffect={section.hasHoverEffect}
+        />
+      ))}
     </div>
   )
 }
