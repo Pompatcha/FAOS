@@ -113,7 +113,7 @@ const AuthPanel: FC = () => {
   }
 
   return (
-    <div className='sticky mx-auto flex h-fit w-full max-w-md flex-col gap-6 rounded-lg bg-white/20 p-6 backdrop-blur-sm'>
+    <div className='mx-auto flex h-fit w-full max-w-md flex-col gap-6 rounded-lg bg-white/20 p-6 backdrop-blur-sm'>
       <div className='text-center'>
         <h2 className='mb-1 text-xl font-semibold text-white'>
           {authMode === 'signin'

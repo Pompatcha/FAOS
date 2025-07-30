@@ -73,7 +73,7 @@ const HeaderImageSlider = () => {
   ]
 
   return (
-    <div className='relative mx-auto w-[80%]'>
+    <div className='relative mx-auto'>
       <div className='embla overflow-hidden' ref={emblaRef}>
         <div className='embla__container flex'>
           {slides.map((slide) => (

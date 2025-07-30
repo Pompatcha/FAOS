@@ -3,8 +3,10 @@ import { FC } from 'react'
 
 const Research: FC = () => {
   return (
-    <div className='flex w-full flex-col items-center items-start gap-2.5'>
-      <span className='font-bold text-white'>Research & References</span>
+    <div className='flex w-full flex-col items-center gap-2.5'>
+      <span className='text-xl font-bold text-white'>
+        Research & References
+      </span>
 
       <div className='flex flex-col gap-2.5 text-start'>
         <Link href='' className='text-white'>

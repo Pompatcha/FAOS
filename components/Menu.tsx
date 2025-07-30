@@ -8,17 +8,32 @@ const Menu = () => {
 
   const menuItems = [
     {
-      id: 'home',
       title: 'Home',
-      href: '/',
+      href: '',
     },
     {
-      id: 'products',
-      title: 'Products',
-      submenu: [{ title: 'Honey', href: '' }],
+      title: 'Honey',
+      submenu: [
+        { title: 'Pine', href: '' },
+        { title: 'Flower', href: '' },
+        { title: 'Thyme', href: '' },
+        { title: 'Oak and Forest', href: '' },
+        { title: 'Orange Blossom', href: '' },
+        { title: '“PEARL FIR”', href: '' },
+        { title: 'Vanilla', href: '' },
+      ],
     },
     {
-      id: 'ourshop',
+      title: 'Olive oil',
+    },
+    {
+      title: 'Organics skin care',
+      submenu: [
+        { title: 'Lotions', href: '' },
+        { title: 'Face and Hair', href: '' },
+      ],
+    },
+    {
       title: 'Our Shop',
       submenu: [
         { title: 'Bangkok', href: '' },
@@ -31,7 +46,6 @@ const Menu = () => {
       ],
     },
     {
-      id: 'about',
       title: 'About me',
     },
   ]
@@ -53,14 +67,16 @@ const Menu = () => {
       <div className='flex justify-center'>
         {menuItems.map((item) => (
           <div
-            key={item.id}
+            key={item.title}
             className='group relative'
-            onMouseEnter={() => item.submenu && handleMenuHover(item.id)}
+            onMouseEnter={() => item.submenu && handleMenuHover(item.title)}
             onMouseLeave={handleMenuLeave}
           >
             <button
               className={`flex items-center gap-2 px-6 py-4 font-bold text-white`}
-              onClick={() => (item.submenu ? handleMenuClick(item.id) : null)}
+              onClick={() =>
+                item.submenu ? handleMenuClick(item.title) : null
+              }
             >
               <span className='font-medium whitespace-nowrap'>
                 {item.title}
@@ -68,7 +84,7 @@ const Menu = () => {
               {item.submenu && (
                 <ChevronDown
                   className={`h-4 w-4 transition-transform duration-200 ${
-                    activeMenu === item.id ? 'rotate-180' : ''
+                    activeMenu === item.title ? 'rotate-180' : ''
                   }`}
                 />
               )}
@@ -77,7 +93,7 @@ const Menu = () => {
             {item.submenu && (
               <div
                 className={`absolute top-full left-0 z-50 min-w-[200px] origin-top border-2 border-[#f3d27a] bg-[#e2b007] shadow-xl transition-all duration-200 ${
-                  activeMenu === item.id
+                  activeMenu === item.title
                     ? 'visible scale-y-100 opacity-100'
                     : 'invisible scale-y-0 opacity-0'
                 } `}

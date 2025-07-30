@@ -2,7 +2,7 @@ import { FC } from 'react'
 
 const Certification: FC = () => {
   return (
-    <div className='flex w-[80%] flex-col items-center gap-2.5 rounded-lg bg-white p-5 text-center shadow'>
+    <div className='flex w-full flex-col items-center gap-2.5 rounded-lg bg-white p-5 text-center shadow'>
       <span className='text-2xl font-bold'>
         Certification compliance with organic, safety, and hygiene standards
       </span>
