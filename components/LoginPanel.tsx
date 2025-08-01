@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react'
+import { createClient } from '@/utils/supabase/client'
 
 type AuthMode = 'signin' | 'signup'
 
@@ -26,6 +27,7 @@ interface SignUpFormData {
 }
 
 const AuthPanel: FC = () => {
+  const supabase = createClient()
   const [authMode, setAuthMode] = useState<AuthMode>('signin')
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
