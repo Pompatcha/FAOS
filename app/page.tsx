@@ -93,7 +93,7 @@ export default function Home() {
 
           <Certification />
 
-          <div className='grid w-full grid-cols-3'>
+          <div className='grid w-full grid-cols-3 gap-5'>
             <FollowUs />
             <Research />
 

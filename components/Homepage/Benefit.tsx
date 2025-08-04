@@ -135,7 +135,7 @@ const BenefitSection: FC<BenefitSectionProps> = ({
   items,
   hasHoverEffect = false,
 }) => (
-  <section className='w-full p-5'>
+  <section className='w-full'>
     <h2 className='mb-8 text-center text-2xl font-bold'>{title}</h2>
     <div className='grid grid-cols-2 gap-5'>
       {items.map((item) => (
