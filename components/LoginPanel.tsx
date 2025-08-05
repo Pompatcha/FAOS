@@ -82,12 +82,12 @@ const AuthPanel: FC = () => {
     setIsLoading(true)
     try {
       await signOut()
-      setAuthSuccess('ออกจากระบบสำเร็จ!')
+      setAuthSuccess('Successfully signed out!')
       setTimeout(() => {
         router.push('/')
       }, 1000)
     } catch (error) {
-      setAuthError('เกิดข้อผิดพลาดในการออกจากระบบ')
+      setAuthError('An error occurred while signing out')
       console.error('Logout error:', error)
     } finally {
       setIsLoading(false)
@@ -225,15 +225,15 @@ const AuthPanel: FC = () => {
       })
 
       if (result.success) {
-        setAuthSuccess('เข้าสู่ระบบสำเร็จ!')
+        setAuthSuccess('Sign in successful!')
         setTimeout(() => {
           router.push('/dashboard')
         }, 1000)
       } else {
-        setAuthError(result.error || 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ')
+        setAuthError(result.error || 'An error occurred during sign in')
       }
     } catch (error) {
-      setAuthError('เกิดข้อผิดพลาดที่ไม่คาดคิด')
+      setAuthError('An unexpected error occurred')
       console.error('Sign in error:', error)
     } finally {
       setIsLoading(false)
@@ -244,7 +244,7 @@ const AuthPanel: FC = () => {
     if (data.password !== data.confirmPassword) {
       signUpForm.setError('confirmPassword', {
         type: 'manual',
-        message: 'รหัสผ่านไม่ตรงกัน',
+        message: 'Passwords do not match',
       })
       return
     }
@@ -260,16 +260,18 @@ const AuthPanel: FC = () => {
       })
 
       if (result.success) {
-        setAuthSuccess('สมัครสมาชิกสำเร็จ! กรุณาตรวจสอบอีเมลเพื่อยืนยันบัญชี')
+        setAuthSuccess(
+          'Account created successfully! Please check your email to verify your account',
+        )
         setTimeout(() => {
           setAuthMode('signin')
           signUpForm.reset()
         }, 3000)
       } else {
-        setAuthError(result.error || 'เกิดข้อผิดพลาดในการสมัครสมาชิก')
+        setAuthError(result.error || 'An error occurred during sign up')
       }
     } catch (error) {
-      setAuthError('เกิดข้อผิดพลาดที่ไม่คาดคิด')
+      setAuthError('An unexpected error occurred')
       console.error('Sign up error:', error)
     } finally {
       setIsLoading(false)
@@ -292,7 +294,7 @@ const AuthPanel: FC = () => {
         setAuthError(result.error)
       }
     } catch (error) {
-      setAuthError('เกิดข้อผิดพลาดในการเข้าสู่ระบบด้วย Social Media')
+      setAuthError('An error occurred during social media sign in')
       console.error('Social login error:', error)
     } finally {
       setIsLoading(false)
@@ -302,7 +304,7 @@ const AuthPanel: FC = () => {
   const handleForgotPassword = async () => {
     const email = signInForm.getValues('email')
     if (!email) {
-      setAuthError('กรุณากรอกอีเมลก่อนขอรีเซ็ตรหัสผ่าน')
+      setAuthError('Please enter your email before requesting password reset')
       return
     }
 
@@ -312,14 +314,14 @@ const AuthPanel: FC = () => {
     try {
       const result = await authService.resetPassword(email)
       if (result.success) {
-        setAuthSuccess('ส่งลิงก์รีเซ็ตรหัสผ่านไปยังอีเมลของคุณแล้ว')
+        setAuthSuccess('Password reset link has been sent to your email')
       } else {
         setAuthError(
-          result.error || 'เกิดข้อผิดพลาดในการส่งลิงก์รีเซ็ตรหัสผ่าน',
+          result.error || 'An error occurred while sending password reset link',
         )
       }
     } catch (error) {
-      setAuthError('เกิดข้อผิดพลาดที่ไม่คาดคิด')
+      setAuthError('An unexpected error occurred')
       console.error('Reset password error:', error)
     } finally {
       setIsLoading(false)

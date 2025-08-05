@@ -264,36 +264,36 @@ class AuthService {
   private getAuthErrorMessage(error: AuthError): string {
     switch (error.message) {
       case 'Invalid login credentials':
-        return 'อีเมลหรือรหัสผ่านไม่ถูกต้อง'
+        return 'Invalid email or password'
       case 'User already registered':
-        return 'อีเมลนี้ถูกใช้งานแล้ว'
+        return 'This email is already in use'
       case 'Password should be at least 6 characters':
-        return 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร'
+        return 'Password must be at least 6 characters long'
       case 'Unable to validate email address: invalid format':
-        return 'รูปแบบอีเมลไม่ถูกต้อง'
+        return 'Invalid email format'
       case 'Email not confirmed':
-        return 'กรุณายืนยันอีเมลก่อนเข้าสู่ระบบ'
+        return 'Please confirm your email before signing in'
       case 'Too many requests':
-        return 'มีการร้องขอมากเกินไป กรุณาลองใหม่ในภายหลัง'
+        return 'Too many requests. Please try again later'
       default:
-        return error.message || 'เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ'
+        return error.message || 'An unknown error occurred'
     }
   }
 
   private getPostgrestErrorMessage(error: PostgrestError): string {
     switch (error.code) {
       case 'PGRST116':
-        return 'ไม่พบข้อมูลที่ต้องการ'
+        return 'Data not found'
       case 'PGRST202':
-        return 'ไม่มีสิทธิ์เข้าถึงข้อมูล'
+        return 'Access denied'
       case '23505':
-        return 'ข้อมูลซ้ำ'
+        return 'Duplicate data'
       case '23503':
-        return 'ข้อมูลอ้างอิงไม่ถูกต้อง'
+        return 'Invalid reference data'
       case '42501':
-        return 'ไม่มีสิทธิ์ในการดำเนินการ'
+        return 'Insufficient permissions'
       default:
-        return error.message || 'เกิดข้อผิดพลาดกับฐานข้อมูล'
+        return error.message || 'Database error occurred'
     }
   }
 }
