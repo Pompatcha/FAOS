@@ -49,10 +49,10 @@ export default function Home() {
           </div>
 
           <div className='flex w-full items-center rounded-lg bg-white p-5'>
-            <div className='flex w-[20%] flex-col items-center gap-2.5'>
+            <div className='flex flex-col items-center gap-2.5'>
               <img
                 src='https://i.ibb.co/351rJLyB/IMG-8438.jpg'
-                className='size-28 rounded-full object-cover'
+                className='size-20 items-center justify-center rounded-full object-cover'
               />
               <span className='text-center font-bold'>
                 Patcharin Chanaphukdee
