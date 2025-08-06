@@ -30,25 +30,15 @@ const Menu = () => {
     },
     {
       title: 'Honey',
-      submenu: [
-        { title: 'Pine', href: '' },
-        { title: 'Flower', href: '' },
-        { title: 'Thyme', href: '' },
-        { title: 'Oak and Forest', href: '' },
-        { title: 'Orange Blossom', href: '' },
-        { title: '"PEARL FIR"', href: '' },
-        { title: 'Vanilla', href: '' },
-      ],
+      href: '',
     },
     {
       title: 'Olive oil',
+      href: '',
     },
     {
       title: 'Organics skin care',
-      submenu: [
-        { title: 'Lotions', href: '' },
-        { title: 'Face and Hair', href: '' },
-      ],
+      href: '',
     },
     {
       title: 'Our Shop',
@@ -64,6 +54,7 @@ const Menu = () => {
     },
     {
       title: 'About me',
+      href: '',
     },
   ]
 

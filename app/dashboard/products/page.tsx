@@ -1,113 +1,95 @@
-"use client"
+'use client'
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Plus, Search, Edit, Trash2, Eye } from "lucide-react"
-import { ProductModal } from "./components/product-modal"
-import { ProductImageGallery } from "./components/product-image-gallery"
+import { useState, useEffect } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
+import { Plus, Search, Edit, Trash2, Eye, Loader2 } from 'lucide-react'
+import { ProductImageGallery } from './components/product-image-gallery'
+import { ProductModal } from './components/product-modal'
+import { Product } from '@/app/actions/products'
+import {
+  useProducts,
+  useSearchProducts,
+  useDeleteProduct,
+} from './hooks/products'
 
-// Mock data
-const mockProducts = [
-  {
-    id: 1,
-    name: "iPhone 15 Pro",
-    category: "Smartphone",
-    price: 39900,
-    stock: 25,
-    status: "active",
-    images: [
-      "/placeholder.svg?height=50&width=50&text=iPhone+Front",
-      "/placeholder.svg?height=50&width=50&text=iPhone+Back",
-      "/placeholder.svg?height=50&width=50&text=iPhone+Side",
-    ],
-  },
-  {
-    id: 2,
-    name: "MacBook Air M2",
-    category: "Laptop",
-    price: 42900,
-    stock: 12,
-    status: "active",
-    images: [
-      "/placeholder.svg?height=50&width=50&text=MacBook+Open",
-      "/placeholder.svg?height=50&width=50&text=MacBook+Closed",
-    ],
-  },
-  {
-    id: 3,
-    name: "AirPods Pro",
-    category: "Headphones",
-    price: 8900,
-    stock: 0,
-    status: "out_of_stock",
-    images: [
-      "/placeholder.svg?height=50&width=50&text=AirPods+Case",
-      "/placeholder.svg?height=50&width=50&text=AirPods+Open",
-    ],
-  },
-  {
-    id: 4,
-    name: "iPad Air",
-    category: "Tablet",
-    price: 22900,
-    stock: 8,
-    status: "active",
-    images: [
-      "/placeholder.svg?height=50&width=50&text=iPad+Front",
-      "/placeholder.svg?height=50&width=50&text=iPad+Back",
-    ],
-  },
-  {
-    id: 5,
-    name: "Apple Watch Series 9",
-    category: "Smartwatch",
-    price: 13900,
-    stock: 15,
-    status: "active",
-    images: [
-      "/placeholder.svg?height=50&width=50&text=Watch+Face",
-      "/placeholder.svg?height=50&width=50&text=Watch+Side",
-    ],
-  },
-]
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value)
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value)
+    }, delay)
+
+    return () => {
+      clearTimeout(handler)
+    }
+  }, [value, delay])
+
+  return debouncedValue
+}
 
 export default function ProductsPage() {
-  const [products, setProducts] = useState(mockProducts)
-  const [searchTerm, setSearchTerm] = useState("")
+  const [searchTerm, setSearchTerm] = useState('')
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [editingProduct, setEditingProduct] = useState(null)
-
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [galleryState, setGalleryState] = useState({
     isOpen: false,
     images: [],
-    productName: "",
+    productName: '',
     initialIndex: 0,
   })
 
-  const filteredProducts = products.filter(
-    (product) =>
-      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.category.toLowerCase().includes(searchTerm.toLowerCase()),
-  )
+  const debouncedSearchTerm = useDebounce(searchTerm, 300)
 
-  const handleAddProduct = (productData) => {
-    const newProduct = {
-      ...productData,
-      id: Math.max(...products.map((p) => p.id)) + 1,
+  const {
+    data: allProducts,
+    isLoading: isLoadingProducts,
+    error: productsError,
+  } = useProducts()
+
+  const { data: searchResults, isLoading: isSearching } =
+    useSearchProducts(debouncedSearchTerm)
+
+  const products = debouncedSearchTerm.length > 0 ? searchResults : allProducts
+  const isLoading =
+    debouncedSearchTerm.length > 0 ? isSearching : isLoadingProducts
+
+  const deleteProductMutation = useDeleteProduct()
+
+  const handleDeleteProduct = async (id: string) => {
+    try {
+      await deleteProductMutation.mutateAsync(id)
+    } catch (error) {
+      console.error('Failed to delete product:', error)
     }
-    setProducts([...products, newProduct])
-  }
-
-  const handleEditProduct = (productData) => {
-    setProducts(products.map((p) => (p.id === editingProduct.id ? { ...productData, id: editingProduct.id } : p)))
-  }
-
-  const handleDeleteProduct = (id) => {
-    setProducts(products.filter((p) => p.id !== id))
   }
 
   const openAddModal = () => {
@@ -115,42 +97,46 @@ export default function ProductsPage() {
     setIsModalOpen(true)
   }
 
-  const openEditModal = (product) => {
+  const openEditModal = (product: Product) => {
     setEditingProduct(product)
     setIsModalOpen(true)
   }
 
-  const getStatusBadge = (status) => {
+  const getStatusBadge = (status: string) => {
     switch (status) {
-      case "active":
-        return <Badge variant="default">Active</Badge>
-      case "out_of_stock":
-        return <Badge variant="destructive">Out of Stock</Badge>
-      case "inactive":
-        return <Badge variant="secondary">Inactive</Badge>
+      case 'active':
+        return <Badge variant='default'>Active</Badge>
+      case 'out_of_stock':
+        return <Badge variant='destructive'>Out of Stock</Badge>
+      case 'inactive':
+        return <Badge variant='secondary'>Inactive</Badge>
       default:
-        return <Badge variant="outline">Unknown</Badge>
+        return <Badge variant='outline'>Unknown</Badge>
     }
   }
 
-  const openImageGallery = (product, initialIndex = 0) => {
-    setGalleryState({
-      isOpen: true,
-      images: product.images || [],
-      productName: product.name,
-      initialIndex,
-    })
+  if (productsError) {
+    return (
+      <div className='space-y-6'>
+        <div className='py-8 text-center'>
+          <p className='text-destructive'>Failed to load products</p>
+          <Button variant='outline' onClick={() => window.location.reload()}>
+            Try Again
+          </Button>
+        </div>
+      </div>
+    )
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className='space-y-6'>
+      <div className='flex items-center justify-between'>
         <div>
-          <h1 className="text-3xl font-bold">Product Management</h1>
-          <p className="text-muted-foreground">Manage your store products</p>
+          <h1 className='text-3xl font-bold'>Product Management</h1>
+          <p className='text-muted-foreground'>Manage your store products</p>
         </div>
         <Button onClick={openAddModal}>
-          <Plus className="mr-2 h-4 w-4" />
+          <Plus className='mr-2 h-4 w-4' />
           Add New Product
         </Button>
       </div>
@@ -158,74 +144,130 @@ export default function ProductsPage() {
       <Card>
         <CardHeader>
           <CardTitle>Product List</CardTitle>
-          <CardDescription>Total {products.length} products</CardDescription>
+          <CardDescription>
+            {isLoading ? (
+              <span className='flex items-center gap-2'>
+                <Loader2 className='h-4 w-4 animate-spin' />
+                Loading products...
+              </span>
+            ) : (
+              `Total ${products?.length || 0} products`
+            )}
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center space-x-2 mb-4">
-            <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+          <div className='mb-4 flex items-center space-x-2'>
+            <div className='relative max-w-sm flex-1'>
+              <Search className='text-muted-foreground absolute top-2.5 left-2 h-4 w-4' />
               <Input
-                placeholder="Search products..."
+                placeholder='Search products...'
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-8"
+                className='pl-8'
               />
+              {isSearching && searchTerm && (
+                <Loader2 className='absolute top-2.5 right-2 h-4 w-4 animate-spin' />
+              )}
             </div>
           </div>
 
-          <div className="rounded-md border">
+          <div className='rounded-md border'>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Image</TableHead>
                   <TableHead>Product Name</TableHead>
                   <TableHead>Category</TableHead>
                   <TableHead>Price</TableHead>
                   <TableHead>Stock</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className='text-right'>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredProducts.map((product) => (
-                  <TableRow key={product.id}>
-                    <TableCell>
-                      <div className="flex -space-x-2 cursor-pointer" onClick={() => openImageGallery(product)}>
-                        {product.images?.slice(0, 3).map((image, index) => (
-                          <img
-                            key={index}
-                            src={image || "/placeholder.svg"}
-                            alt={`${product.name} ${index + 1}`}
-                            className="h-10 w-10 rounded-md object-cover border-2 border-white hover:z-10 transition-all"
-                          />
-                        ))}
-                        {product.images?.length > 3 && (
-                          <div className="h-10 w-10 rounded-md bg-muted flex items-center justify-center text-xs font-medium border-2 border-white">
-                            +{product.images.length - 3}
-                          </div>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-medium">{product.name}</TableCell>
-                    <TableCell>{product.category}</TableCell>
-                    <TableCell>฿{product.price.toLocaleString()}</TableCell>
-                    <TableCell>{product.stock}</TableCell>
-                    <TableCell>{getStatusBadge(product.status)}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end space-x-2">
-                        <Button variant="ghost" size="sm">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="sm" onClick={() => openEditModal(product)}>
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="sm" onClick={() => handleDeleteProduct(product.id)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className='py-8 text-center'>
+                      <Loader2 className='mx-auto h-6 w-6 animate-spin' />
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : products && products.length > 0 ? (
+                  products.map((product) => (
+                    <TableRow key={product.id}>
+                      <TableCell className='font-medium'>
+                        {product.name}
+                      </TableCell>
+                      <TableCell>{product.category}</TableCell>
+                      <TableCell>฿{product.price.toLocaleString()}</TableCell>
+                      <TableCell>
+                        <span
+                          className={
+                            product.stock <= 10
+                              ? 'text-destructive font-semibold'
+                              : ''
+                          }
+                        >
+                          {product.stock}
+                        </span>
+                      </TableCell>
+                      <TableCell>{getStatusBadge(product.status)}</TableCell>
+                      <TableCell className='text-right'>
+                        <div className='flex justify-end space-x-2'>
+                          <Button variant='ghost' size='sm'>
+                            <Eye className='h-4 w-4' />
+                          </Button>
+                          <Button
+                            variant='ghost'
+                            size='sm'
+                            onClick={() => openEditModal(product)}
+                          >
+                            <Edit className='h-4 w-4' />
+                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant='ghost' size='sm'>
+                                <Trash2 className='h-4 w-4' />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>
+                                  Delete Product
+                                </AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to delete &quot;
+                                  {product.name}&quot;? This action cannot be
+                                  undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() =>
+                                    handleDeleteProduct(product.id)
+                                  }
+                                  disabled={deleteProductMutation.isPending}
+                                >
+                                  {deleteProductMutation.isPending ? (
+                                    <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                                  ) : null}
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={6} className='py-8 text-center'>
+                      {searchTerm
+                        ? 'No products found'
+                        : 'No products available'}
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           </div>
@@ -235,7 +277,6 @@ export default function ProductsPage() {
       <ProductModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onSave={editingProduct ? handleEditProduct : handleAddProduct}
         product={editingProduct}
       />
 
