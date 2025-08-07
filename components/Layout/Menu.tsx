@@ -100,7 +100,7 @@ const Menu = () => {
 
   return (
     <>
-      <nav className='relative flex w-full justify-between border-8 border-[#e2b007] bg-[#e2b007] shadow-lg'>
+      <nav className='relative w-full border-8 border-[#e2b007] bg-[#e2b007] shadow-lg'>
         <div className='item flex justify-center'>
           {menuItems.map((item) => (
             <div

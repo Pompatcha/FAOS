@@ -1,16 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
-import {
-  X,
-  User,
-  Package,
-  Settings,
-  LogOut,
-  Heart,
-  MapPin,
-  GripVertical,
-} from 'lucide-react'
+import { X, User, Package, Settings, LogOut, Heart, MapPin } from 'lucide-react'
 
 interface ProfileProps {
   isOpen: boolean
@@ -23,73 +13,6 @@ interface ProfileProps {
 }
 
 const Profile = ({ isOpen, onClose, user }: ProfileProps) => {
-  const [position, setPosition] = useState({ x: 0, y: 0 })
-  const [isDragging, setIsDragging] = useState(false)
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
-  const profileRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (isOpen) {
-      const savedPosition = localStorage.getItem('profilePosition')
-
-      if (savedPosition) {
-        const parsed = JSON.parse(savedPosition)
-        setPosition(parsed)
-      } else {
-        setPosition({ x: 0, y: 0 })
-      }
-    }
-  }, [isOpen])
-
-  useEffect(() => {
-    if (!isDragging && (position.x !== 0 || position.y !== 0)) {
-      localStorage.setItem('profilePosition', JSON.stringify(position))
-    }
-  }, [isDragging, position])
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (!profileRef.current) return
-
-    const rect = profileRef.current.getBoundingClientRect()
-    setDragOffset({
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
-    })
-    setIsDragging(true)
-  }
-
-  const handleMouseMove = (e: MouseEvent) => {
-    if (!isDragging || !profileRef.current) return
-
-    const newX = e.clientX - dragOffset.x
-    const newY = e.clientY - dragOffset.y
-
-    const maxX = window.innerWidth - profileRef.current.offsetWidth
-    const maxY = window.innerHeight - profileRef.current.offsetHeight
-
-    setPosition({
-      x: Math.max(0, Math.min(newX, maxX)),
-      y: Math.max(0, Math.min(newY, maxY)),
-    })
-  }
-
-  const handleMouseUp = () => {
-    setIsDragging(false)
-  }
-
-  useEffect(() => {
-    if (isDragging) {
-      document.addEventListener('mousemove', handleMouseMove)
-      document.addEventListener('mouseup', handleMouseUp)
-      document.body.style.userSelect = 'none'
-      return () => {
-        document.removeEventListener('mousemove', handleMouseMove)
-        document.removeEventListener('mouseup', handleMouseUp)
-        document.body.style.userSelect = ''
-      }
-    }
-  }, [isDragging, dragOffset])
-
   const handleMenuClick = (action: string) => {
     console.log(`${action} clicked`)
     onClose()
@@ -135,35 +58,12 @@ const Profile = ({ isOpen, onClose, user }: ProfileProps) => {
     <div className='fixed inset-0 z-50'>
       <div className='bg-opacity-50 absolute inset-0' onClick={onClose} />
 
-      <div
-        ref={profileRef}
-        className={`absolute max-h-[80vh] w-80 overflow-hidden rounded-lg bg-white shadow-2xl transition-shadow ${
-          isDragging ? 'shadow-3xl cursor-grabbing' : 'cursor-default'
-        }`}
-        style={{
-          left:
-            position.x === 0 && position.y === 0 ? '50%' : `${position.x}px`,
-          top: position.x === 0 && position.y === 0 ? '50%' : `${position.y}px`,
-          transform:
-            position.x === 0 && position.y === 0
-              ? 'translate(-50%, -50%)'
-              : 'none',
-        }}
-      >
-        <div
-          className={`flex items-center justify-between border-b border-gray-200 bg-[#e2b007] p-4 ${
-            isDragging ? 'cursor-grabbing' : 'cursor-grab'
-          }`}
-          onMouseDown={handleMouseDown}
-        >
-          <div className='flex items-center gap-2'>
-            <GripVertical className='h-4 w-4 text-white opacity-70' />
-            <h2 className='text-lg font-bold text-white'>Profile</h2>
-          </div>
+      <div className='absolute right-10 bottom-0 max-h-[80vh] w-80 overflow-hidden rounded-t-lg bg-white shadow-2xl'>
+        <div className='flex items-center justify-between border-b border-gray-200 p-4'>
+          <h2 className='text-lg font-bold'>Profile</h2>
           <button
             onClick={onClose}
-            className='cursor-pointer text-white transition-colors hover:text-gray-200'
-            onMouseDown={(e) => e.stopPropagation()}
+            className='transition-colors hover:text-gray-200'
           >
             <X className='h-6 w-6' />
           </button>
