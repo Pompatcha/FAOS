@@ -1,7 +1,7 @@
 'use client'
 
 import { useAuth } from '@/contexts/AuthContext'
-import { X, User, Package, Settings, LogOut, Heart, MapPin } from 'lucide-react'
+import { X, User, Package, Settings, LogOut, MapPin } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 interface ProfileProps {
@@ -35,12 +35,6 @@ const Profile = ({ isOpen, onClose }: ProfileProps) => {
       title: 'My Orders',
       action: 'orders',
       description: 'Check order status',
-    },
-    {
-      icon: Heart,
-      title: 'Favorites',
-      action: 'favorites',
-      description: 'Products you liked',
     },
     {
       icon: MapPin,
