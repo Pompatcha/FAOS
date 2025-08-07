@@ -6,7 +6,7 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar'
 import { Separator } from '@/components/ui/separator'
-import { AdminRoute } from '@/components/Protected/RouteGuard'
+import { ProtectedRoute } from '@/components/Protected/RouteGuard'
 
 export default function DashboardLayout({
   children,
@@ -14,7 +14,7 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   return (
-    <AdminRoute>
+    <ProtectedRoute>
       <SidebarProvider>
         <AppSidebar />
         <SidebarInset>
@@ -25,6 +25,6 @@ export default function DashboardLayout({
           <div className='flex flex-1 flex-col gap-4 p-4'>{children}</div>
         </SidebarInset>
       </SidebarProvider>
-    </AdminRoute>
+    </ProtectedRoute>
   )
 }
