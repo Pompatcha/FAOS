@@ -2,8 +2,10 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function updateSession(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({
-    request,
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
   })
 
   const supabase = createServerClient(
@@ -15,21 +17,41 @@ export async function updateSession(request: NextRequest) {
           return request.cookies.getAll()
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
+          cookiesToSet.forEach(({ name, value, options }) =>
             request.cookies.set(name, value),
           )
-          supabaseResponse = NextResponse.next({
+          response = NextResponse.next({
             request,
           })
           cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options),
+            response.cookies.set(name, value, options),
           )
         },
       },
     },
   )
 
-  await supabase.auth.getUser()
+  const {
+    data: { session },
+    error,
+  } = await supabase.auth.getSession()
 
-  return supabaseResponse
+  if (error) {
+    console.error('Error getting session in middleware:', error)
+    return response
+  }
+
+  if (session) {
+    const expiresAt = session.expires_at
+    const currentTime = Math.floor(Date.now() / 1000)
+
+    if (expiresAt && currentTime >= expiresAt - 60) {
+      const { error: refreshError } = await supabase.auth.refreshSession()
+      if (refreshError) {
+        console.error('Error refreshing session:', refreshError)
+      }
+    }
+  }
+
+  return response
 }

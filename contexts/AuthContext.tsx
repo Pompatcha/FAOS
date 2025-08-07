@@ -6,9 +6,14 @@ import {
   useEffect,
   useState,
   ReactNode,
+  useCallback,
+  useRef,
 } from 'react'
 import { User, Session } from '@supabase/supabase-js'
 import { Profile, authService } from '@/actions/auth'
+import { createClient } from '@/utils/supabase/client'
+import { useRealtimeProfile } from '@/hooks/use-realtime-profile'
+import { AuthDebug } from '@/utils/auth-debug'
 
 interface AuthContextType {
   user: User | null
@@ -27,68 +32,93 @@ interface AuthProviderProps {
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null)
-  const [profile, setProfile] = useState<Profile | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
+  const initialized = useRef(false)
+  const supabase = createClient()
 
-  const refreshProfile = async () => {
-    if (!user) return
+  const {
+    profile,
+    loading: profileLoading,
+    refetch: refreshProfile,
+  } = useRealtimeProfile(user)
 
-    const result = await authService.getUserProfile(user.id)
-    if (result.success && result.profile) {
-      setProfile(result.profile)
-    }
-  }
-
-  const signOut = async () => {
-    const result = await authService.signOut()
-    if (result.success) {
-      setUser(null)
-      setProfile(null)
-      setSession(null)
-    }
-  }
-
-  useEffect(() => {
-    const getInitialSession = async () => {
-      const result = await authService.getCurrentUser()
-      if (result.success && result.user) {
-        setUser(result.user as User)
-        const profileResult = await authService.getUserProfile(result.user.id)
-        if (profileResult.success && profileResult.profile) {
-          setProfile(profileResult.profile)
-        }
+  const signOut = useCallback(async () => {
+    try {
+      setLoading(true)
+      const result = await authService.signOut()
+      if (result.success) {
+        setUser(null)
+        setSession(null)
       }
+    } catch (error) {
+      console.error('Error signing out:', error)
+    } finally {
       setLoading(false)
     }
+  }, [])
 
-    getInitialSession()
+  useEffect(() => {
+    let isMounted = true
+
+    const initializeAuth = async () => {
+      if (initialized.current) return
+      initialized.current = true
+
+      try {
+        const {
+          data: { session: initialSession },
+          error: sessionError,
+        } = await supabase.auth.getSession()
+
+        if (sessionError) {
+          console.error('Error getting initial session:', sessionError)
+          return
+        }
+
+        if (initialSession?.user && isMounted) {
+          AuthDebug.log('Initial session found')
+          AuthDebug.session(initialSession)
+          setSession(initialSession)
+          setUser(initialSession.user)
+        } else {
+          AuthDebug.log('No initial session found')
+        }
+      } catch (error) {
+        console.error('Error initializing auth:', error)
+      } finally {
+        if (isMounted) {
+          setLoading(false)
+        }
+      }
+    }
+
+    initializeAuth()
 
     const {
       data: { subscription },
-    } = authService.onAuthStateChange(
-      async (event: string, session: unknown) => {
-        const typedSession = session as Session | null
-        setSession(typedSession)
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!isMounted) return
 
-        if (typedSession?.user) {
-          setUser(typedSession.user)
-          const profileResult = await authService.getUserProfile(
-            typedSession.user.id,
-          )
-          if (profileResult.success && profileResult.profile) {
-            setProfile(profileResult.profile)
-          }
-        } else {
-          setUser(null)
-          setProfile(null)
-        }
+      AuthDebug.authState(event, session, session?.user, null)
+      AuthDebug.session(session)
 
+      setSession(session)
+      setLoading(true)
+
+      if (session?.user) {
+        setUser(session.user)
+      } else {
+        setUser(null)
+      }
+
+      if (isMounted) {
         setLoading(false)
-      },
-    )
+      }
+    })
 
     return () => {
+      isMounted = false
       subscription?.unsubscribe()
     }
   }, [])
@@ -97,7 +127,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     user,
     profile,
     session,
-    loading,
+    loading: loading || profileLoading,
     signOut,
     refreshProfile,
   }
