@@ -100,7 +100,7 @@ const Menu = () => {
 
   return (
     <>
-      <nav className='relative w-full border-8 border-[#e2b007] bg-[#e2b007] shadow-lg'>
+      <nav className='relative flex w-full justify-between border-8 border-[#e2b007] bg-[#e2b007] shadow-lg'>
         <div className='item flex justify-center'>
           {menuItems.map((item) => (
             <div
@@ -110,7 +110,7 @@ const Menu = () => {
               onMouseLeave={handleMenuLeave}
             >
               <button
-                className={`flex items-center gap-2 px-6 py-4 font-bold text-white`}
+                className={`flex items-center gap-2 px-6 py-4 font-bold text-white hover:bg-[#f3d27a] hover:text-white`}
                 onClick={() =>
                   item.submenu ? handleMenuClick(item.title) : null
                 }
@@ -155,14 +155,14 @@ const Menu = () => {
         <div className='flex justify-center gap-4'>
           <button
             onClick={handleProfileClick}
-            className='top-4 right-4 z-40 rounded-full border-2 border-white bg-[#e2b007] p-3 text-white shadow-lg transition-all duration-200 hover:scale-105 hover:bg-[#f3d27a]'
+            className='top-4 right-4 z-40 size-13 rounded-full border-2 border-white bg-[#e2b007] p-3 text-white shadow-lg transition-all duration-200 hover:scale-105 hover:bg-[#f3d27a]'
           >
             <User className='h-6 w-6' />
           </button>
 
           <button
             onClick={() => setIsCartOpen(true)}
-            className='top-4 right-4 z-40 rounded-full border-2 border-white bg-[#e2b007] p-3 text-white shadow-lg transition-all duration-200 hover:scale-105 hover:bg-[#f3d27a]'
+            className='top-4 right-4 z-40 size-13 rounded-full border-2 border-white bg-[#e2b007] p-3 text-white shadow-lg transition-all duration-200 hover:scale-105 hover:bg-[#f3d27a]'
           >
             <div className='relative'>
               <ShoppingCart className='h-6 w-6' />
@@ -174,25 +174,21 @@ const Menu = () => {
             </div>
           </button>
         </div>
+
+        <Cart
+          isOpen={isCartOpen}
+          onClose={() => setIsCartOpen(false)}
+          items={cartItems}
+          onUpdateQuantity={updateQuantity}
+          onRemoveItem={removeItem}
+          onClearCart={clearCart}
+        />
+
+        <Profile
+          isOpen={isProfileOpen}
+          onClose={() => setIsProfileOpen(false)}
+        />
       </nav>
-
-      <Cart
-        isOpen={isCartOpen}
-        onClose={() => setIsCartOpen(false)}
-        items={cartItems}
-        onUpdateQuantity={updateQuantity}
-        onRemoveItem={removeItem}
-        onClearCart={clearCart}
-      />
-
-      <Profile
-        isOpen={isProfileOpen}
-        onClose={() => setIsProfileOpen(false)}
-        user={{
-          name: 'Patcharin Chanaphukdee',
-          email: 'customer@email.com',
-        }}
-      />
     </>
   )
 }

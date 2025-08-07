@@ -111,17 +111,6 @@ const AuthPanel: FC = () => {
     return (
       <div className='mx-auto flex h-fit w-full max-w-md flex-col gap-6 rounded-lg bg-white/20 p-6 backdrop-blur-sm'>
         <div className='text-center'>
-          {extendedProfile?.avatar_url ? (
-            <img
-              src={extendedProfile.avatar_url}
-              className='mx-auto mb-4 size-20 rounded-full bg-white/20'
-            />
-          ) : (
-            <div className='mx-auto mb-4 flex size-20 items-center justify-center rounded-full bg-white/20'>
-              <User className='h-8 w-8 text-white/60' />
-            </div>
-          )}
-
           <h2 className='mb-1 text-xl font-semibold text-white'>
             Welcome Back!
           </h2>
@@ -176,15 +165,6 @@ const AuthPanel: FC = () => {
                 })}
               </p>
             </div>
-
-            {user.email_confirmed_at && (
-              <div>
-                <Label className='text-sm font-medium text-white/70'>
-                  Email Status
-                </Label>
-                <p className='text-green-300'>✓ Verified</p>
-              </div>
-            )}
           </div>
         </div>
 

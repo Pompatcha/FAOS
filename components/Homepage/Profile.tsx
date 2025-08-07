@@ -31,6 +31,7 @@ const Profile = ({ isOpen, onClose, user }: ProfileProps) => {
   useEffect(() => {
     if (isOpen) {
       const savedPosition = localStorage.getItem('profilePosition')
+
       if (savedPosition) {
         const parsed = JSON.parse(savedPosition)
         setPosition(parsed)
