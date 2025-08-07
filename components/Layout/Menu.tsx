@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { ChevronDown, ShoppingCart, User } from 'lucide-react'
 import { Cart } from '../Products/Cart'
 import { Profile } from '../Homepage/Profile'
+import { ShowIfAuth } from '../Protected/RouteGuard'
 
 interface CartItem {
   id: string
@@ -152,42 +153,48 @@ const Menu = () => {
           ))}
         </div>
 
-        <div className='flex justify-center gap-4'>
-          <button
-            onClick={handleProfileClick}
-            className='top-4 right-4 z-40 size-13 rounded-full border-2 border-white bg-[#e2b007] p-3 text-white shadow-lg transition-all duration-200 hover:scale-105 hover:bg-[#f3d27a]'
-          >
-            <User className='h-6 w-6' />
-          </button>
+        <ShowIfAuth>
+          <>
+            <div className='flex justify-center gap-4'>
+              <button
+                onClick={handleProfileClick}
+                className='top-4 right-4 z-40 size-13 rounded-full border-2 border-white bg-[#e2b007] p-3 text-white shadow-lg transition-all duration-200 hover:scale-105 hover:bg-[#f3d27a]'
+              >
+                <User className='h-6 w-6' />
+              </button>
 
-          <button
-            onClick={() => setIsCartOpen(true)}
-            className='top-4 right-4 z-40 size-13 rounded-full border-2 border-white bg-[#e2b007] p-3 text-white shadow-lg transition-all duration-200 hover:scale-105 hover:bg-[#f3d27a]'
-          >
-            <div className='relative'>
-              <ShoppingCart className='h-6 w-6' />
-              {getTotalItems() > 0 && (
-                <span className='absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white'>
-                  {getTotalItems()}
-                </span>
-              )}
+              <button
+                onClick={() => setIsCartOpen(true)}
+                className='top-4 right-4 z-40 size-13 rounded-full border-2 border-white bg-[#e2b007] p-3 text-white shadow-lg transition-all duration-200 hover:scale-105 hover:bg-[#f3d27a]'
+              >
+                <div className='relative'>
+                  <ShoppingCart className='h-6 w-6' />
+                  {getTotalItems() > 0 && (
+                    <span className='absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white'>
+                      {getTotalItems()}
+                    </span>
+                  )}
+                </div>
+              </button>
             </div>
-          </button>
-        </div>
 
-        <Cart
-          isOpen={isCartOpen}
-          onClose={() => setIsCartOpen(false)}
-          items={cartItems}
-          onUpdateQuantity={updateQuantity}
-          onRemoveItem={removeItem}
-          onClearCart={clearCart}
-        />
+            <Cart
+              isOpen={isCartOpen}
+              onClose={() => setIsCartOpen(false)}
+              items={cartItems}
+              onUpdateQuantity={updateQuantity}
+              onRemoveItem={removeItem}
+              onClearCart={clearCart}
+            />
 
-        <Profile
-          isOpen={isProfileOpen}
-          onClose={() => setIsProfileOpen(false)}
-        />
+            <ShowIfAuth>
+              <Profile
+                isOpen={isProfileOpen}
+                onClose={() => setIsProfileOpen(false)}
+              />
+            </ShowIfAuth>
+          </>
+        </ShowIfAuth>
       </nav>
     </>
   )

@@ -20,6 +20,7 @@ import {
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { authService } from '@/actions/auth'
 import { useAuth } from '@/contexts/AuthContext'
+import { ShowIfAdmin } from './RouteGuard'
 
 type AuthMode = 'signin' | 'signup'
 
@@ -169,12 +170,14 @@ const AuthPanel: FC = () => {
         </div>
 
         <div className='space-y-3'>
-          <Button
-            onClick={() => router.push('/dashboard')}
-            className='w-full border border-white/20 bg-white/20 text-white hover:bg-white/30'
-          >
-            Go to Dashboard
-          </Button>
+          <ShowIfAdmin>
+            <Button
+              onClick={() => router.push('/dashboard')}
+              className='w-full border border-white/20 bg-white/20 text-white hover:bg-white/30'
+            >
+              Go to Dashboard
+            </Button>
+          </ShowIfAdmin>
 
           <Button
             onClick={handleLogout}
