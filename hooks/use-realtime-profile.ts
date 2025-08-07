@@ -4,7 +4,6 @@ import { useEffect, useState, useCallback } from 'react'
 import { User } from '@supabase/supabase-js'
 import { createClient } from '@/utils/supabase/client'
 import { Profile } from '@/actions/auth'
-import { AuthDebug } from '@/utils/auth-debug'
 
 export function useRealtimeProfile(user: User | null) {
   const [profile, setProfile] = useState<Profile | null>(null)
@@ -33,7 +32,6 @@ export function useRealtimeProfile(user: User | null) {
       }
 
       setProfile(data)
-      AuthDebug.profile(data)
     } catch (error) {
       console.error('Unexpected error fetching profile:', error)
     } finally {
@@ -60,8 +58,6 @@ export function useRealtimeProfile(user: User | null) {
           filter: `id=eq.${user.id}`,
         },
         (payload) => {
-          AuthDebug.log('Profile updated in real-time', payload.eventType)
-
           if (
             payload.eventType === 'UPDATE' ||
             payload.eventType === 'INSERT'
@@ -70,7 +66,6 @@ export function useRealtimeProfile(user: User | null) {
             setProfile(newProfile)
           } else if (payload.eventType === 'DELETE') {
             setProfile(null)
-            AuthDebug.log('Profile deleted')
           }
         },
       )

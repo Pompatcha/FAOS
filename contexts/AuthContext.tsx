@@ -13,7 +13,6 @@ import { User, Session } from '@supabase/supabase-js'
 import { Profile, authService } from '@/actions/auth'
 import { createClient } from '@/utils/supabase/client'
 import { useRealtimeProfile } from '@/hooks/use-realtime-profile'
-import { AuthDebug } from '@/utils/auth-debug'
 
 interface AuthContextType {
   user: User | null
@@ -77,12 +76,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
 
         if (initialSession?.user && isMounted) {
-          AuthDebug.log('Initial session found')
-          AuthDebug.session(initialSession)
           setSession(initialSession)
           setUser(initialSession.user)
-        } else {
-          AuthDebug.log('No initial session found')
         }
       } catch (error) {
         console.error('Error initializing auth:', error)
@@ -99,9 +94,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!isMounted) return
-
-      AuthDebug.authState(event, session, session?.user, null)
-      AuthDebug.session(session)
 
       setSession(session)
       setLoading(true)
