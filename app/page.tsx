@@ -48,15 +48,12 @@ export default function Home() {
             </span>
           </div>
 
-          <div className='flex w-full items-center rounded-lg bg-white p-5'>
-            <div className='flex flex-col items-center gap-2.5'>
+          <div className='flex w-full items-center gap-5 rounded-lg bg-white p-5'>
+            <div className='size-20 flex-shrink-0 overflow-hidden rounded-full'>
               <img
                 src='https://i.ibb.co/351rJLyB/IMG-8438.jpg'
-                className='size-20 items-center justify-center rounded-full object-cover'
+                className='h-full w-full object-cover'
               />
-              <span className='text-center font-bold'>
-                Patcharin Chanaphukdee
-              </span>
             </div>
             <span className='w-full text-xl'>
               Created for Health, Elegance and Well-Being. Elevate patient care
