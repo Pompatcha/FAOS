@@ -1,29 +1,33 @@
 'use client'
 
+import { useAuth } from '@/contexts/AuthContext'
 import { X, User, Package, Settings, LogOut, Heart, MapPin } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 interface ProfileProps {
   isOpen: boolean
   onClose: () => void
-  user?: {
-    name: string
-    email: string
-    avatar?: string
-  }
 }
 
-const Profile = ({ isOpen, onClose, user }: ProfileProps) => {
+const Profile = ({ isOpen, onClose }: ProfileProps) => {
+  const { profile, signOut } = useAuth()
+  const router = useRouter()
+
+  const handleLogout = async () => {
+    try {
+      await signOut()
+      setTimeout(() => {
+        router.push('/')
+      }, 1000)
+    } catch (error) {
+      console.error('Logout error:', error)
+    }
+  }
+
   const handleMenuClick = (action: string) => {
     console.log(`${action} clicked`)
     onClose()
   }
-
-  const defaultUser = {
-    name: 'John Doe',
-    email: 'john.doe@example.com',
-  }
-
-  const currentUser = user || defaultUser
 
   const menuItems = [
     {
@@ -75,8 +79,10 @@ const Profile = ({ isOpen, onClose, user }: ProfileProps) => {
               <User className='h-6 w-6' />
             </div>
             <div>
-              <h3 className='font-medium text-gray-900'>{currentUser.name}</h3>
-              <p className='text-sm text-gray-600'>{currentUser.email}</p>
+              <h3 className='font-medium text-gray-900'>
+                {profile?.full_name}
+              </h3>
+              <p className='text-sm text-gray-600'>{profile?.email}</p>
             </div>
           </div>
         </div>
@@ -103,7 +109,7 @@ const Profile = ({ isOpen, onClose, user }: ProfileProps) => {
 
         <div className='border-t border-gray-200 bg-gray-50 p-4'>
           <button
-            onClick={() => handleMenuClick('logout')}
+            onClick={handleLogout}
             className='flex w-full items-center justify-center gap-2 rounded-lg bg-red-500 py-3 font-medium text-white transition-colors hover:bg-red-600'
           >
             <LogOut className='h-4 w-4' />

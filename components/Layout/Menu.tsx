@@ -187,12 +187,10 @@ const Menu = () => {
               onClearCart={clearCart}
             />
 
-            <ShowIfAuth>
-              <Profile
-                isOpen={isProfileOpen}
-                onClose={() => setIsProfileOpen(false)}
-              />
-            </ShowIfAuth>
+            <Profile
+              isOpen={isProfileOpen}
+              onClose={() => setIsProfileOpen(false)}
+            />
           </>
         </ShowIfAuth>
       </nav>
