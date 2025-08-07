@@ -25,7 +25,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { X, Upload, Plus, Loader2, GripVertical } from 'lucide-react'
 import { toast } from 'sonner'
 import { useCreateProduct, useUpdateProduct } from '../hooks/products'
-import { Product, ProductImageData } from '@/app/actions/products'
+import { Product, ProductImageData } from '@/actions/products'
 import { createClient } from '@/utils/supabase/client'
 
 const categories = ['Honey', 'Olive oil', 'Organics skin care'] as const

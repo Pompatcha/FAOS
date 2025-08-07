@@ -20,7 +20,7 @@ import {
   type Product,
   type ProductFormData,
   type ProductImageData,
-} from '@/app/actions/products'
+} from '@/actions/products'
 
 export const productKeys = {
   all: ['products'] as const,

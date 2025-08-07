@@ -3,7 +3,7 @@
 import { useEffect, ReactNode } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
-import { Profile } from '@/app/actions/auth'
+import { Profile } from '@/actions/auth'
 
 interface ExtendedProfile extends Profile {
   role?: string

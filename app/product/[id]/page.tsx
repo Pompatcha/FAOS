@@ -1,8 +1,8 @@
 'use client'
 
-import { Header } from '@/components/Header'
-import { AuthPanel } from '@/components/LoginPanel'
-import { Menu } from '@/components/Menu'
+import { Header } from '@/components/Layout/Header'
+import { AuthPanel } from '@/components/Protected/LoginPanel'
+import { Menu } from '@/components/Layout/Menu'
 
 // import { use } from 'react'
 

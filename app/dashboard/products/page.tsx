@@ -33,7 +33,7 @@ import {
 import { Plus, Search, Edit, Trash2, Eye, Loader2 } from 'lucide-react'
 import { ProductImageGallery } from './components/product-image-gallery'
 import { ProductModal } from './components/product-modal'
-import { Product } from '@/app/actions/products'
+import { Product } from '@/actions/products'
 import {
   useProducts,
   useSearchProducts,

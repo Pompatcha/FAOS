@@ -18,7 +18,7 @@ import {
   LogOut,
 } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { authService } from '@/app/actions/auth'
+import { authService } from '@/actions/auth'
 import { useAuth } from '@/contexts/AuthContext'
 
 type AuthMode = 'signin' | 'signup'

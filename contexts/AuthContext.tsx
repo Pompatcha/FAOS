@@ -8,7 +8,7 @@ import {
   ReactNode,
 } from 'react'
 import { User, Session } from '@supabase/supabase-js'
-import { Profile, authService } from '@/app/actions/auth'
+import { Profile, authService } from '@/actions/auth'
 
 interface AuthContextType {
   user: User | null

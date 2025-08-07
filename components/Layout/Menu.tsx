@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import { ChevronDown, ShoppingCart, User } from 'lucide-react'
-import { Cart } from './Cart'
-import { Profile } from './Homepage/Profile'
+import { Cart } from '../Products/Cart'
+import { Profile } from '../Homepage/Profile'
 
 interface CartItem {
   id: string
