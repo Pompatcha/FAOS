@@ -191,7 +191,7 @@ class AuthService {
   ): Promise<{ success: boolean; profile?: Profile; error?: string }> {
     try {
       const { data, error } = await this.supabase
-        .from('profiles')
+        .from('customers')
         .select('*')
         .eq('id', userId)
         .single()
@@ -218,7 +218,7 @@ class AuthService {
   ): Promise<AuthResult> {
     try {
       const { data, error } = await this.supabase
-        .from('profiles')
+        .from('customers')
         .update(updates)
         .eq('id', userId)
         .select()

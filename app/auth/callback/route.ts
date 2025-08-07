@@ -65,7 +65,7 @@ async function ensureUserProfile(
 ): Promise<void> {
   try {
     const { data: existingProfile, error: fetchError } = await supabase
-      .from('profiles')
+      .from('customers')
       .select('id')
       .eq('id', user.id)
       .single()
@@ -87,7 +87,7 @@ async function ensureUserProfile(
       }
 
       const { error: insertError } = await supabase
-        .from('profiles')
+        .from('customers')
         .insert(profileData)
 
       if (insertError) {
@@ -110,7 +110,7 @@ async function ensureUserProfile(
       }
 
       const { error: updateError } = await supabase
-        .from('profiles')
+        .from('customers')
         .update(updateData)
         .eq('id', user.id)
 
