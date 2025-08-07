@@ -207,7 +207,7 @@ const AuthPanel: FC = () => {
       if (result.success) {
         setAuthSuccess('Sign in successful!')
         setTimeout(() => {
-          router.push('/dashboard')
+          router.push('/')
         }, 1000)
       } else {
         setAuthError(result.error || 'An error occurred during sign in')

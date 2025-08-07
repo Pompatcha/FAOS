@@ -37,7 +37,7 @@ export function RouteGuard({
     if (loading) return
 
     if (requireGuest && user) {
-      const redirect = redirectTo || '/dashboard'
+      const redirect = redirectTo || '/'
       router.push(redirect)
       return
     }
