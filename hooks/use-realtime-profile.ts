@@ -20,7 +20,7 @@ export function useRealtimeProfile(user: User | null) {
     setLoading(true)
     try {
       const { data, error } = await supabase
-        .from('profiles')
+        .from('customers')
         .select('*')
         .eq('id', user.id)
         .single()
@@ -56,7 +56,7 @@ export function useRealtimeProfile(user: User | null) {
         {
           event: '*',
           schema: 'public',
-          table: 'profiles',
+          table: 'customers',
           filter: `id=eq.${user.id}`,
         },
         (payload) => {
@@ -68,7 +68,6 @@ export function useRealtimeProfile(user: User | null) {
           ) {
             const newProfile = payload.new as Profile
             setProfile(newProfile)
-            AuthDebug.profile(newProfile)
           } else if (payload.eventType === 'DELETE') {
             setProfile(null)
             AuthDebug.log('Profile deleted')
