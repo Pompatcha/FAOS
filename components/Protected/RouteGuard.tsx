@@ -31,6 +31,7 @@ export function RouteGuard({
 }: RouteGuardProps) {
   const { user, profile, loading } = useAuth()
   const router = useRouter()
+
   const pathname = usePathname()
 
   useEffect(() => {
@@ -43,8 +44,7 @@ export function RouteGuard({
     }
 
     if (requireAuth && !user) {
-      const redirect =
-        redirectTo || `/auth?redirectTo=${encodeURIComponent(pathname)}`
+      const redirect = redirectTo || `/`
       router.push(redirect)
       return
     }
@@ -52,7 +52,7 @@ export function RouteGuard({
     if (requireAuth && user && roles.length > 0) {
       const userRole = (profile as ExtendedProfile)?.role || 'user'
       if (!roles.includes(userRole)) {
-        router.push('/unauthorized')
+        router.push('/')
         return
       }
     }
@@ -63,7 +63,7 @@ export function RouteGuard({
         userPermissions.includes(permission),
       )
       if (!hasPermission) {
-        router.push('/unauthorized')
+        router.push('/')
         return
       }
     }
