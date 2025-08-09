@@ -6,30 +6,9 @@ import { Header } from '@/components/Layout/Header'
 import { Menu } from '@/components/Layout/Menu'
 import { ProductCard } from '@/components/Products/ProductCard'
 import { AuthPanel } from '@/components/Protected/LoginPanel'
+import { Product } from '@/types/product'
 import { useQuery } from '@tanstack/react-query'
 import { use } from 'react'
-
-interface ProductImage {
-  id: string
-  alt_text: string
-  image_url: string
-  created_at: string
-  product_id: string
-  sort_order: number
-}
-
-interface Product {
-  id: string
-  name: string
-  description?: string | undefined
-  category: string
-  price: number
-  stock: number
-  status: string
-  created_at: string
-  updated_at: string
-  images: ProductImage[]
-}
 
 export default function CategoryPage({
   params,

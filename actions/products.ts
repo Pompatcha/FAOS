@@ -1,5 +1,6 @@
 'use server'
 
+import { Product, ProductImage } from '@/types/product'
 import { createClient } from '@/utils/supabase/client'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
@@ -18,28 +19,6 @@ const productImageSchema = z.object({
   alt_text: z.string().optional(),
   sort_order: z.number().int().min(0).default(0),
 })
-
-export type Product = {
-  id: string
-  name: string
-  description?: string
-  category: string
-  price: number
-  stock: number
-  status: 'active' | 'inactive' | 'out_of_stock'
-  created_at: string
-  updated_at: string
-  images?: ProductImage[]
-}
-
-export type ProductImage = {
-  id: string
-  product_id: string
-  image_url: string
-  alt_text?: string
-  sort_order: number
-  created_at: string
-}
 
 export type ProductFormData = z.infer<typeof productSchema>
 export type ProductImageData = z.infer<typeof productImageSchema>
