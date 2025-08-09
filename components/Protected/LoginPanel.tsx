@@ -141,6 +141,13 @@ const AuthPanel: FC = () => {
 
           <div className='space-y-3'>
             <div>
+              <Label className='text-sm font-medium text-white/70'>
+                Customer ID
+              </Label>
+              <p className='text-white'>{user.id}</p>
+            </div>
+
+            <div>
               <Label className='text-sm font-medium text-white/70'>Email</Label>
               <p className='text-white'>{user.email}</p>
             </div>

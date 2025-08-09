@@ -69,13 +69,14 @@ const Profile = ({ isOpen, onClose }: ProfileProps) => {
 
         <div className='border-b border-gray-200 bg-gray-50 p-4'>
           <div className='flex items-center gap-3'>
-            <div className='flex h-12 w-12 items-center justify-center rounded-full bg-[#e2b007] text-white'>
+            <div className='flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#e2b007] text-white'>
               <User className='h-6 w-6' />
             </div>
             <div>
               <h3 className='font-medium text-gray-900'>
                 {profile?.full_name}
               </h3>
+              {profile?.id}
               <p className='text-sm text-gray-600'>{profile?.email}</p>
             </div>
           </div>

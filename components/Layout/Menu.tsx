@@ -2,29 +2,19 @@
 
 import { useState } from 'react'
 import { ChevronDown, ShoppingCart, User } from 'lucide-react'
-import { Cart } from '../Products/Cart'
 import { Profile } from '../Homepage/Profile'
 import { ShowIfAuth } from '../Protected/RouteGuard'
 import { useRouter } from 'next/navigation'
-
-interface CartItem {
-  id: string
-  name: string
-  price: number
-  quantity: number
-  image?: string
-}
+import Cart from '../Products/Cart'
+import { useCartCount } from '@/hooks/use-carts'
 
 const Menu = () => {
   const router = useRouter()
   const [activeMenu, setActiveMenu] = useState<string | null>(null)
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [isProfileOpen, setIsProfileOpen] = useState(false)
-  const [cartItems, setCartItems] = useState<CartItem[]>([
-    { id: '1', name: 'Pine Honey', price: 350, quantity: 2 },
-    { id: '2', name: 'Orange Blossom Honey', price: 420, quantity: 1 },
-    { id: '3', name: 'Organic Face Lotion', price: 280, quantity: 1 },
-  ])
+
+  const { data: cartCount = 0 } = useCartCount()
 
   const menuItems = [
     {
@@ -46,13 +36,13 @@ const Menu = () => {
     {
       title: 'Our Shop',
       submenu: [
-        { title: 'Bangkok', href: '/shop/bangkok' },
-        { title: 'Pattaya', href: '/shop/pattaya' },
-        { title: 'Chiang Mai', href: '/shop/chiang-mai' },
-        { title: 'Phuket', href: '/shop/phuket' },
-        { title: 'Krabi', href: '/shop/krabi' },
-        { title: 'Prachinburi', href: '/shop/prachinburi' },
-        { title: 'Hua Hin', href: '/shop/hua-hin' },
+        { title: 'Bangkok', href: '/our-shop/bangkok' },
+        { title: 'Pattaya', href: '/our-shop/pattaya' },
+        { title: 'Chiang Mai', href: '/our-shop/chiang-mai' },
+        { title: 'Phuket', href: '/our-shop/phuket' },
+        { title: 'Krabi', href: '/our-shop/krabi' },
+        { title: 'Prachinburi', href: '/our-shop/prachinburi' },
+        { title: 'Hua Hin', href: '/our-shop/hua-hin' },
       ],
     },
     {
@@ -86,32 +76,12 @@ const Menu = () => {
     }, 150)
   }
 
-  const getTotalItems = () => {
-    return cartItems.reduce((total, item) => total + item.quantity, 0)
-  }
-
-  const updateQuantity = (id: string, newQuantity: number) => {
-    if (newQuantity <= 0) {
-      removeItem(id)
-      return
-    }
-    setCartItems((prevItems) =>
-      prevItems.map((item) =>
-        item.id === id ? { ...item, quantity: newQuantity } : item,
-      ),
-    )
-  }
-
-  const removeItem = (id: string) => {
-    setCartItems((prevItems) => prevItems.filter((item) => item.id !== id))
-  }
-
-  const clearCart = () => {
-    setCartItems([])
-  }
-
   const handleProfileClick = () => {
     setIsProfileOpen(true)
+  }
+
+  const handleCartClick = () => {
+    setIsCartOpen(true)
   }
 
   return (
@@ -168,46 +138,41 @@ const Menu = () => {
           ))}
         </div>
 
-        <ShowIfAuth>
-          <>
-            <div className='flex justify-center gap-4 pb-4'>
+        <div className='flex justify-center gap-4 pb-4'>
+          <ShowIfAuth>
+            <>
               <button
                 onClick={handleProfileClick}
                 className='z-40 size-13 rounded-full border-2 border-white bg-[#e2b007] p-3 text-white shadow-lg transition-all duration-200 hover:scale-105 hover:bg-[#f3d27a]'
+                aria-label='Open profile'
               >
                 <User className='h-6 w-6' />
               </button>
 
-              <button
-                onClick={() => setIsCartOpen(true)}
-                className='z-40 size-13 rounded-full border-2 border-white bg-[#e2b007] p-3 text-white shadow-lg transition-all duration-200 hover:scale-105 hover:bg-[#f3d27a]'
-              >
-                <div className='relative'>
-                  <ShoppingCart className='h-6 w-6' />
-                  {getTotalItems() > 0 && (
-                    <span className='absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white'>
-                      {getTotalItems()}
-                    </span>
-                  )}
-                </div>
-              </button>
+              <Profile
+                isOpen={isProfileOpen}
+                onClose={() => setIsProfileOpen(false)}
+              />
+            </>
+          </ShowIfAuth>
+
+          <button
+            onClick={handleCartClick}
+            className='z-40 size-13 rounded-full border-2 border-white bg-[#e2b007] p-3 text-white shadow-lg transition-all duration-200 hover:scale-105 hover:bg-[#f3d27a]'
+            aria-label={`Open cart with ${cartCount} items`}
+          >
+            <div className='relative'>
+              <ShoppingCart className='h-6 w-6' />
+              {cartCount > 0 && (
+                <span className='absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white'>
+                  {cartCount > 99 ? '99+' : cartCount}
+                </span>
+              )}
             </div>
+          </button>
+        </div>
 
-            <Cart
-              isOpen={isCartOpen}
-              onClose={() => setIsCartOpen(false)}
-              items={cartItems}
-              onUpdateQuantity={updateQuantity}
-              onRemoveItem={removeItem}
-              onClearCart={clearCart}
-            />
-
-            <Profile
-              isOpen={isProfileOpen}
-              onClose={() => setIsProfileOpen(false)}
-            />
-          </>
-        </ShowIfAuth>
+        <Cart isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
       </nav>
     </>
   )
