@@ -28,7 +28,11 @@ import { useCreateProduct, useUpdateProduct } from '../hooks/products'
 import { Product, ProductImageData } from '@/actions/products'
 import { createClient } from '@/utils/supabase/client'
 
-const categories = ['Honey', 'Olive oil', 'Organics skin care'] as const
+const categories = [
+  { label: 'Honey', value: 'honey' },
+  { label: 'Olive oil', value: 'olive-oil' },
+  { label: 'Organics skin care', value: 'organice-skin-care' },
+] as const
 
 type ProductStatus = 'active' | 'inactive' | 'out_of_stock'
 
@@ -359,8 +363,11 @@ export function ProductModal({ isOpen, onClose, product }: ProductModalProps) {
                       </SelectTrigger>
                       <SelectContent>
                         {categories.map((category) => (
-                          <SelectItem key={category} value={category}>
-                            {category}
+                          <SelectItem
+                            key={category?.label}
+                            value={category?.value}
+                          >
+                            {category?.label}
                           </SelectItem>
                         ))}
                       </SelectContent>

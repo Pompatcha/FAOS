@@ -5,6 +5,7 @@ import { ChevronDown, ShoppingCart, User } from 'lucide-react'
 import { Cart } from '../Products/Cart'
 import { Profile } from '../Homepage/Profile'
 import { ShowIfAuth } from '../Protected/RouteGuard'
+import { useRouter } from 'next/navigation'
 
 interface CartItem {
   id: string
@@ -15,6 +16,7 @@ interface CartItem {
 }
 
 const Menu = () => {
+  const router = useRouter()
   const [activeMenu, setActiveMenu] = useState<string | null>(null)
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [isProfileOpen, setIsProfileOpen] = useState(false)
@@ -27,40 +29,51 @@ const Menu = () => {
   const menuItems = [
     {
       title: 'Home',
-      href: '',
+      href: '/',
     },
     {
       title: 'Honey',
-      href: '',
+      href: '/category/honey',
     },
     {
       title: 'Olive oil',
-      href: '',
+      href: '/category/olive-oil',
     },
     {
-      title: 'Organics skin care',
-      href: '',
+      title: 'Organic skin care',
+      href: '/category/organic-skin-care',
     },
     {
       title: 'Our Shop',
       submenu: [
-        { title: 'Bangkok', href: '' },
-        { title: 'Pattaya', href: '' },
-        { title: 'Chiang Mai', href: '' },
-        { title: 'Phuket', href: '' },
-        { title: 'Krabi', href: '' },
-        { title: 'Prachinburi', href: '' },
-        { title: 'Hua Hin', href: '' },
+        { title: 'Bangkok', href: '/shop/bangkok' },
+        { title: 'Pattaya', href: '/shop/pattaya' },
+        { title: 'Chiang Mai', href: '/shop/chiang-mai' },
+        { title: 'Phuket', href: '/shop/phuket' },
+        { title: 'Krabi', href: '/shop/krabi' },
+        { title: 'Prachinburi', href: '/shop/prachinburi' },
+        { title: 'Hua Hin', href: '/shop/hua-hin' },
       ],
     },
     {
       title: 'About me',
-      href: '',
+      href: '/about',
     },
   ]
 
-  const handleMenuClick = (menuId: string) => {
-    setActiveMenu(activeMenu === menuId ? null : menuId)
+  const handleMenuClick = (
+    href: string | undefined,
+    hasSubmenu: boolean = false,
+  ) => {
+    if (!hasSubmenu && href) {
+      router.push(href)
+      setActiveMenu(null)
+    }
+  }
+
+  const handleSubmenuClick = (href: string) => {
+    router.push(href)
+    setActiveMenu(null)
   }
 
   const handleMenuHover = (menuId: string) => {
@@ -68,7 +81,9 @@ const Menu = () => {
   }
 
   const handleMenuLeave = () => {
-    setActiveMenu(null)
+    setTimeout(() => {
+      setActiveMenu(null)
+    }, 150)
   }
 
   const getTotalItems = () => {
@@ -108,13 +123,11 @@ const Menu = () => {
               key={item.title}
               className='group relative'
               onMouseEnter={() => item.submenu && handleMenuHover(item.title)}
-              onMouseLeave={handleMenuLeave}
+              onMouseLeave={() => item.submenu && handleMenuLeave()}
             >
               <button
-                className={`flex items-center gap-2 px-6 py-4 font-bold text-white hover:bg-[#f3d27a] hover:text-white`}
-                onClick={() =>
-                  item.submenu ? handleMenuClick(item.title) : null
-                }
+                className={`flex items-center gap-2 px-6 py-4 font-bold text-white transition-colors duration-200 hover:bg-[#f3d27a] hover:text-white`}
+                onClick={() => handleMenuClick(item.href, !!item.submenu)}
               >
                 <span className='font-medium whitespace-nowrap'>
                   {item.title}
@@ -135,16 +148,18 @@ const Menu = () => {
                       ? 'visible scale-y-100 opacity-100'
                       : 'invisible scale-y-0 opacity-0'
                   } `}
+                  onMouseEnter={() => setActiveMenu(item.title)}
+                  onMouseLeave={handleMenuLeave}
                 >
                   <div className='py-2'>
                     {item.submenu.map((subItem, index) => (
-                      <a
+                      <button
                         key={index}
-                        href={subItem.href}
-                        className='block px-4 py-3 text-white transition-colors duration-150 hover:bg-[#f3d27a] hover:text-white'
+                        onClick={() => handleSubmenuClick(subItem.href)}
+                        className='block w-full px-4 py-3 text-left text-white transition-colors duration-150 hover:bg-[#f3d27a] hover:text-white'
                       >
                         <span>{subItem.title}</span>
-                      </a>
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -155,17 +170,17 @@ const Menu = () => {
 
         <ShowIfAuth>
           <>
-            <div className='flex justify-center gap-4'>
+            <div className='flex justify-center gap-4 pb-4'>
               <button
                 onClick={handleProfileClick}
-                className='top-4 right-4 z-40 size-13 rounded-full border-2 border-white bg-[#e2b007] p-3 text-white shadow-lg transition-all duration-200 hover:scale-105 hover:bg-[#f3d27a]'
+                className='z-40 size-13 rounded-full border-2 border-white bg-[#e2b007] p-3 text-white shadow-lg transition-all duration-200 hover:scale-105 hover:bg-[#f3d27a]'
               >
                 <User className='h-6 w-6' />
               </button>
 
               <button
                 onClick={() => setIsCartOpen(true)}
-                className='top-4 right-4 z-40 size-13 rounded-full border-2 border-white bg-[#e2b007] p-3 text-white shadow-lg transition-all duration-200 hover:scale-105 hover:bg-[#f3d27a]'
+                className='z-40 size-13 rounded-full border-2 border-white bg-[#e2b007] p-3 text-white shadow-lg transition-all duration-200 hover:scale-105 hover:bg-[#f3d27a]'
               >
                 <div className='relative'>
                   <ShoppingCart className='h-6 w-6' />

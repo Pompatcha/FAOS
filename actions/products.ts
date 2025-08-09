@@ -44,7 +44,7 @@ export type ProductImage = {
 export type ProductFormData = z.infer<typeof productSchema>
 export type ProductImageData = z.infer<typeof productImageSchema>
 
-export async function getProducts() {
+const getProducts = async () => {
   const supabase = createClient()
 
   const { data, error } = await supabase
@@ -65,7 +65,7 @@ export async function getProducts() {
   return data as Product[]
 }
 
-export async function getProduct(id: string) {
+const getProduct = async (id: string) => {
   const supabase = createClient()
 
   const { data, error } = await supabase
@@ -87,10 +87,10 @@ export async function getProduct(id: string) {
   return data as Product
 }
 
-export async function createProduct(
+const createProduct = async (
   formData: ProductFormData,
   imageData?: ProductImageData[],
-) {
+) => {
   const supabase = createClient()
 
   const validatedFields = productSchema.safeParse(formData)
@@ -138,11 +138,11 @@ export async function createProduct(
   return { data: completeProduct }
 }
 
-export async function updateProduct(
+const updateProduct = async (
   id: string,
   formData: ProductFormData,
   imageData?: ProductImageData[],
-) {
+) => {
   const supabase = createClient()
 
   const validatedFields = productSchema.safeParse(formData)
@@ -202,7 +202,7 @@ export async function updateProduct(
   return { data: completeProduct }
 }
 
-export async function deleteProduct(id: string) {
+const deleteProduct = async (id: string) => {
   const supabase = createClient()
 
   const { error } = await supabase.from('products').delete().eq('id', id)
@@ -219,10 +219,10 @@ export async function deleteProduct(id: string) {
   return { success: true }
 }
 
-export async function updateProductStatus(
+const updateProductStatus = async (
   id: string,
   status: 'active' | 'inactive' | 'out_of_stock',
-) {
+) => {
   const supabase = createClient()
 
   const { data, error } = await supabase
@@ -249,7 +249,7 @@ export async function updateProductStatus(
   return { data: data as Product }
 }
 
-export async function searchProducts(query: string) {
+const searchProducts = async (query: string) => {
   const supabase = createClient()
 
   const { data, error } = await supabase
@@ -273,7 +273,7 @@ export async function searchProducts(query: string) {
   return data as Product[]
 }
 
-export async function getProductsByCategory(category: string) {
+const getProductsByCategory = async (category: string) => {
   const supabase = createClient()
 
   const { data, error } = await supabase
@@ -295,7 +295,7 @@ export async function getProductsByCategory(category: string) {
   return data as Product[]
 }
 
-export async function getLowStockProducts(threshold: number = 10) {
+const getLowStockProducts = async (threshold: number = 10) => {
   const supabase = createClient()
 
   const { data, error } = await supabase
@@ -318,7 +318,7 @@ export async function getLowStockProducts(threshold: number = 10) {
   return data as Product[]
 }
 
-export async function getProductImages(productId: string) {
+const getProductImages = async (productId: string) => {
   const supabase = createClient()
 
   const { data, error } = await supabase
@@ -335,10 +335,10 @@ export async function getProductImages(productId: string) {
   return data as ProductImage[]
 }
 
-export async function addProductImage(
+const addProductImage = async (
   productId: string,
   imageData: ProductImageData,
-) {
+) => {
   const supabase = createClient()
 
   const validatedImage = productImageSchema.safeParse(imageData)
@@ -368,10 +368,10 @@ export async function addProductImage(
   return { data: data as ProductImage }
 }
 
-export async function updateProductImage(
+const updateProductImage = async (
   imageId: string,
   imageData: Partial<ProductImageData>,
-) {
+) => {
   const supabase = createClient()
 
   const { data, error } = await supabase
@@ -393,7 +393,7 @@ export async function updateProductImage(
   return { data: data as ProductImage }
 }
 
-export async function deleteProductImage(imageId: string) {
+const deleteProductImage = async (imageId: string) => {
   const supabase = createClient()
 
   const { error } = await supabase
@@ -413,10 +413,10 @@ export async function deleteProductImage(imageId: string) {
   return { success: true }
 }
 
-export async function reorderProductImages(
+const reorderProductImages = async (
   productId: string,
   imageOrders: { id: string; sort_order: number }[],
-) {
+) => {
   const supabase = createClient()
 
   const updatePromises = imageOrders.map(({ id, sort_order }) =>
@@ -439,4 +439,21 @@ export async function reorderProductImages(
 
   revalidatePath('/products')
   return { success: true }
+}
+
+export {
+  getProducts,
+  getProduct,
+  createProduct,
+  updateProduct,
+  deleteProduct,
+  updateProductStatus,
+  searchProducts,
+  getProductsByCategory,
+  getLowStockProducts,
+  getProductImages,
+  addProductImage,
+  updateProductImage,
+  deleteProductImage,
+  reorderProductImages,
 }

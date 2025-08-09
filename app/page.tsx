@@ -90,14 +90,11 @@ export default function Home() {
 
           <Certification />
 
-          <div className='grid w-full grid-cols-3 gap-5'>
+          <div className='grid w-full grid-cols-2 gap-5'>
             <FollowUs />
             <Research />
-
-            <div className='flex flex-col gap-2.5'>
-              <Shipping />
-              <Payment />
-            </div>
+            <Shipping />
+            <Payment />
           </div>
 
           <Footer />
