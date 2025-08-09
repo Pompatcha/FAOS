@@ -102,7 +102,7 @@ const Cart = ({ isOpen, onClose }: CartProps) => {
   return (
     <div className='fixed inset-0 z-50'>
       <div className='bg-opacity-50 absolute inset-0' onClick={onClose} />
-      <div className='absolute right-10 bottom-0 max-h-[80vh] min-w-[450px] overflow-hidden rounded-t-lg bg-white shadow-2xl'>
+      <div className='absolute right-10 bottom-0 max-h-[80vh] min-w-96 overflow-hidden rounded-t-lg bg-white shadow-2xl'>
         <div className='flex items-center justify-between border-b border-gray-200 bg-[#dda700] p-4 text-white'>
           <h2 className='text-lg font-bold'>Shopping Cart</h2>
           <button

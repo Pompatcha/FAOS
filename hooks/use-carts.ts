@@ -13,7 +13,7 @@ import {
   type UpdateCartItemData,
 } from '@/actions/carts'
 
-export const useCartItems = () => {
+const useCartItems = () => {
   const { profile } = useAuth()
 
   return useQuery({
@@ -27,7 +27,7 @@ export const useCartItems = () => {
   })
 }
 
-export const useCartSummary = () => {
+const useCartSummary = () => {
   const { profile } = useAuth()
 
   return useQuery({
@@ -41,7 +41,7 @@ export const useCartSummary = () => {
   })
 }
 
-export const useCartDetails = () => {
+const useCartDetails = () => {
   const { profile } = useAuth()
 
   return useQuery({
@@ -55,7 +55,7 @@ export const useCartDetails = () => {
   })
 }
 
-export const useCartCount = () => {
+const useCartCount = () => {
   const { profile } = useAuth()
 
   return useQuery({
@@ -69,7 +69,7 @@ export const useCartCount = () => {
   })
 }
 
-export const useAddToCart = () => {
+const useAddToCart = () => {
   const queryClient = useQueryClient()
   const { profile } = useAuth()
 
@@ -99,7 +99,7 @@ export const useAddToCart = () => {
   })
 }
 
-export const useUpdateCartItem = () => {
+const useUpdateCartItem = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -127,7 +127,7 @@ export const useUpdateCartItem = () => {
   })
 }
 
-export const useRemoveFromCart = () => {
+const useRemoveFromCart = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -149,7 +149,7 @@ export const useRemoveFromCart = () => {
   })
 }
 
-export const useClearCart = () => {
+const useClearCart = () => {
   const queryClient = useQueryClient()
   const { profile } = useAuth()
 
@@ -174,4 +174,15 @@ export const useClearCart = () => {
       console.error('Clear cart error:', error)
     },
   })
+}
+
+export {
+  useCartItems,
+  useCartSummary,
+  useCartDetails,
+  useCartCount,
+  useAddToCart,
+  useUpdateCartItem,
+  useRemoveFromCart,
+  useClearCart,
 }
