@@ -57,7 +57,7 @@ const Profile = ({ isOpen, onClose }: ProfileProps) => {
       <div className='bg-opacity-50 absolute inset-0' onClick={onClose} />
 
       <div className='absolute right-10 bottom-0 max-h-[80vh] w-80 overflow-hidden rounded-t-lg bg-white shadow-2xl'>
-        <div className='flex items-center justify-between border-b border-gray-200 p-4'>
+        <div className='flex items-center justify-between border-b border-gray-200 bg-[#dda700] p-4 text-white'>
           <h2 className='text-lg font-bold'>Profile</h2>
           <button
             onClick={onClose}

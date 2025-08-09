@@ -20,6 +20,7 @@ import {
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { authService } from '@/actions/auth'
 import { useAuth } from '@/contexts/AuthContext'
+import { ShowIfAdmin, ShowIfCustomer } from './RouteGuard'
 
 type AuthMode = 'signin' | 'signup'
 
@@ -169,18 +170,43 @@ const AuthPanel: FC = () => {
         </div>
 
         <div className='space-y-3'>
-          <Button
-            onClick={() => router.push('/dashboard')}
-            className='w-full border border-white/20 bg-white/20 text-white hover:bg-white/30'
-          >
-            Go to Dashboard
-          </Button>
+          <ShowIfCustomer>
+            <Button
+              onClick={() => router.push('/')}
+              className='w-full border border-white/20 bg-white/20 text-white hover:bg-white/30'
+            >
+              Go to My Orders
+            </Button>
+
+            <Button
+              onClick={() => router.push('/')}
+              className='w-full border border-white/20 bg-white/20 text-white hover:bg-white/30'
+            >
+              Go to Shipping Address
+            </Button>
+
+            <Button
+              onClick={() => router.push('/')}
+              className='w-full border border-white/20 bg-white/20 text-white hover:bg-white/30'
+            >
+              Go to Profile Settings
+            </Button>
+          </ShowIfCustomer>
+
+          <ShowIfAdmin>
+            <Button
+              onClick={() => router.push('/dashboard')}
+              className='w-full border border-white/20 bg-white/20 text-white hover:bg-white/30'
+            >
+              Go to Dashboard
+            </Button>
+          </ShowIfAdmin>
 
           <Button
             onClick={handleLogout}
             disabled={isLoading}
             variant='outline'
-            className='w-full border-red-300/50 bg-red-500/20 text-white hover:bg-red-500/30 disabled:opacity-50'
+            className='w-full border-red-300/50 bg-red-500/20 text-white hover:bg-red-500/30 hover:text-white disabled:opacity-50'
           >
             <LogOut className='mr-2 h-4 w-4' />
             {isLoading ? 'Signing out...' : 'Sign Out'}

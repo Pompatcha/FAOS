@@ -56,7 +56,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
           <>
             <button
               onClick={prevImage}
-              className='bg-opacity-50 hover:bg-opacity-70 absolute top-1/2 left-2 -translate-y-1/2 transform rounded-full bg-black p-2 text-white transition-opacity'
+              className='bg-opacity-50 hover:bg-opacity-70 absolute top-1/2 left-2 -translate-y-1/2 transform rounded-full bg-[#dda600c1] p-2 text-white transition-opacity'
               aria-label='Previous image'
             >
               <svg
@@ -75,7 +75,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
             </button>
             <button
               onClick={nextImage}
-              className='bg-opacity-50 hover:bg-opacity-70 absolute top-1/2 right-2 -translate-y-1/2 transform rounded-full bg-black p-2 text-white transition-opacity'
+              className='bg-opacity-50 hover:bg-opacity-70 absolute top-1/2 right-2 -translate-y-1/2 transform rounded-full bg-[#dda600c1] p-2 text-white transition-opacity'
               aria-label='Next image'
             >
               <svg
