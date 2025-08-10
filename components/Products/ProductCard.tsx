@@ -4,6 +4,7 @@ import { useAddToCart } from '@/hooks/use-carts'
 import { Product } from '@/types/product'
 import { ChevronLeft, ChevronRight, Minus, Plus } from 'lucide-react'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
 interface ProductCardProps {
@@ -11,6 +12,7 @@ interface ProductCardProps {
 }
 
 const ProductCard = ({ product }: ProductCardProps) => {
+  const router = useRouter()
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [quantity, setQuantity] = useState(1)
 
@@ -55,6 +57,10 @@ const ProductCard = ({ product }: ProductCardProps) => {
 
       setQuantity(1)
     } catch (error) {}
+  }
+
+  const handelMoreDetail = async () => {
+    router.push(`/product/${product.id}`)
   }
 
   const handleQuantityChange = (newQuantity: number) => {
@@ -165,13 +171,19 @@ const ProductCard = ({ product }: ProductCardProps) => {
           <button
             onClick={handleAddToCart}
             disabled={product.stock === 0 || addToCartMutation.isPending}
-            className='flex-1 rounded-lg bg-[#dda700] px-4 py-2 font-medium text-white transition-colors hover:bg-[#cc9600] disabled:cursor-not-allowed disabled:opacity-50'
+            className='flex-1 cursor-pointer rounded-lg bg-[#dda700] px-4 py-2 font-medium text-white transition-colors hover:bg-[#cc9600] disabled:cursor-not-allowed disabled:opacity-50'
           >
             {addToCartMutation.isPending
               ? 'Adding...'
               : product.stock > 0
                 ? 'Add to Cart'
                 : 'Out of Stock'}
+          </button>
+          <button
+            onClick={handelMoreDetail}
+            className='cursor-pointer rounded-lg bg-gray-500 px-4 py-2 font-medium text-white transition-colors hover:bg-gray-400 disabled:cursor-not-allowed disabled:opacity-50'
+          >
+            More details
           </button>
         </div>
       </div>

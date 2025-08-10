@@ -133,7 +133,7 @@ const Cart = ({ isOpen, onClose }: CartProps) => {
               {items.map((item) => (
                 <div
                   key={item.id}
-                  className='flex items-center gap-3 rounded-lg border border-gray-200 p-3'
+                  className='flex items-center gap-3 border-b border-gray-200 p-3'
                 >
                   <Image
                     src={item.product_image || '/placeholder.svg'}
