@@ -179,21 +179,14 @@ const AuthPanel: FC = () => {
         <div className='space-y-3'>
           <ShowIfCustomer>
             <Button
-              onClick={() => router.push('/')}
+              onClick={() => router.push('/profile/orders')}
               className='w-full border border-white/20 bg-white/20 text-white hover:bg-white/30'
             >
               Go to My Orders
             </Button>
 
             <Button
-              onClick={() => router.push('/')}
-              className='w-full border border-white/20 bg-white/20 text-white hover:bg-white/30'
-            >
-              Go to Shipping Address
-            </Button>
-
-            <Button
-              onClick={() => router.push('/')}
+              onClick={() => router.push('/profile/settings')}
               className='w-full border border-white/20 bg-white/20 text-white hover:bg-white/30'
             >
               Go to Profile Settings
