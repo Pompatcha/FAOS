@@ -135,15 +135,13 @@ const Cart = ({ isOpen, onClose }: CartProps) => {
                   key={item.id}
                   className='flex items-center gap-3 rounded-lg border border-gray-200 p-3'
                 >
-                  {item.product_image && (
-                    <Image
-                      src={item.product_image}
-                      alt={item.product_name}
-                      width={48}
-                      height={48}
-                      className='h-12 w-12 rounded object-cover'
-                    />
-                  )}
+                  <Image
+                    src={item.product_image || '/placeholder.svg'}
+                    alt={item.product_name}
+                    width={48}
+                    height={48}
+                    className='h-12 w-12 rounded object-cover'
+                  />
 
                   <div className='flex-1'>
                     <h3 className='font-medium text-gray-900'>
