@@ -2,6 +2,7 @@
 
 import { useAddToCart } from '@/hooks/use-carts'
 import { Product } from '@/types/product'
+import { ChevronLeft, ChevronRight, Minus, Plus } from 'lucide-react'
 import Image from 'next/image'
 import { useState } from 'react'
 
@@ -77,41 +78,17 @@ const ProductCard = ({ product }: ProductCardProps) => {
           <>
             <button
               onClick={prevImage}
-              className='bg-opacity-50 hover:bg-opacity-70 absolute top-1/2 left-2 -translate-y-1/2 transform rounded-full bg-[#dda600c1] p-2 text-white transition-opacity'
+              className='bg-opacity-50 hover:bg-opacity-70 absolute top-1/2 left-2 -translate-y-1/2 transform cursor-pointer rounded-full bg-white/50 p-2 text-white transition-opacity hover:scale-105'
               aria-label='Previous image'
             >
-              <svg
-                className='h-4 w-4'
-                fill='none'
-                stroke='currentColor'
-                viewBox='0 0 24 24'
-              >
-                <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  strokeWidth={2}
-                  d='M15 19l-7-7 7-7'
-                />
-              </svg>
+              <ChevronLeft className='size-5 text-gray-500' />
             </button>
             <button
               onClick={nextImage}
-              className='bg-opacity-50 hover:bg-opacity-70 absolute top-1/2 right-2 -translate-y-1/2 transform rounded-full bg-[#dda600c1] p-2 text-white transition-opacity'
+              className='bg-opacity-50 hover:bg-opacity-70 absolute top-1/2 right-2 -translate-y-1/2 transform cursor-pointer rounded-full bg-white/50 p-2 text-white transition-opacity hover:scale-105'
               aria-label='Next image'
             >
-              <svg
-                className='h-4 w-4'
-                fill='none'
-                stroke='currentColor'
-                viewBox='0 0 24 24'
-              >
-                <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  strokeWidth={2}
-                  d='M9 5l7 7-7 7'
-                />
-              </svg>
+              <ChevronRight className='size-5 text-gray-500' />
             </button>
           </>
         )}
@@ -166,23 +143,21 @@ const ProductCard = ({ product }: ProductCardProps) => {
 
         {product.stock > 0 && (
           <div className='mb-3 flex items-center justify-center space-x-3'>
-            <button
+            <div
               onClick={() => handleQuantityChange(quantity - 1)}
-              disabled={quantity <= 1}
-              className='flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 text-gray-600 transition-colors hover:bg-gray-300 disabled:cursor-not-allowed disabled:opacity-50'
+              className='flex-center flex size-8 cursor-pointer items-center justify-center rounded-full bg-gray-100 text-gray-600 transition-colors hover:bg-gray-300 disabled:cursor-not-allowed disabled:opacity-50'
             >
-              -
-            </button>
+              <Minus className='size-4' />
+            </div>
             <span className='min-w-[2rem] text-center font-medium'>
               {quantity}
             </span>
-            <button
+            <div
               onClick={() => handleQuantityChange(quantity + 1)}
-              disabled={quantity >= product.stock}
-              className='flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 text-gray-600 transition-colors hover:bg-gray-300 disabled:cursor-not-allowed disabled:opacity-50'
+              className='flex-center flex size-8 cursor-pointer items-center justify-center rounded-full bg-gray-100 text-gray-600 transition-colors hover:bg-gray-300 disabled:cursor-not-allowed disabled:opacity-50'
             >
-              +
-            </button>
+              <Plus className='size-4' />
+            </div>
           </div>
         )}
 
