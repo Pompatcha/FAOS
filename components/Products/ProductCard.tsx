@@ -65,7 +65,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
 
   return (
     <div className='overflow-hidden rounded-lg bg-white shadow-lg transition-shadow duration-300 hover:shadow-xl'>
-      <div className='relative aspect-square overflow-hidden'>
+      <div className='relative aspect-square h-[250px] w-full overflow-hidden'>
         <Image
           src={displayImage?.image_url || '/placeholder.svg'}
           alt={displayImage?.alt_text || `${product.name} placeholder`}
@@ -145,7 +145,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
           <div className='mb-3 flex items-center justify-center space-x-3'>
             <div
               onClick={() => handleQuantityChange(quantity - 1)}
-              className='flex-center flex size-8 cursor-pointer items-center justify-center rounded-full bg-gray-100 text-gray-600 transition-colors hover:bg-gray-300 disabled:cursor-not-allowed disabled:opacity-50'
+              className='flex-center flex size-8 cursor-pointer items-center justify-center rounded-full bg-gray-100 text-gray-500 transition-colors hover:bg-gray-300 disabled:cursor-not-allowed disabled:opacity-50'
             >
               <Minus className='size-4' />
             </div>
@@ -154,7 +154,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
             </span>
             <div
               onClick={() => handleQuantityChange(quantity + 1)}
-              className='flex-center flex size-8 cursor-pointer items-center justify-center rounded-full bg-gray-100 text-gray-600 transition-colors hover:bg-gray-300 disabled:cursor-not-allowed disabled:opacity-50'
+              className='flex-center flex size-8 cursor-pointer items-center justify-center rounded-full bg-gray-100 text-gray-500 transition-colors hover:bg-gray-300 disabled:cursor-not-allowed disabled:opacity-50'
             >
               <Plus className='size-4' />
             </div>
