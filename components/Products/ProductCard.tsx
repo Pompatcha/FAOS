@@ -1,5 +1,6 @@
 'use client'
 
+import { useAddToCart } from '@/hooks/use-carts'
 import { Product } from '@/types/product'
 import Image from 'next/image'
 import { useState } from 'react'
@@ -10,6 +11,9 @@ interface ProductCardProps {
 
 const ProductCard = ({ product }: ProductCardProps) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [quantity, setQuantity] = useState(1)
+
+  const addToCartMutation = useAddToCart()
 
   const sortedImages =
     product.images?.sort((a, b) => a.sort_order - b.sort_order) || []
@@ -39,6 +43,23 @@ const ProductCard = ({ product }: ProductCardProps) => {
       currency: 'USD',
       minimumFractionDigits: 2,
     }).format(price)
+  }
+
+  const handleAddToCart = async () => {
+    try {
+      await addToCartMutation.mutateAsync({
+        product_id: product.id,
+        quantity: quantity,
+      })
+
+      setQuantity(1)
+    } catch (error) {}
+  }
+
+  const handleQuantityChange = (newQuantity: number) => {
+    if (newQuantity >= 1 && newQuantity <= product.stock) {
+      setQuantity(newQuantity)
+    }
   }
 
   return (
@@ -143,12 +164,39 @@ const ProductCard = ({ product }: ProductCardProps) => {
           <span className='text-sm text-gray-500'>{product.stock} left</span>
         </div>
 
+        {product.stock > 0 && (
+          <div className='mb-3 flex items-center justify-center space-x-3'>
+            <button
+              onClick={() => handleQuantityChange(quantity - 1)}
+              disabled={quantity <= 1}
+              className='flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 text-gray-600 transition-colors hover:bg-gray-300 disabled:cursor-not-allowed disabled:opacity-50'
+            >
+              -
+            </button>
+            <span className='min-w-[2rem] text-center font-medium'>
+              {quantity}
+            </span>
+            <button
+              onClick={() => handleQuantityChange(quantity + 1)}
+              disabled={quantity >= product.stock}
+              className='flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 text-gray-600 transition-colors hover:bg-gray-300 disabled:cursor-not-allowed disabled:opacity-50'
+            >
+              +
+            </button>
+          </div>
+        )}
+
         <div className='flex space-x-2'>
           <button
+            onClick={handleAddToCart}
+            disabled={product.stock === 0 || addToCartMutation.isPending}
             className='flex-1 rounded-lg bg-[#dda700] px-4 py-2 font-medium text-white transition-colors hover:bg-[#cc9600] disabled:cursor-not-allowed disabled:opacity-50'
-            disabled={product.stock === 0}
           >
-            {product.stock > 0 ? 'Add to Cart' : 'Out of Stock'}
+            {addToCartMutation.isPending
+              ? 'Adding...'
+              : product.stock > 0
+                ? 'Add to Cart'
+                : 'Out of Stock'}
           </button>
         </div>
       </div>
