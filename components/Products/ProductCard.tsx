@@ -1,8 +1,9 @@
 'use client'
 
 import { useAddToCart } from '@/hooks/use-carts'
+import { formatPrice } from '@/lib/currency'
 import { Product } from '@/types/product'
-import { ChevronLeft, ChevronRight, Minus, Plus } from 'lucide-react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
@@ -40,14 +41,6 @@ const ProductCard = ({ product }: ProductCardProps) => {
     }
   }
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2,
-    }).format(price)
-  }
-
   const handleAddToCart = async () => {
     try {
       await addToCartMutation.mutateAsync({
@@ -61,12 +54,6 @@ const ProductCard = ({ product }: ProductCardProps) => {
 
   const handelMoreDetail = async () => {
     router.push(`/product/${product.id}`)
-  }
-
-  const handleQuantityChange = (newQuantity: number) => {
-    if (newQuantity >= 1 && newQuantity <= product.stock) {
-      setQuantity(newQuantity)
-    }
   }
 
   return (
@@ -134,38 +121,12 @@ const ProductCard = ({ product }: ProductCardProps) => {
           {product.name}
         </h3>
 
-        {product.description && (
-          <p className='mb-3 line-clamp-2 text-sm text-gray-600'>
-            {product.description}
-          </p>
-        )}
-
         <div className='mb-3 flex items-center justify-between'>
           <span className='text-2xl font-bold text-[#dda700]'>
             {formatPrice(product.price)}
           </span>
           <span className='text-sm text-gray-500'>{product.stock} left</span>
         </div>
-
-        {product.stock > 0 && (
-          <div className='mb-3 flex items-center justify-center space-x-3'>
-            <div
-              onClick={() => handleQuantityChange(quantity - 1)}
-              className='flex-center flex size-8 cursor-pointer items-center justify-center rounded-full bg-gray-100 text-gray-500 transition-colors hover:bg-gray-300 disabled:cursor-not-allowed disabled:opacity-50'
-            >
-              <Minus className='size-4' />
-            </div>
-            <span className='min-w-[2rem] text-center font-medium'>
-              {quantity}
-            </span>
-            <div
-              onClick={() => handleQuantityChange(quantity + 1)}
-              className='flex-center flex size-8 cursor-pointer items-center justify-center rounded-full bg-gray-100 text-gray-500 transition-colors hover:bg-gray-300 disabled:cursor-not-allowed disabled:opacity-50'
-            >
-              <Plus className='size-4' />
-            </div>
-          </div>
-        )}
 
         <div className='flex space-x-2'>
           <button
