@@ -273,7 +273,7 @@ export default function ProductPage({
 
   if (error) {
     return (
-      <div className='flex min-h-screen flex-col items-center'>
+      <div className='flex min-h-full flex-col items-center'>
         <Header />
         <Menu />
         <div className='w-full bg-[#fff9df] p-5'>

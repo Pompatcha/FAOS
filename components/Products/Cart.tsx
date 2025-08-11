@@ -10,6 +10,7 @@ import {
   useRemoveFromCart,
   useClearCart,
 } from '@/hooks/use-carts'
+import { useRouter } from 'next/navigation'
 
 interface CartProps {
   isOpen: boolean
@@ -18,7 +19,7 @@ interface CartProps {
 
 const Cart = ({ isOpen, onClose }: CartProps) => {
   const { profile } = useAuth()
-
+  const router = useRouter()
   const { data: items = [], isLoading, error } = useCartDetails()
   const updateCartItem = useUpdateCartItem()
   const removeFromCart = useRemoveFromCart()
@@ -133,7 +134,10 @@ const Cart = ({ isOpen, onClose }: CartProps) => {
               {items.map((item) => (
                 <div
                   key={item.id}
-                  className='flex items-center gap-3 border-b border-gray-200 p-3'
+                  onClick={() => {
+                    router.push(`/product/${item?.product_id}`)
+                  }}
+                  className='flex cursor-pointer items-center gap-3 border-b border-gray-200 p-3'
                 >
                   <Image
                     src={item.product_image || '/placeholder.svg'}
