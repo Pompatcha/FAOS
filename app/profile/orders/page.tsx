@@ -146,8 +146,8 @@ export default function CustomerOrdersPage() {
       <Menu />
 
       <div className='w-full p-5'>
-        <div className='min-h-screen w-full py-6'>
-          <div className='container mx-auto max-w-4xl px-4'>
+        <div className='w-full py-6'>
+          <div className='container mx-auto max-w-6xl px-4'>
             <div className='mb-6'>
               <div className='mb-4 flex items-center gap-3'>
                 <Button

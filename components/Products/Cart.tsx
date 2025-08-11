@@ -134,12 +134,12 @@ const Cart = ({ isOpen, onClose }: CartProps) => {
               {items.map((item) => (
                 <div
                   key={item.id}
-                  onClick={() => {
-                    router.push(`/product/${item?.product_id}`)
-                  }}
                   className='flex cursor-pointer items-center gap-3 border-b border-gray-200 p-3'
                 >
                   <Image
+                    onClick={() => {
+                      router.push(`/product/${item?.product_id}`)
+                    }}
                     src={item.product_image || '/placeholder.svg'}
                     alt={item.product_name}
                     width={48}
@@ -216,6 +216,10 @@ const Cart = ({ isOpen, onClose }: CartProps) => {
 
             <div className='space-y-2'>
               <button
+                onClick={() => {
+                  onClose()
+                  router.push('/checkout')
+                }}
                 className='w-full rounded-lg bg-[#e2b007] py-3 font-medium text-white transition-colors hover:bg-[#f3d27a] disabled:opacity-50'
                 disabled={updateCartItem.isPending || removeFromCart.isPending}
               >
