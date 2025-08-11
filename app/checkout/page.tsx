@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -7,8 +7,8 @@ import { loadStripe } from '@stripe/stripe-js'
 import { z } from 'zod'
 import Image from 'next/image'
 import { useAuth } from '@/contexts/AuthContext'
-import { useCartDetails, useCartSummary, useClearCart } from '@/hooks/use-carts'
-import { useCreateOrder } from '@/hooks/use-orders'
+import { useCartDetails, useCartSummary } from '@/hooks/use-carts'
+import { createStripeInstantOrder } from '@/actions/orders'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -46,10 +46,9 @@ type CheckoutFormData = z.infer<typeof checkoutSchema>
 
 export default function CheckoutPage() {
   const router = useRouter()
-  const { user, profile } = useAuth()
+  const { profile } = useAuth()
   const { data: cartDetails, isLoading: cartLoading } = useCartDetails()
   const { data: cartSummary } = useCartSummary()
-  const clearCartMutation = useClearCart()
   const [isProcessing, setIsProcessing] = useState(false)
 
   const form = useForm<CheckoutFormData>({
@@ -61,72 +60,26 @@ export default function CheckoutPage() {
     },
   })
 
-  const createOrderMutation = useCreateOrder()
-
-  useEffect(() => {
-    if (!user || !profile) {
-      router.push('/')
-      return
-    }
-
-    if (!cartLoading && (!cartDetails || cartDetails.length === 0)) {
-      toast.error('Your cart is empty')
-      router.push('/')
-      return
-    }
-  }, [user, profile, cartDetails, cartLoading, router])
-
-  const handleStripePayment = async (
-    orderId: string,
-    paymentMethod: 'card' | 'qr',
-  ) => {
+  const handleCheckoutRedirect = async (sessionId: string) => {
     try {
-      setIsProcessing(true)
       const stripe = await stripePromise
 
       if (!stripe) {
         throw new Error('Stripe failed to load')
       }
 
-      const response = await fetch('/api/checkout/create-payment-intent', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          orderId,
-          amount: cartSummary?.total_amount || 0,
-          paymentMethod,
-        }),
+      const { error } = await stripe.redirectToCheckout({
+        sessionId: sessionId,
       })
 
-      const { clientSecret } = await response.json()
-
-      if (paymentMethod === 'qr') {
-        const { error } = await stripe.confirmPromptPayPayment(clientSecret, {
-          payment_method: 'promptpay',
-        })
-
-        if (error) {
-          throw error
-        }
-      } else {
-        const { error } = await stripe.redirectToCheckout({
-          sessionId: clientSecret,
-        })
-
-        if (error) {
-          throw error
-        }
+      if (error) {
+        throw error
       }
-
-      await clearCartMutation.mutateAsync()
-      toast.success('Order created successfully!')
-      router.push(`/profile/orders`)
     } catch (error) {
-      console.error('Payment error:', error)
-      toast.error(error instanceof Error ? error.message : 'Payment failed')
-    } finally {
+      console.error('Checkout redirect error:', error)
+      toast.error(
+        error instanceof Error ? error.message : 'Payment redirect failed',
+      )
       setIsProcessing(false)
     }
   }
@@ -154,9 +107,19 @@ export default function CheckoutPage() {
         })),
       }
 
-      const result = await createOrderMutation.mutateAsync(orderData)
-      if (result.data) {
-        await handleStripePayment(result.data.id, data.payment_method)
+      const result = await createStripeInstantOrder(
+        orderData,
+        data.payment_method,
+      )
+
+      if (result.success && result.data) {
+        if (result.data.sessionId) {
+          await handleCheckoutRedirect(result.data.sessionId)
+        } else {
+          throw new Error('Invalid payment data received')
+        }
+      } else {
+        throw new Error(result.error || 'Failed to create order')
       }
     } catch (error) {
       console.error('Order creation error:', error)
@@ -344,10 +307,10 @@ export default function CheckoutPage() {
                                   <QrCode className='h-5 w-5' />
                                   <div>
                                     <p className='font-medium'>
-                                      QR Code Payment
+                                      PromptPay QR Code
                                     </p>
                                     <p className='text-muted-foreground text-sm'>
-                                      Pay with PromptPay QR code
+                                      Pay with PromptPay via Stripe Checkout
                                     </p>
                                   </div>
                                 </label>
@@ -363,16 +326,18 @@ export default function CheckoutPage() {
                       type='submit'
                       className='w-full'
                       size='lg'
-                      disabled={isProcessing || createOrderMutation.isPending}
+                      disabled={isProcessing}
                     >
-                      {isProcessing || createOrderMutation.isPending ? (
+                      {isProcessing ? (
                         <>
                           <Loader2 className='mr-2 h-4 w-4 animate-spin' />
                           Processing...
                         </>
                       ) : (
                         <>
-                          Complete Order - ฿
+                          {form.watch('payment_method') === 'qr'
+                            ? 'Pay with PromptPay - ฿'
+                            : 'Complete Order - ฿'}
                           {cartSummary?.total_amount.toLocaleString()}
                         </>
                       )}

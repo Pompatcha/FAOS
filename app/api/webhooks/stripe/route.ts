@@ -3,7 +3,7 @@ import Stripe from 'stripe'
 import { updateOrderStatus } from '@/actions/orders'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-06-20',
+  apiVersion: '2025-07-30.basil',
 })
 
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!
@@ -28,7 +28,11 @@ export async function POST(req: NextRequest) {
         const orderId = session.metadata?.orderId
 
         if (orderId) {
-          await updateOrderStatus(orderId, 'processing', 'Payment completed via Stripe Checkout')
+          await updateOrderStatus(
+            orderId,
+            'processing',
+            'Payment completed via Stripe Checkout',
+          )
           console.log(`Order ${orderId} payment completed`)
         }
         break
@@ -39,7 +43,11 @@ export async function POST(req: NextRequest) {
         const orderId = paymentIntent.metadata?.orderId
 
         if (orderId) {
-          await updateOrderStatus(orderId, 'processing', 'Payment completed via Stripe Payment Intent')
+          await updateOrderStatus(
+            orderId,
+            'processing',
+            'Payment completed via Stripe Payment Intent',
+          )
           console.log(`Order ${orderId} payment succeeded`)
         }
         break
@@ -65,7 +73,7 @@ export async function POST(req: NextRequest) {
     console.error('Webhook handler error:', error)
     return NextResponse.json(
       { error: 'Webhook handler failed' },
-      { status: 500 }
+      { status: 500 },
     )
   }
 }

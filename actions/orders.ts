@@ -243,6 +243,70 @@ const getOrderStatistics = async (customerId: string) => {
   return stats
 }
 
+const createStripeInstantOrder = async (
+  orderData: CreateOrderData,
+  paymentMethod: 'card' | 'qr' = 'card',
+) => {
+  try {
+    const orderResult = await createOrder(orderData)
+
+    if (!orderResult.success || !orderResult.data) {
+      return {
+        error: 'Failed to create order',
+        details: orderResult.error,
+      }
+    }
+
+    const order = orderResult.data
+
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/api/checkout/create-payment-intent`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          orderId: order.id,
+          amount: orderData.total_amount,
+          paymentMethod,
+          metadata: {
+            orderId: order.id,
+            customerAddress: orderData.shipping_address,
+          },
+        }),
+      },
+    )
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('Payment API Error:', errorText)
+      return {
+        error: 'Failed to create payment session',
+        details: `Payment service error: ${response.status}`,
+      }
+    }
+
+    const paymentData = await response.json()
+
+    return {
+      success: true,
+      data: {
+        order,
+        sessionId: paymentData.sessionId,
+        type: 'checkout_session',
+        paymentMethod,
+      },
+    }
+  } catch (error) {
+    console.error('Error creating instant order:', error)
+    return {
+      error: 'Failed to create instant order',
+      details: error instanceof Error ? error.message : 'Unknown error',
+    }
+  }
+}
+
 export {
   getCustomerOrders,
   getOrderById,
@@ -250,4 +314,5 @@ export {
   updateOrderStatus,
   cancelOrder,
   getOrderStatistics,
+  createStripeInstantOrder,
 }

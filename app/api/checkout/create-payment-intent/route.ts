@@ -2,22 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-06-20',
+  apiVersion: '2025-07-30.basil',
 })
 
 export async function POST(request: NextRequest) {
   try {
-    const { orderId, amount, paymentMethod } = await request.json()
+    const { orderId, amount, paymentMethod, metadata } = await request.json()
 
-    if (!orderId || !amount || !paymentMethod) {
-      return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
-      )
-    }
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
 
     if (paymentMethod === 'card') {
-      // Create Checkout Session for card payments
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ['card'],
         line_items: [
@@ -26,51 +20,87 @@ export async function POST(request: NextRequest) {
               currency: 'thb',
               product_data: {
                 name: `Order #${orderId}`,
-                description: 'Order from FAOS',
+                description: 'E-commerce order payment',
               },
-              unit_amount: Math.round(amount * 100), // Convert to smallest currency unit
+              unit_amount: Math.round(amount * 100),
             },
             quantity: 1,
           },
         ],
         mode: 'payment',
-        success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/checkout/success?session_id={CHECKOUT_SESSION_ID}&order_id=${orderId}`,
-        cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/checkout?cancelled=true`,
+        success_url: `${baseUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}&order_id=${orderId}`,
+        cancel_url: `${baseUrl}/checkout/cancel?order_id=${orderId}`,
         metadata: {
           orderId,
+          ...metadata,
         },
+        billing_address_collection: 'auto',
+        shipping_address_collection: {
+          allowed_countries: ['TH'],
+        },
+        customer_creation: 'always',
       })
 
       return NextResponse.json({
-        clientSecret: session.id,
-        paymentIntentId: session.payment_intent,
+        sessionId: session.id,
+        url: session.url,
+        success: true,
       })
     } else if (paymentMethod === 'qr') {
-      // Create Payment Intent for PromptPay QR code
-      const paymentIntent = await stripe.paymentIntents.create({
-        amount: Math.round(amount * 100), // Convert to smallest currency unit
-        currency: 'thb',
+      const session = await stripe.checkout.sessions.create({
         payment_method_types: ['promptpay'],
+        line_items: [
+          {
+            price_data: {
+              currency: 'thb',
+              product_data: {
+                name: orderId,
+              },
+              unit_amount: Math.round(amount * 100),
+            },
+            quantity: 1,
+          },
+        ],
+        mode: 'payment',
+        success_url: `${baseUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}&order_id=${orderId}`,
+        cancel_url: `${baseUrl}/checkout/cancel?order_id=${orderId}`,
         metadata: {
           orderId,
+          ...metadata,
         },
       })
 
       return NextResponse.json({
-        clientSecret: paymentIntent.client_secret,
-        paymentIntentId: paymentIntent.id,
+        sessionId: session.id,
+        url: session.url,
+        success: true,
       })
+    } else {
+      return NextResponse.json(
+        { error: 'Invalid payment method' },
+        { status: 400 },
+      )
+    }
+  } catch (error) {
+    console.error('Stripe API Error:', error)
+
+    if (error instanceof Stripe.errors.StripeError) {
+      return NextResponse.json(
+        {
+          error: 'Payment processing error',
+          details: error.message,
+          type: error.type,
+        },
+        { status: 400 },
+      )
     }
 
     return NextResponse.json(
-      { error: 'Invalid payment method' },
-      { status: 400 }
-    )
-  } catch (error) {
-    console.error('Error creating payment intent:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      {
+        error: 'Internal server error',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 },
     )
   }
 }

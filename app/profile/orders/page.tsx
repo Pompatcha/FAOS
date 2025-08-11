@@ -75,7 +75,7 @@ export default function CustomerOrdersPage() {
         )
       case 'processing':
         return (
-          <Badge variant='default' className='bg-blue-500'>
+          <Badge variant='default' className='bg-blue-500 text-white'>
             Processing
           </Badge>
         )
