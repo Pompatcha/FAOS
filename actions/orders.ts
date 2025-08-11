@@ -3,15 +3,26 @@
 import { createClient } from '@/utils/supabase/client'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
+import { generateCartHash } from '@/lib/cart-hash'
 
 export interface Order {
   id: string
   order_number: string
   customer_id: string
-  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled'
+  status:
+    | 'pending'
+    | 'processing'
+    | 'shipped'
+    | 'delivered'
+    | 'cancelled'
+    | 'expired'
   total_amount: number
   shipping_address: string
   notes?: string
+  cart_hash?: string
+  payment_link?: string
+  payment_session_id?: string
+  session_expires_at?: string
   created_at: string
   updated_at: string
   shipped_at?: string
@@ -76,6 +87,7 @@ const getCustomerOrders = async (
     `,
     )
     .eq('customer_id', customerId)
+    .neq('status', 'expired')
     .order('created_at', { ascending: false })
 
   if (error) {
@@ -111,7 +123,10 @@ const getOrderById = async (
   return data
 }
 
-const createOrder = async (orderData: CreateOrderData) => {
+const createOrderWithPaymentLink = async (
+  orderData: CreateOrderData,
+  paymentMethod: 'card' | 'qr' = 'card',
+) => {
   const supabase = createClient()
 
   const validatedFields = orderSchema.safeParse(orderData)
@@ -125,10 +140,22 @@ const createOrder = async (orderData: CreateOrderData) => {
 
   const { items, ...orderFields } = validatedFields.data
 
+  const cartHash = generateCartHash(items)
+
   try {
+    const sessionExpiresAt = new Date()
+    sessionExpiresAt.setDate(sessionExpiresAt.getDate() + 7)
+
     const { data: order, error: orderError } = await supabase
       .from('orders')
-      .insert([orderFields])
+      .insert([
+        {
+          ...orderFields,
+          cart_hash: cartHash,
+          session_expires_at: sessionExpiresAt.toISOString(),
+          status: 'pending',
+        },
+      ])
       .select()
       .single()
 
@@ -149,8 +176,61 @@ const createOrder = async (orderData: CreateOrderData) => {
       throw itemsError
     }
 
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/api/checkout/create-payment-intent`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          orderId: order.id,
+          amount: orderData.total_amount,
+          paymentMethod,
+          metadata: {
+            orderId: order.id,
+            customerAddress: orderData.shipping_address,
+          },
+        }),
+      },
+    )
+
+    if (!response.ok) {
+      throw new Error(`Payment API Error: ${response.status}`)
+    }
+
+    const paymentData = await response.json()
+
+    const { data: updatedOrder, error: updateError } = await supabase
+      .from('orders')
+      .update({
+        payment_link: paymentData.url,
+        payment_session_id: paymentData.sessionId,
+      })
+      .eq('id', order.id)
+      .select()
+      .single()
+
+    if (updateError) {
+      console.warn('Failed to update payment link:', updateError)
+    }
+
+    await supabase.from('order_status_history').insert([
+      {
+        order_id: order.id,
+        status: 'pending',
+        notes: 'Order created with payment link',
+      },
+    ])
+
     revalidatePath('/orders')
-    return { data: order, success: true }
+
+    return {
+      data: updatedOrder || order,
+      success: true,
+      paymentLink: paymentData.url,
+      sessionId: paymentData.sessionId,
+    }
   } catch (error) {
     console.error('Error creating order:', error)
     return {
@@ -214,6 +294,98 @@ const updateOrderStatus = async (
   }
 }
 
+const getOrderPaymentLink = async (orderId: string): Promise<string | null> => {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('orders')
+    .select('payment_link, status')
+    .eq('id', orderId)
+    .single()
+
+  if (error || !data) {
+    return null
+  }
+
+  if (data.status !== 'pending') {
+    return null
+  }
+
+  return data.payment_link
+}
+
+const refreshPaymentLink = async (
+  orderId: string,
+  paymentMethod: 'card' | 'qr' = 'card',
+) => {
+  const supabase = createClient()
+
+  try {
+    const { data: order, error: orderError } = await supabase
+      .from('orders')
+      .select('*, order_items(*)')
+      .eq('id', orderId)
+      .eq('status', 'pending')
+      .single()
+
+    if (orderError || !order) {
+      return { error: 'Order not found or not pending' }
+    }
+
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/api/checkout/create-payment-intent`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          orderId: order.id,
+          amount: order.total_amount,
+          paymentMethod,
+          metadata: {
+            orderId: order.id,
+            customerAddress: order.shipping_address,
+          },
+        }),
+      },
+    )
+
+    if (!response.ok) {
+      throw new Error(`Payment API Error: ${response.status}`)
+    }
+
+    const paymentData = await response.json()
+
+    const { error: updateError } = await supabase
+      .from('orders')
+      .update({
+        payment_link: paymentData.url,
+        payment_session_id: paymentData.sessionId,
+        session_expires_at: new Date(
+          Date.now() + 7 * 24 * 60 * 60 * 1000,
+        ).toISOString(),
+      })
+      .eq('id', orderId)
+
+    if (updateError) {
+      throw updateError
+    }
+
+    return {
+      success: true,
+      paymentLink: paymentData.url,
+      sessionId: paymentData.sessionId,
+    }
+  } catch (error) {
+    console.error('Error refreshing payment link:', error)
+    return {
+      error: 'Failed to refresh payment link',
+      details: error instanceof Error ? error.message : 'Unknown error',
+    }
+  }
+}
+
 const cancelOrder = async (orderId: string, reason?: string) => {
   return updateOrderStatus(orderId, 'cancelled', reason)
 }
@@ -225,6 +397,7 @@ const getOrderStatistics = async (customerId: string) => {
     .from('orders')
     .select('status')
     .eq('customer_id', customerId)
+    .neq('status', 'expired') // ไม่นับ expired orders
 
   if (error) {
     console.error('Error fetching order statistics:', error)
@@ -248,52 +421,21 @@ const createStripeInstantOrder = async (
   paymentMethod: 'card' | 'qr' = 'card',
 ) => {
   try {
-    const orderResult = await createOrder(orderData)
+    const result = await createOrderWithPaymentLink(orderData, paymentMethod)
 
-    if (!orderResult.success || !orderResult.data) {
+    if (!result.success || !result.data) {
       return {
         error: 'Failed to create order',
-        details: orderResult.error,
+        details: result.error,
       }
     }
-
-    const order = orderResult.data
-
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/api/checkout/create-payment-intent`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          orderId: order.id,
-          amount: orderData.total_amount,
-          paymentMethod,
-          metadata: {
-            orderId: order.id,
-            customerAddress: orderData.shipping_address,
-          },
-        }),
-      },
-    )
-
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error('Payment API Error:', errorText)
-      return {
-        error: 'Failed to create payment session',
-        details: `Payment service error: ${response.status}`,
-      }
-    }
-
-    const paymentData = await response.json()
 
     return {
       success: true,
       data: {
-        order,
-        sessionId: paymentData.sessionId,
+        order: result.data,
+        paymentLink: result.paymentLink,
+        sessionId: result.sessionId,
         type: 'checkout_session',
         paymentMethod,
       },
@@ -310,8 +452,10 @@ const createStripeInstantOrder = async (
 export {
   getCustomerOrders,
   getOrderById,
-  createOrder,
+  createOrderWithPaymentLink,
   updateOrderStatus,
+  getOrderPaymentLink,
+  refreshPaymentLink,
   cancelOrder,
   getOrderStatistics,
   createStripeInstantOrder,

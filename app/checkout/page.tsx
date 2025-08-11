@@ -3,11 +3,10 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { loadStripe } from '@stripe/stripe-js'
 import { z } from 'zod'
 import Image from 'next/image'
 import { useAuth } from '@/contexts/AuthContext'
-import { useCartDetails, useCartSummary } from '@/hooks/use-carts'
+import { useCartDetails, useCartSummary, useClearCart } from '@/hooks/use-carts'
 import { createStripeInstantOrder } from '@/actions/orders'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -23,16 +22,21 @@ import { Textarea } from '@/components/ui/textarea'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
-import { CreditCard, QrCode, Loader2, ArrowLeft } from 'lucide-react'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import {
+  CreditCard,
+  QrCode,
+  Loader2,
+  ArrowLeft,
+  CheckCircle,
+  Copy,
+  ExternalLink,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { Loading } from '@/components/Layout/Loading'
 import { Header } from '@/components/Layout/Header'
 import { Menu } from '@/components/Layout/Menu'
 import { Footer } from '@/components/Layout/Footer'
-
-const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '',
-)
 
 const checkoutSchema = z.object({
   shipping_address: z.string().min(1, 'Shipping address is required'),
@@ -49,7 +53,13 @@ export default function CheckoutPage() {
   const { profile } = useAuth()
   const { data: cartDetails, isLoading: cartLoading } = useCartDetails()
   const { data: cartSummary } = useCartSummary()
+  const clearCartMutation = useClearCart()
   const [isProcessing, setIsProcessing] = useState(false)
+  const [orderCreated, setOrderCreated] = useState<{
+    orderId: string
+    paymentLink: string
+    orderNumber: string
+  } | null>(null)
 
   const form = useForm<CheckoutFormData>({
     resolver: zodResolver(checkoutSchema),
@@ -60,27 +70,20 @@ export default function CheckoutPage() {
     },
   })
 
-  const handleCheckoutRedirect = async (sessionId: string) => {
+  const copyPaymentLink = async () => {
+    if (!orderCreated?.paymentLink) return
+
     try {
-      const stripe = await stripePromise
-
-      if (!stripe) {
-        throw new Error('Stripe failed to load')
-      }
-
-      const { error } = await stripe.redirectToCheckout({
-        sessionId: sessionId,
-      })
-
-      if (error) {
-        throw error
-      }
+      await navigator.clipboard.writeText(orderCreated.paymentLink)
+      toast.success('Payment link copied to clipboard!')
     } catch (error) {
-      console.error('Checkout redirect error:', error)
-      toast.error(
-        error instanceof Error ? error.message : 'Payment redirect failed',
-      )
-      setIsProcessing(false)
+      toast.error('Failed to copy link')
+    }
+  }
+
+  const openPaymentLink = () => {
+    if (orderCreated?.paymentLink) {
+      window.open(orderCreated.paymentLink, '_blank')
     }
   }
 
@@ -113,11 +116,15 @@ export default function CheckoutPage() {
       )
 
       if (result.success && result.data) {
-        if (result.data.sessionId) {
-          await handleCheckoutRedirect(result.data.sessionId)
-        } else {
-          throw new Error('Invalid payment data received')
-        }
+        await clearCartMutation.mutateAsync()
+
+        setOrderCreated({
+          orderId: result.data.order.id,
+          paymentLink: result.data.paymentLink,
+          orderNumber: result.data.order.order_number,
+        })
+
+        toast.success('Order created successfully! Cart has been cleared.')
       } else {
         throw new Error(result.error || 'Failed to create order')
       }
@@ -126,6 +133,7 @@ export default function CheckoutPage() {
       toast.error(
         error instanceof Error ? error.message : 'Failed to create order',
       )
+    } finally {
       setIsProcessing(false)
     }
   }
@@ -134,8 +142,105 @@ export default function CheckoutPage() {
     return <Loading />
   }
 
+  if (orderCreated) {
+    return (
+      <div className='flex min-h-screen flex-col items-center bg-[#fff9df]'>
+        <Header />
+        <Menu />
+
+        <div className='flex w-full flex-1 items-center justify-center p-5'>
+          <Card className='w-full max-w-md'>
+            <CardHeader className='text-center'>
+              <div className='mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-100'>
+                <CheckCircle className='h-6 w-6 text-green-600' />
+              </div>
+              <CardTitle className='text-2xl text-green-600'>
+                Order Created!
+              </CardTitle>
+            </CardHeader>
+            <CardContent className='space-y-4'>
+              <div className='text-center'>
+                <p className='text-lg font-semibold'>
+                  Order #{orderCreated.orderNumber}
+                </p>
+                <p className='text-muted-foreground mt-2'>
+                  Your order has been created successfully. Your cart has been
+                  cleared.
+                </p>
+              </div>
+
+              <Alert>
+                <AlertDescription>
+                  <strong>Payment Link:</strong> You can pay now or save this
+                  link to pay later.
+                </AlertDescription>
+              </Alert>
+
+              <div className='space-y-2'>
+                <Button onClick={openPaymentLink} className='w-full' size='lg'>
+                  <ExternalLink className='mr-2 h-4 w-4' />
+                  Pay Now
+                </Button>
+
+                <Button
+                  variant='outline'
+                  onClick={copyPaymentLink}
+                  className='w-full'
+                >
+                  <Copy className='mr-2 h-4 w-4' />
+                  Copy Payment Link
+                </Button>
+
+                <Button
+                  variant='outline'
+                  onClick={() => router.push('/profile/orders')}
+                  className='w-full'
+                >
+                  View My Orders
+                </Button>
+
+                <Button
+                  variant='ghost'
+                  onClick={() => router.push('/')}
+                  className='w-full'
+                >
+                  Continue Shopping
+                </Button>
+              </div>
+
+              <div className='text-muted-foreground text-center text-xs'>
+                Payment link is valid for 7 days
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Footer className='mt-5 text-black' />
+      </div>
+    )
+  }
+
   if (!cartDetails || cartDetails.length === 0) {
-    return null
+    return (
+      <div className='flex min-h-screen flex-col items-center bg-[#fff9df]'>
+        <Header />
+        <Menu />
+        <div className='flex flex-1 items-center justify-center'>
+          <Card className='w-full max-w-md'>
+            <CardContent className='p-6 text-center'>
+              <h2 className='mb-2 text-xl font-semibold'>Cart is Empty</h2>
+              <p className='text-muted-foreground mb-4'>
+                Add some items to your cart before checkout
+              </p>
+              <Button onClick={() => router.push('/')}>
+                Continue Shopping
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+        <Footer className='mt-5 text-black' />
+      </div>
+    )
   }
 
   return (
@@ -146,7 +251,7 @@ export default function CheckoutPage() {
       <div className='w-full p-5'>
         <div className='container mx-auto px-4 py-8'>
           <div className='mb-8'>
-            <div className='flex'>
+            <div className='flex items-center gap-4'>
               <Button
                 variant='ghost'
                 size='sm'
@@ -156,12 +261,13 @@ export default function CheckoutPage() {
                 <ArrowLeft className='h-4 w-4' />
               </Button>
 
-              <h1 className='text-2xl font-bold text-gray-900'>Checkout</h1>
+              <div>
+                <h1 className='text-2xl font-bold text-gray-900'>Checkout</h1>
+                <p className='text-muted-foreground mt-2'>
+                  Create your order and get a payment link
+                </p>
+              </div>
             </div>
-
-            <p className='text-muted-foreground mt-2'>
-              Review your order and complete your purchase
-            </p>
           </div>
 
           <div className='grid grid-cols-1 gap-8 lg:grid-cols-2'>
@@ -273,7 +379,7 @@ export default function CheckoutPage() {
                       name='payment_method'
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Payment Method</FormLabel>
+                          <FormLabel>Preferred Payment Method</FormLabel>
                           <FormControl>
                             <RadioGroup
                               onValueChange={field.onChange}
@@ -292,7 +398,7 @@ export default function CheckoutPage() {
                                       Credit/Debit Card
                                     </p>
                                     <p className='text-muted-foreground text-sm'>
-                                      Pay securely with your card via Stripe
+                                      Pay with your card via Stripe
                                     </p>
                                   </div>
                                 </label>
@@ -310,7 +416,7 @@ export default function CheckoutPage() {
                                       PromptPay QR Code
                                     </p>
                                     <p className='text-muted-foreground text-sm'>
-                                      Pay with PromptPay via Stripe Checkout
+                                      Pay with PromptPay
                                     </p>
                                   </div>
                                 </label>
@@ -322,6 +428,15 @@ export default function CheckoutPage() {
                       )}
                     />
 
+                    <Alert>
+                      <AlertDescription>
+                        <strong>How it works:</strong> We&apos;ll create your
+                        order and clear your cart immediately. You&apos;ll get a
+                        payment link that you can use now or later (valid for 7
+                        days).
+                      </AlertDescription>
+                    </Alert>
+
                     <Button
                       type='submit'
                       className='w-full'
@@ -331,13 +446,11 @@ export default function CheckoutPage() {
                       {isProcessing ? (
                         <>
                           <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                          Processing...
+                          Creating Order...
                         </>
                       ) : (
                         <>
-                          {form.watch('payment_method') === 'qr'
-                            ? 'Pay with PromptPay - ฿'
-                            : 'Complete Order - ฿'}
+                          Create Order - ฿
                           {cartSummary?.total_amount.toLocaleString()}
                         </>
                       )}
