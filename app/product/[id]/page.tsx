@@ -14,6 +14,7 @@ import { Product } from '@/types/product'
 import { useQuery } from '@tanstack/react-query'
 import { useAddToCart } from '@/hooks/use-carts'
 import { use } from 'react'
+import { Loading } from '@/components/Layout/Loading'
 
 interface ProductImageSliderProps {
   images: { image_url: string; alt_text?: string }[]
@@ -195,7 +196,6 @@ const ProductDetail = ({ product }: ProductDetailProps) => {
       )}
 
       <div className='flex items-center gap-2 text-sm text-gray-600'>
-        <span>Stock:</span>
         <span
           className={`font-medium ${
             product.stock <= 10 ? 'text-red-600' : 'text-green-600'
@@ -268,19 +268,7 @@ export default function ProductPage({
   })
 
   if (isLoading) {
-    return (
-      <div className='flex min-h-screen flex-col items-center'>
-        <Header />
-        <Menu />
-        <div className='w-full bg-[#fff9df] p-5'>
-          <Banner />
-          <div className='flex h-96 items-center justify-center'>
-            <div className='h-32 w-32 animate-spin rounded-full border-b-2 border-[#dda700]'></div>
-          </div>
-        </div>
-        <Footer />
-      </div>
-    )
+    return <Loading />
   }
 
   if (error) {

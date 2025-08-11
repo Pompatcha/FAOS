@@ -1,9 +1,11 @@
 'use client'
 import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
+import { Input } from '@/components/ui/input'
 import {
   Package,
   Eye,
@@ -13,124 +15,54 @@ import {
   ArrowLeft,
   Calendar,
   MapPin,
+  Search,
+  Clock,
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { Header } from '@/components/Layout/Header'
 import { Menu } from '@/components/Layout/Menu'
 import { Footer } from '@/components/Layout/Footer'
-
-type OrderStatus =
-  | 'pending'
-  | 'processing'
-  | 'shipped'
-  | 'delivered'
-  | 'cancelled'
-
-interface OrderItem {
-  id: string
-  name: string
-  image: string
-  quantity: number
-  price: number
-}
-
-interface CustomerOrder {
-  id: string
-  orderDate: string
-  items: OrderItem[]
-  total: number
-  status: OrderStatus
-  shippingAddress: string
-  trackingNumber?: string
-}
+import {
+  OrderWithDetails,
+  getCustomerOrders,
+  getOrderStatistics,
+  Order,
+} from '@/actions/orders'
+import { formatDate } from '@/lib/date'
+import { formatPrice } from '@/lib/currency'
+import { Loading } from '@/components/Layout/Loading'
 
 export default function CustomerOrdersPage() {
   const router = useRouter()
-  const { profile } = useAuth()
-
-  const [orders] = useState<CustomerOrder[]>([
-    {
-      id: 'ORD-001',
-      orderDate: '2024-01-15',
-      items: [
-        {
-          id: '1',
-          name: 'Extra Virgin Olive Oil 500ml',
-          image: '/placeholder.jpg',
-          quantity: 2,
-          price: 450,
-        },
-        {
-          id: '2',
-          name: 'Organic Honey 250g',
-          image: '/placeholder.jpg',
-          quantity: 1,
-          price: 320,
-        },
-      ],
-      total: 1220,
-      status: 'delivered',
-      shippingAddress:
-        '123 Moo 5 Sukhumvit Soi 21 Klongtan Wattana Bangkok 10110',
-      trackingNumber: 'TH1234567890',
-    },
-    {
-      id: 'ORD-002',
-      orderDate: '2024-01-20',
-      items: [
-        {
-          id: '3',
-          name: 'Premium Olive Oil 750ml',
-          image: '/placeholder.jpg',
-          quantity: 1,
-          price: 680,
-        },
-      ],
-      total: 680,
-      status: 'shipped',
-      shippingAddress:
-        '123 Moo 5 Sukhumvit Soi 21 Klongtan Wattana Bangkok 10110',
-      trackingNumber: 'TH0987654321',
-    },
-    {
-      id: 'ORD-003',
-      orderDate: '2024-01-22',
-      items: [
-        {
-          id: '4',
-          name: 'Wild Honey 500g',
-          image: '/placeholder.jpg',
-          quantity: 1,
-          price: 550,
-        },
-        {
-          id: '5',
-          name: 'Organic Olive Oil 250ml',
-          image: '/placeholder.jpg',
-          quantity: 3,
-          price: 380,
-        },
-      ],
-      total: 1690,
-      status: 'processing',
-      shippingAddress:
-        '123 Moo 5 Sukhumvit Soi 21 Klongtan Wattana Bangkok 10110',
-    },
-  ])
+  const { user } = useAuth()
 
   const [searchTerm, setSearchTerm] = useState('')
-  const [selectedOrder, setSelectedOrder] = useState<CustomerOrder | null>(null)
+  const [selectedOrder, setSelectedOrder] = useState<OrderWithDetails | null>(
+    null,
+  )
+
+  const { data: orders = [], isLoading: ordersLoading } = useQuery({
+    queryKey: ['customer-orders', user?.id],
+    queryFn: () => getCustomerOrders(user!.id),
+    enabled: !!user?.id,
+  })
+
+  const { data: statistics } = useQuery({
+    queryKey: ['order-statistics', user?.id],
+    queryFn: () => getOrderStatistics(user!.id),
+    enabled: !!user?.id,
+  })
 
   const filteredOrders = orders.filter(
     (order) =>
-      order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.items.some((item) =>
-        item.name.toLowerCase().includes(searchTerm.toLowerCase()),
+      order.order_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.order_items.some((item) =>
+        item.product_name.toLowerCase().includes(searchTerm.toLowerCase()),
       ),
   )
 
-  const getStatusBadge = (status: OrderStatus) => {
+  const getStatusBadge = (status: Order['status']) => {
     switch (status) {
       case 'pending':
         return (
@@ -166,10 +98,10 @@ export default function CustomerOrdersPage() {
     }
   }
 
-  const getStatusIcon = (status: OrderStatus) => {
+  const getStatusIcon = (status: Order['status']) => {
     switch (status) {
       case 'pending':
-        return <Package className='h-4 w-4 text-orange-600' />
+        return <Clock className='h-4 w-4 text-orange-600' />
       case 'processing':
         return <Package className='h-4 w-4 text-blue-600' />
       case 'shipped':
@@ -183,10 +115,10 @@ export default function CustomerOrdersPage() {
     }
   }
 
-  const getStatusText = (status: OrderStatus) => {
+  const getStatusText = (status: Order['status']) => {
     switch (status) {
       case 'pending':
-        return 'Pending'
+        return 'Order Received'
       case 'processing':
         return 'Processing'
       case 'shipped':
@@ -198,6 +130,14 @@ export default function CustomerOrdersPage() {
       default:
         return 'Unknown Status'
     }
+  }
+
+  const generateTrackingNumber = (orderNumber: string) => {
+    return `TH${orderNumber.replace('ORD-', '')}TH`
+  }
+
+  if (ordersLoading) {
+    return <Loading />
   }
 
   return (
@@ -229,12 +169,25 @@ export default function CustomerOrdersPage() {
               </div>
             </div>
 
-            <div className='mb-6 grid grid-cols-2 gap-4 md:grid-cols-4'>
+            <div className='mb-6'>
+              <div className='relative bg-white'>
+                <Search className='absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400' />
+                <Input
+                  type='text'
+                  placeholder='Search orders by order number or product name...'
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className='pl-10'
+                />
+              </div>
+            </div>
+
+            <div className='mb-6 grid grid-cols-2 gap-4 md:grid-cols-5'>
               <Card>
                 <CardContent className='pt-6'>
                   <div className='text-center'>
                     <div className='text-2xl font-bold text-[#dda700]'>
-                      {orders.length}
+                      {statistics?.total || 0}
                     </div>
                     <p className='text-sm text-gray-600'>Total Orders</p>
                   </div>
@@ -243,8 +196,18 @@ export default function CustomerOrdersPage() {
               <Card>
                 <CardContent className='pt-6'>
                   <div className='text-center'>
+                    <div className='text-2xl font-bold text-orange-600'>
+                      {statistics?.pending || 0}
+                    </div>
+                    <p className='text-sm text-gray-600'>Pending</p>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className='pt-6'>
+                  <div className='text-center'>
                     <div className='text-2xl font-bold text-blue-600'>
-                      {orders.filter((o) => o.status === 'processing').length}
+                      {statistics?.processing || 0}
                     </div>
                     <p className='text-sm text-gray-600'>Processing</p>
                   </div>
@@ -254,7 +217,7 @@ export default function CustomerOrdersPage() {
                 <CardContent className='pt-6'>
                   <div className='text-center'>
                     <div className='text-2xl font-bold text-purple-600'>
-                      {orders.filter((o) => o.status === 'shipped').length}
+                      {statistics?.shipped || 0}
                     </div>
                     <p className='text-sm text-gray-600'>Shipped</p>
                   </div>
@@ -264,7 +227,7 @@ export default function CustomerOrdersPage() {
                 <CardContent className='pt-6'>
                   <div className='text-center'>
                     <div className='text-2xl font-bold text-green-600'>
-                      {orders.filter((o) => o.status === 'delivered').length}
+                      {statistics?.delivered || 0}
                     </div>
                     <p className='text-sm text-gray-600'>Delivered</p>
                   </div>
@@ -298,20 +261,18 @@ export default function CustomerOrdersPage() {
                           <div className='mb-4 flex items-center justify-between'>
                             <div className='flex items-center gap-3'>
                               <h3 className='text-lg font-semibold'>
-                                {order.id}
+                                {order.order_number}
                               </h3>
                               {getStatusBadge(order.status)}
                             </div>
                             <div className='flex items-center gap-1 text-sm text-gray-600'>
                               <Calendar className='h-4 w-4' />
-                              {new Date(order.orderDate).toLocaleDateString(
-                                'en-US',
-                              )}
+                              {formatDate(order.created_at)}
                             </div>
                           </div>
 
                           <div className='mb-4 space-y-3'>
-                            {order.items.map((item) => (
+                            {order.order_items.map((item) => (
                               <div
                                 key={item.id}
                                 className='flex items-center gap-3 rounded-lg bg-gray-50 p-3'
@@ -321,18 +282,16 @@ export default function CustomerOrdersPage() {
                                 </div>
                                 <div className='flex-1'>
                                   <h4 className='text-sm font-medium'>
-                                    {item.name}
+                                    {item.product_name}
                                   </h4>
                                   <p className='text-sm text-gray-600'>
-                                    Quantity: {item.quantity}
+                                    Quantity: {item.quantity} ×{' '}
+                                    {formatPrice(item.unit_price)}
                                   </p>
                                 </div>
                                 <div className='text-right'>
                                   <p className='font-medium'>
-                                    ฿
-                                    {(
-                                      item.price * item.quantity
-                                    ).toLocaleString()}
+                                    {formatPrice(item.total_price)}
                                   </p>
                                 </div>
                               </div>
@@ -342,19 +301,42 @@ export default function CustomerOrdersPage() {
                           <div className='mb-4'>
                             <div className='flex items-start gap-2 text-sm text-gray-600'>
                               <MapPin className='mt-0.5 h-4 w-4 flex-shrink-0' />
-                              <span>{order.shippingAddress}</span>
+                              <span>{order.shipping_address}</span>
                             </div>
                           </div>
 
-                          {order.trackingNumber && (
+                          {(order.status === 'shipped' ||
+                            order.status === 'delivered') && (
                             <div className='mb-4'>
                               <div className='rounded-lg border border-blue-200 bg-blue-50 p-3'>
                                 <div className='flex items-center gap-2'>
                                   <Truck className='h-4 w-4 text-blue-600' />
                                   <span className='text-sm font-medium text-blue-900'>
-                                    Tracking Number: {order.trackingNumber}
+                                    Tracking Number:{' '}
+                                    {generateTrackingNumber(order.order_number)}
                                   </span>
                                 </div>
+                                {order.shipped_at && (
+                                  <p className='mt-1 text-xs text-blue-700'>
+                                    Shipped on {formatDate(order.shipped_at)}
+                                  </p>
+                                )}
+                                {order.delivered_at && (
+                                  <p className='mt-1 text-xs text-green-700'>
+                                    Delivered on{' '}
+                                    {formatDate(order.delivered_at)}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          )}
+
+                          {order.notes && (
+                            <div className='mb-4'>
+                              <div className='rounded-lg border border-gray-200 bg-gray-50 p-3'>
+                                <p className='text-sm text-gray-700'>
+                                  <strong>Notes:</strong> {order.notes}
+                                </p>
                               </div>
                             </div>
                           )}
@@ -375,14 +357,12 @@ export default function CustomerOrdersPage() {
                               <div className='flex justify-between text-sm'>
                                 <span>Subtotal:</span>
                                 <span>
-                                  ฿
-                                  {order.items
-                                    .reduce(
-                                      (sum, item) =>
-                                        sum + item.price * item.quantity,
+                                  {formatPrice(
+                                    order.order_items.reduce(
+                                      (sum, item) => sum + item.total_price,
                                       0,
-                                    )
-                                    .toLocaleString()}
+                                    ),
+                                  )}
                                 </span>
                               </div>
                               <div className='flex justify-between text-sm'>
@@ -392,7 +372,7 @@ export default function CustomerOrdersPage() {
                               <Separator />
                               <div className='flex justify-between text-lg font-semibold text-[#dda700]'>
                                 <span>Total:</span>
-                                <span>฿{order.total.toLocaleString()}</span>
+                                <span>{formatPrice(order.total_amount)}</span>
                               </div>
                             </div>
 
@@ -407,30 +387,47 @@ export default function CustomerOrdersPage() {
                                 View Details
                               </Button>
 
-                              {order.status === 'shipped' &&
-                                order.trackingNumber && (
-                                  <Button
-                                    variant='outline'
-                                    size='sm'
-                                    className='w-full'
-                                    onClick={() =>
-                                      window.open(
-                                        `https://track.thailandpost.co.th/?trackNumber=${order.trackingNumber}`,
-                                        '_blank',
-                                      )
-                                    }
-                                  >
-                                    <Truck className='mr-2 h-4 w-4' />
-                                    Track Package
-                                  </Button>
-                                )}
+                              {(order.status === 'shipped' ||
+                                order.status === 'delivered') && (
+                                <Button
+                                  variant='outline'
+                                  size='sm'
+                                  className='w-full'
+                                  onClick={() =>
+                                    window.open(
+                                      `https://track.thailandpost.co.th/?trackNumber=${generateTrackingNumber(order.order_number)}`,
+                                      '_blank',
+                                    )
+                                  }
+                                >
+                                  <Truck className='mr-2 h-4 w-4' />
+                                  Track Package
+                                </Button>
+                              )}
 
                               {order.status === 'delivered' && (
                                 <Button
                                   size='sm'
                                   className='w-full bg-[#dda700] text-white hover:bg-[#c4950a]'
+                                  onClick={() => {
+                                    console.log('Reorder:', order.id)
+                                  }}
                                 >
                                   Reorder
+                                </Button>
+                              )}
+
+                              {order.status === 'pending' && (
+                                <Button
+                                  variant='destructive'
+                                  size='sm'
+                                  className='w-full'
+                                  onClick={() => {
+                                    console.log('Cancel order:', order.id)
+                                  }}
+                                >
+                                  <XCircle className='mr-2 h-4 w-4' />
+                                  Cancel Order
                                 </Button>
                               )}
                             </div>

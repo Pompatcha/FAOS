@@ -44,6 +44,7 @@ import {
   updateCustomerProfile,
 } from '@/actions/customers'
 import { formatDate } from '@/lib/date'
+import { Loading } from '@/components/Layout/Loading'
 
 const profileSchema = z.object({
   full_name: z
@@ -131,11 +132,7 @@ export default function ProfileSettingsPage() {
   }
 
   if (profileLoading) {
-    return (
-      <div className='flex min-h-screen items-center justify-center'>
-        Loading...
-      </div>
-    )
+    return <Loading />
   }
 
   return (
