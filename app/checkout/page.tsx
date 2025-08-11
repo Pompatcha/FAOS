@@ -155,8 +155,6 @@ export default function CheckoutPage() {
       }
 
       const result = await createOrderMutation.mutateAsync(orderData)
-      console.log(result)
-
       if (result.data) {
         await handleStripePayment(result.data.id, data.payment_method)
       }
