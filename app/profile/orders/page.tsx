@@ -27,7 +27,6 @@ import {
   Copy,
   ExternalLink,
   RefreshCw,
-  X,
   AlertTriangle,
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
@@ -93,7 +92,7 @@ export default function CustomerOrdersPage() {
         )
       case 'delivered':
         return (
-          <Badge variant='default' className='bg-green-500'>
+          <Badge variant='default' className='bg-green-500 text-white'>
             Delivered
           </Badge>
         )
@@ -148,10 +147,6 @@ export default function CustomerOrdersPage() {
     }
   }
 
-  const generateTrackingNumber = (orderNumber: string) => {
-    return `TH${orderNumber.replace('ORD-', '')}TH`
-  }
-
   const isExpiringSoon = (expiresAt?: string) => {
     if (!expiresAt) return false
     const expiry = new Date(expiresAt)
@@ -165,10 +160,9 @@ export default function CustomerOrdersPage() {
     return new Date(expiresAt) < new Date()
   }
 
-  const copyPaymentLink = async (orderId: string) => {
+  const copyPaymentLink = async (paymentLink: string) => {
     try {
-      const paymentLink = `${window.location.origin}/payment/${orderId}`
-      await navigator.clipboard.writeText(paymentLink)
+      await navigator.clipboard.writeText(`${paymentLink}`)
       toast.success('Payment link copied to clipboard!')
     } catch (error) {
       toast.error('Failed to copy payment link')
@@ -427,30 +421,30 @@ export default function CustomerOrdersPage() {
                           </div>
 
                           {(order.status === 'shipped' ||
-                            order.status === 'delivered') && (
-                            <div className='mb-4'>
-                              <div className='rounded-lg border border-blue-200 bg-blue-50 p-3'>
-                                <div className='flex items-center gap-2'>
-                                  <Truck className='h-4 w-4 text-blue-600' />
-                                  <span className='text-sm font-medium text-blue-900'>
-                                    Tracking Number:{' '}
-                                    {generateTrackingNumber(order.order_number)}
-                                  </span>
+                            order.status === 'delivered') &&
+                            order.tracking && (
+                              <div className='mb-4'>
+                                <div className='rounded-lg border border-blue-200 bg-blue-50 p-3'>
+                                  <div className='flex items-center gap-2'>
+                                    <Truck className='h-4 w-4 text-blue-600' />
+                                    <span className='text-sm font-medium text-blue-900'>
+                                      Tracking : {order.tracking}
+                                    </span>
+                                  </div>
+                                  {order.shipped_at && (
+                                    <p className='mt-1 text-xs text-blue-700'>
+                                      Shipped on {formatDate(order.shipped_at)}
+                                    </p>
+                                  )}
+                                  {order.delivered_at && (
+                                    <p className='mt-1 text-xs text-green-700'>
+                                      Delivered on{' '}
+                                      {formatDate(order.delivered_at)}
+                                    </p>
+                                  )}
                                 </div>
-                                {order.shipped_at && (
-                                  <p className='mt-1 text-xs text-blue-700'>
-                                    Shipped on {formatDate(order.shipped_at)}
-                                  </p>
-                                )}
-                                {order.delivered_at && (
-                                  <p className='mt-1 text-xs text-green-700'>
-                                    Delivered on{' '}
-                                    {formatDate(order.delivered_at)}
-                                  </p>
-                                )}
                               </div>
-                            </div>
-                          )}
+                            )}
 
                           {order.notes && (
                             <div className='mb-4'>
@@ -526,7 +520,9 @@ export default function CustomerOrdersPage() {
                                         size='sm'
                                         className='w-full'
                                         onClick={() =>
-                                          copyPaymentLink(order.id)
+                                          copyPaymentLink(
+                                            order.payment_link ?? '',
+                                          )
                                         }
                                       >
                                         <Copy className='mr-2 h-4 w-4' />
@@ -554,34 +550,20 @@ export default function CustomerOrdersPage() {
                               )}
 
                               {(order.status === 'shipped' ||
-                                order.status === 'delivered') && (
-                                <Button
-                                  variant='outline'
-                                  size='sm'
-                                  className='w-full'
-                                  onClick={() =>
-                                    window.open(
-                                      `https://track.thailandpost.co.th/?trackNumber=${generateTrackingNumber(order.order_number)}`,
-                                      '_blank',
-                                    )
-                                  }
-                                >
-                                  <Truck className='mr-2 h-4 w-4' />
-                                  Track Package
-                                </Button>
-                              )}
-
-                              {order.status === 'delivered' && (
-                                <Button
-                                  size='sm'
-                                  className='w-full bg-[#dda700] text-white hover:bg-[#c4950a]'
-                                  onClick={() => {
-                                    toast.info('Reorder feature coming soon!')
-                                  }}
-                                >
-                                  Reorder
-                                </Button>
-                              )}
+                                order.status === 'delivered') &&
+                                order.tracking && (
+                                  <Button
+                                    variant='outline'
+                                    size='sm'
+                                    className='w-full'
+                                    onClick={() =>
+                                      window.open(order.tracking, '_blank')
+                                    }
+                                  >
+                                    <Truck className='mr-2 h-4 w-4' />
+                                    Track Package
+                                  </Button>
+                                )}
 
                               {order.status === 'pending' && (
                                 <Button
@@ -683,8 +665,7 @@ export default function CustomerOrdersPage() {
                     <div className='mb-2 flex items-center gap-2'>
                       <Truck className='h-4 w-4 text-blue-600' />
                       <span className='text-sm font-medium text-blue-900'>
-                        Tracking Number:{' '}
-                        {generateTrackingNumber(selectedOrder.order_number)}
+                        Tracking : {selectedOrder.tracking}
                       </span>
                     </div>
                     {selectedOrder.shipped_at && (
@@ -830,7 +811,9 @@ export default function CustomerOrdersPage() {
                       <Button
                         variant='outline'
                         className='w-full'
-                        onClick={() => copyPaymentLink(selectedOrder.id)}
+                        onClick={() =>
+                          copyPaymentLink(selectedOrder.payment_link ?? '')
+                        }
                       >
                         <Copy className='mr-2 h-4 w-4' />
                         Copy Payment Link
@@ -849,40 +832,6 @@ export default function CustomerOrdersPage() {
                       </Button>
                     </div>
                   )}
-                </div>
-              )}
-
-              {(selectedOrder.status === 'shipped' ||
-                selectedOrder.status === 'delivered') && (
-                <div className='space-y-2'>
-                  <Button
-                    variant='outline'
-                    className='w-full'
-                    onClick={() =>
-                      window.open(
-                        `https://track.thailandpost.co.th/?trackNumber=${generateTrackingNumber(selectedOrder.order_number)}`,
-                        '_blank',
-                      )
-                    }
-                  >
-                    <Truck className='mr-2 h-4 w-4' />
-                    Track Package Online
-                  </Button>
-                </div>
-              )}
-
-              {selectedOrder.status === 'delivered' && (
-                <div className='space-y-2'>
-                  <Button
-                    className='w-full bg-[#dda700] text-white hover:bg-[#c4950a]'
-                    onClick={() => {
-                      toast.info('Reorder feature coming soon!')
-                      setSelectedOrder(null)
-                    }}
-                  >
-                    <Package className='mr-2 h-4 w-4' />
-                    Reorder Items
-                  </Button>
                 </div>
               )}
             </div>

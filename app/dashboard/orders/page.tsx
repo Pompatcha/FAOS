@@ -22,30 +22,16 @@ import {
 import { Search, Eye, Package, Truck } from 'lucide-react'
 import { OrderModal } from './components/order-modal'
 import { ConfirmModal } from './components/confirm-modal'
-
-type OrderStatus =
-  | 'pending'
-  | 'processing'
-  | 'shipped'
-  | 'delivered'
-  | 'cancelled'
-
-interface OrderItem {
-  name: string
-  quantity: number
-  price: number
-}
-
-interface Order {
-  id: string
-  customerName: string
-  customerEmail: string
-  items: OrderItem[]
-  total: number
-  status: OrderStatus
-  orderDate: string
-  shippingAddress: string
-}
+import {
+  useAllOrders,
+  useAllOrderStatistics,
+  useUpdateOrderWithTracking,
+} from '@/hooks/use-orders'
+import { OrderWithDetails, Order } from '@/actions/orders'
+import { formatDate } from '@/lib/date'
+import { formatPrice } from '@/lib/currency'
+import { Loading } from '@/components/Layout/Loading'
+import { toast } from 'sonner'
 
 interface ConfirmModalState {
   isOpen: boolean
@@ -54,70 +40,16 @@ interface ConfirmModalState {
   onConfirm: () => void
 }
 
-const mockOrders: Order[] = [
-  {
-    id: 'ORD-001',
-    customerName: 'John Smith',
-    customerEmail: 'john@email.com',
-    items: [
-      { name: 'iPhone 15 Pro', quantity: 1, price: 39900 },
-      { name: 'AirPods Pro', quantity: 1, price: 8900 },
-    ],
-    total: 48800,
-    status: 'pending',
-    orderDate: '2024-01-15',
-    shippingAddress: '123 Main Street, New York, NY 10001',
-  },
-  {
-    id: 'ORD-002',
-    customerName: 'Jane Doe',
-    customerEmail: 'jane@email.com',
-    items: [{ name: 'MacBook Air M2', quantity: 1, price: 42900 }],
-    total: 42900,
-    status: 'processing',
-    orderDate: '2024-01-14',
-    shippingAddress: '456 Oak Avenue, Los Angeles, CA 90210',
-  },
-  {
-    id: 'ORD-003',
-    customerName: 'Mike Johnson',
-    customerEmail: 'mike@email.com',
-    items: [
-      { name: 'iPad Air', quantity: 1, price: 22900 },
-      { name: 'Apple Watch Series 9', quantity: 1, price: 13900 },
-    ],
-    total: 36800,
-    status: 'shipped',
-    orderDate: '2024-01-13',
-    shippingAddress: '789 Pine Street, Chicago, IL 60601',
-  },
-  {
-    id: 'ORD-004',
-    customerName: 'Sarah Wilson',
-    customerEmail: 'sarah@email.com',
-    items: [{ name: 'AirPods Pro', quantity: 2, price: 8900 }],
-    total: 17800,
-    status: 'delivered',
-    orderDate: '2024-01-12',
-    shippingAddress: '321 Elm Street, Miami, FL 33101',
-  },
-  {
-    id: 'ORD-005',
-    customerName: 'David Brown',
-    customerEmail: 'david@email.com',
-    items: [{ name: 'iPhone 15 Pro', quantity: 1, price: 39900 }],
-    total: 39900,
-    status: 'cancelled',
-    orderDate: '2024-01-11',
-    shippingAddress: '654 Maple Avenue, Seattle, WA 98101',
-  },
-]
-
 export default function OrdersPage() {
-  const [orders, setOrders] = useState<Order[]>(mockOrders)
   const [searchTerm, setSearchTerm] = useState<string>('')
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false)
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
+  const [selectedOrder, setSelectedOrder] = useState<OrderWithDetails | null>(
+    null,
+  )
+
+  const { data: orders = [], isLoading: ordersLoading } = useAllOrders()
+  const { data: statistics } = useAllOrderStatistics()
+  const updateOrderMutation = useUpdateOrderWithTracking()
 
   const [confirmModal, setConfirmModal] = useState<ConfirmModalState>({
     isOpen: false,
@@ -126,30 +58,55 @@ export default function OrdersPage() {
     onConfirm: () => {},
   })
 
-  const filteredOrders = orders.filter(
-    (order) =>
-      order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.customerEmail.toLowerCase().includes(searchTerm.toLowerCase()),
-  )
+  const filteredOrders = orders.filter((order) => {
+    if (!order) return false
 
-  const handleUpdateOrderStatus = (orderId: string, newStatus: OrderStatus) => {
-    setOrders(
-      orders.map((order) =>
-        order.id === orderId ? { ...order, status: newStatus } : order,
-      ),
+    const searchLower = searchTerm.toLowerCase()
+    const customerName = order?.customers?.full_name || 'Unknown Customer'
+    const customerEmail = order?.customers?.email || ''
+    const orderNumber = order?.order_number || ''
+
+    return (
+      orderNumber.toLowerCase().includes(searchLower) ||
+      customerName.toLowerCase().includes(searchLower) ||
+      customerEmail.toLowerCase().includes(searchLower) ||
+      (order.order_items &&
+        order.order_items.some((item) =>
+          item?.product_name?.toLowerCase().includes(searchLower),
+        ))
     )
-    setConfirmModal({
-      isOpen: false,
-      title: '',
-      description: '',
-      onConfirm: () => {},
-    })
+  })
+
+  const handleUpdateOrderStatus = async (
+    orderId: string,
+    newStatus: Order['status'],
+    trackingNumber?: string,
+    notes?: string,
+  ) => {
+    try {
+      await updateOrderMutation.mutateAsync({
+        orderId,
+        status: newStatus,
+        trackingNumber,
+        notes,
+        updatedBy: 'admin',
+      })
+      toast.success(`Order status updated to ${newStatus}`)
+      setConfirmModal({
+        isOpen: false,
+        title: '',
+        description: '',
+        onConfirm: () => {},
+      })
+      setIsModalOpen(false)
+    } catch (error) {
+      toast.error('Failed to update order status')
+    }
   }
 
   const showConfirmModal = (
     orderId: string,
-    newStatus: OrderStatus,
+    newStatus: Order['status'],
     actionText: string,
     description: string,
   ) => {
@@ -161,33 +118,60 @@ export default function OrdersPage() {
     })
   }
 
-  const openOrderModal = (order: Order) => {
+  const openOrderModal = (order: OrderWithDetails) => {
     setSelectedOrder(order)
     setIsModalOpen(true)
   }
 
-  const getStatusBadge = (status: OrderStatus) => {
+  if (ordersLoading) {
+    return <Loading />
+  }
+
+  const getStatusBadge = (status: Order['status']) => {
     switch (status) {
       case 'pending':
-        return <Badge variant='outline'>Pending</Badge>
+        return (
+          <Badge
+            variant='outline'
+            className='border-orange-200 text-orange-600'
+          >
+            Pending Payment
+          </Badge>
+        )
       case 'processing':
-        return <Badge variant='default'>Processing</Badge>
+        return (
+          <Badge variant='default' className='bg-blue-500 text-white'>
+            Processing
+          </Badge>
+        )
       case 'shipped':
-        return <Badge variant='secondary'>Shipped</Badge>
+        return (
+          <Badge variant='secondary' className='bg-purple-500 text-white'>
+            Shipped
+          </Badge>
+        )
       case 'delivered':
         return (
-          <Badge variant='default' className='bg-green-500'>
+          <Badge variant='default' className='bg-green-500 text-white'>
             Delivered
           </Badge>
         )
       case 'cancelled':
         return <Badge variant='destructive'>Cancelled</Badge>
+      case 'expired':
+        return (
+          <Badge variant='outline' className='border-gray-400 text-gray-600'>
+            Expired
+          </Badge>
+        )
       default:
         return <Badge variant='outline'>Unknown</Badge>
     }
   }
 
-  const getStatusActions = (order: Order) => {
+  const getStatusActions = (order: OrderWithDetails) => {
+    const orderNumber = order.order_number || 'N/A'
+
     switch (order.status) {
       case 'pending':
         return (
@@ -198,7 +182,7 @@ export default function OrdersPage() {
                 order.id,
                 'processing',
                 'Process Order',
-                `Do you want to start processing order ${order.id}?`,
+                `Do you want to start processing order ${orderNumber}?`,
               )
             }
           >
@@ -208,17 +192,7 @@ export default function OrdersPage() {
         )
       case 'processing':
         return (
-          <Button
-            size='sm'
-            onClick={() =>
-              showConfirmModal(
-                order.id,
-                'shipped',
-                'Ship Order',
-                `Do you want to ship order ${order.id}?`,
-              )
-            }
-          >
+          <Button size='sm' onClick={() => openOrderModal(order)}>
             <Truck className='mr-1 h-3 w-3' />
             Ship
           </Button>
@@ -232,7 +206,7 @@ export default function OrdersPage() {
                 order.id,
                 'delivered',
                 'Mark as Delivered',
-                `Do you want to mark order ${order.id} as delivered?`,
+                `Do you want to mark order ${orderNumber} as delivered?`,
               )
             }
           >
@@ -241,6 +215,14 @@ export default function OrdersPage() {
         )
       default:
         return null
+    }
+  }
+
+  const getCustomerInfo = (order: OrderWithDetails) => {
+    const customer = order?.customers
+    return {
+      name: customer?.full_name || 'Unknown Customer',
+      email: customer?.email || '',
     }
   }
 
@@ -253,14 +235,26 @@ export default function OrdersPage() {
         </div>
       </div>
 
-      <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-4'>
+      <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-5'>
         <Card>
           <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>New Orders</CardTitle>
+            <CardTitle className='text-sm font-medium'>Total Orders</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className='text-2xl font-bold'>
-              {orders.filter((o) => o.status === 'pending').length}
+            <div className='text-2xl font-bold text-[#dda700]'>
+              {statistics?.total || 0}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+            <CardTitle className='text-sm font-medium'>
+              Pending Payment
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className='text-2xl font-bold text-orange-600'>
+              {statistics?.pending || 0}
             </div>
           </CardContent>
         </Card>
@@ -269,8 +263,8 @@ export default function OrdersPage() {
             <CardTitle className='text-sm font-medium'>Processing</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className='text-2xl font-bold'>
-              {orders.filter((o) => o.status === 'processing').length}
+            <div className='text-2xl font-bold text-blue-600'>
+              {statistics?.processing || 0}
             </div>
           </CardContent>
         </Card>
@@ -279,8 +273,8 @@ export default function OrdersPage() {
             <CardTitle className='text-sm font-medium'>Shipped</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className='text-2xl font-bold'>
-              {orders.filter((o) => o.status === 'shipped').length}
+            <div className='text-2xl font-bold text-purple-600'>
+              {statistics?.shipped || 0}
             </div>
           </CardContent>
         </Card>
@@ -289,8 +283,8 @@ export default function OrdersPage() {
             <CardTitle className='text-sm font-medium'>Delivered</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className='text-2xl font-bold'>
-              {orders.filter((o) => o.status === 'delivered').length}
+            <div className='text-2xl font-bold text-green-600'>
+              {statistics?.delivered || 0}
             </div>
           </CardContent>
         </Card>
@@ -299,14 +293,16 @@ export default function OrdersPage() {
       <Card>
         <CardHeader>
           <CardTitle>Order List</CardTitle>
-          <CardDescription>Total {orders.length} orders</CardDescription>
+          <CardDescription>
+            Total {filteredOrders.length} orders
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className='mb-4 flex items-center space-x-2'>
             <div className='relative max-w-sm flex-1'>
               <Search className='text-muted-foreground absolute top-2.5 left-2 h-4 w-4' />
               <Input
-                placeholder='Search orders...'
+                placeholder='Search by order number, customer, or product...'
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className='pl-8'
@@ -318,8 +314,9 @@ export default function OrdersPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Order ID</TableHead>
+                  <TableHead>Order Number</TableHead>
                   <TableHead>Customer</TableHead>
+                  <TableHead>Items</TableHead>
                   <TableHead>Order Date</TableHead>
                   <TableHead>Total</TableHead>
                   <TableHead>Status</TableHead>
@@ -327,34 +324,76 @@ export default function OrdersPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredOrders.map((order) => (
-                  <TableRow key={order.id}>
-                    <TableCell className='font-medium'>{order.id}</TableCell>
-                    <TableCell>
-                      <div>
-                        <div className='font-medium'>{order.customerName}</div>
-                        <div className='text-muted-foreground text-sm'>
-                          {order.customerEmail}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>{order.orderDate}</TableCell>
-                    <TableCell>฿{order.total.toLocaleString()}</TableCell>
-                    <TableCell>{getStatusBadge(order.status)}</TableCell>
-                    <TableCell className='text-right'>
-                      <div className='flex justify-end space-x-2'>
-                        <Button
-                          variant='ghost'
-                          size='sm'
-                          onClick={() => openOrderModal(order)}
-                        >
-                          <Eye className='h-4 w-4' />
-                        </Button>
-                        {getStatusActions(order)}
+                {filteredOrders.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className='py-8 text-center'>
+                      <div className='text-gray-500'>
+                        {searchTerm
+                          ? 'No orders match your search'
+                          : 'No orders found'}
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  filteredOrders.map((order) => {
+                    const customerInfo = getCustomerInfo(order)
+
+                    return (
+                      <TableRow key={order.id}>
+                        <TableCell className='font-medium'>
+                          {order.order_number || 'N/A'}
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <div className='font-medium'>
+                              {customerInfo.name}
+                            </div>
+                            <div className='text-muted-foreground text-sm'>
+                              {customerInfo.email}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className='text-sm'>
+                            {order.order_items?.length || 0} item
+                            {(order.order_items?.length || 0) > 1 ? 's' : ''}
+                            <div className='max-w-[200px] truncate text-xs text-gray-500'>
+                              {order.order_items
+                                ?.map(
+                                  (item) =>
+                                    item?.product_name || 'Unknown Product',
+                                )
+                                .join(', ') || 'No items'}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {order.created_at
+                            ? formatDate(order.created_at)
+                            : 'N/A'}
+                        </TableCell>
+                        <TableCell>
+                          {order.total_amount
+                            ? formatPrice(order.total_amount)
+                            : '฿0.00'}
+                        </TableCell>
+                        <TableCell>{getStatusBadge(order.status)}</TableCell>
+                        <TableCell className='text-right'>
+                          <div className='flex justify-end space-x-2'>
+                            <Button
+                              variant='ghost'
+                              size='sm'
+                              onClick={() => openOrderModal(order)}
+                            >
+                              <Eye className='h-4 w-4' />
+                            </Button>
+                            {getStatusActions(order)}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })
+                )}
               </TableBody>
             </Table>
           </div>
@@ -367,6 +406,7 @@ export default function OrdersPage() {
         order={selectedOrder}
         onUpdateStatus={handleUpdateOrderStatus}
         showConfirmModal={showConfirmModal}
+        isLoading={updateOrderMutation.isPending}
       />
       <ConfirmModal
         isOpen={confirmModal.isOpen}

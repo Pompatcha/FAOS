@@ -27,6 +27,7 @@ export interface Order {
   updated_at: string
   shipped_at?: string
   delivered_at?: string
+  tracking?: string
 }
 
 export interface OrderItem {
@@ -50,6 +51,10 @@ export interface OrderStatusHistory {
 }
 
 export interface OrderWithDetails extends Order {
+  customers: {
+    full_name: string
+    email: string
+  }
   order_items: OrderItem[]
   order_status_history: OrderStatusHistory[]
 }
@@ -390,6 +395,125 @@ const cancelOrder = async (orderId: string, reason?: string) => {
   return updateOrderStatus(orderId, 'cancelled', reason)
 }
 
+const getAllOrders = async (): Promise<OrderWithDetails[]> => {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('orders')
+    .select(
+      `
+      *,
+      order_items (*),
+      order_status_history (*),
+      customers!customer_id (
+        full_name,
+        email
+      )
+    `,
+    )
+    .neq('status', 'expired')
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('Error fetching all orders:', error)
+    throw new Error('Failed to fetch orders')
+  }
+
+  return data || []
+}
+
+const getAllOrderStatistics = async () => {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('orders')
+    .select('status')
+    .neq('status', 'expired')
+
+  if (error) {
+    console.error('Error fetching order statistics:', error)
+    throw new Error('Failed to fetch order statistics')
+  }
+
+  const stats = {
+    total: data.length,
+    pending: data.filter((o) => o.status === 'pending').length,
+    processing: data.filter((o) => o.status === 'processing').length,
+    shipped: data.filter((o) => o.status === 'shipped').length,
+    delivered: data.filter((o) => o.status === 'delivered').length,
+    cancelled: data.filter((o) => o.status === 'cancelled').length,
+  }
+
+  return stats
+}
+
+const updateOrderWithTracking = async (
+  orderId: string,
+  status: Order['status'],
+  trackingNumber?: string,
+  notes?: string,
+  updatedBy?: string,
+) => {
+  const supabase = createClient()
+
+  try {
+    const updateData: Partial<Order> = { status }
+
+    if (status === 'shipped') {
+      updateData.shipped_at = new Date().toISOString()
+    } else if (status === 'delivered') {
+      updateData.delivered_at = new Date().toISOString()
+    }
+
+    if (trackingNumber) {
+      updateData.tracking = trackingNumber
+    }
+
+    const { data: order, error: orderError } = await supabase
+      .from('orders')
+      .update(updateData)
+      .eq('id', orderId)
+      .select()
+      .single()
+
+    if (orderError) {
+      throw orderError
+    }
+
+    let historyNotes = notes
+    if (trackingNumber) {
+      historyNotes = historyNotes
+        ? `${historyNotes} - Tracking: ${trackingNumber}`
+        : `Tracking number: ${trackingNumber}`
+    }
+
+    const { error: historyError } = await supabase
+      .from('order_status_history')
+      .insert([
+        {
+          order_id: orderId,
+          status,
+          notes: historyNotes,
+          created_by: updatedBy,
+        },
+      ])
+
+    if (historyError) {
+      console.warn('Failed to add status history:', historyError)
+    }
+
+    revalidatePath('/orders')
+    revalidatePath('/dashboard/orders')
+    return { data: order, success: true }
+  } catch (error) {
+    console.error('Error updating order with tracking:', error)
+    return {
+      error: 'Failed to update order',
+      details: error instanceof Error ? error.message : 'Unknown error',
+    }
+  }
+}
+
 const getOrderStatistics = async (customerId: string) => {
   const supabase = createClient()
 
@@ -397,7 +521,7 @@ const getOrderStatistics = async (customerId: string) => {
     .from('orders')
     .select('status')
     .eq('customer_id', customerId)
-    .neq('status', 'expired') // ไม่นับ expired orders
+    .neq('status', 'expired')
 
   if (error) {
     console.error('Error fetching order statistics:', error)
@@ -451,12 +575,15 @@ const createStripeInstantOrder = async (
 
 export {
   getCustomerOrders,
+  getAllOrders,
   getOrderById,
   createOrderWithPaymentLink,
   updateOrderStatus,
+  updateOrderWithTracking,
   getOrderPaymentLink,
   refreshPaymentLink,
   cancelOrder,
   getOrderStatistics,
+  getAllOrderStatistics,
   createStripeInstantOrder,
 }

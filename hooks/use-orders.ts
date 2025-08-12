@@ -2,14 +2,17 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   getCustomerOrders,
+  getAllOrders,
   getOrderById,
   createOrderWithPaymentLink,
   createStripeInstantOrder,
   updateOrderStatus,
+  updateOrderWithTracking,
   getOrderPaymentLink,
   refreshPaymentLink,
   cancelOrder,
   getOrderStatistics,
+  getAllOrderStatistics,
   type CreateOrderData,
   type Order,
 } from '@/actions/orders'
@@ -263,6 +266,66 @@ const usePendingOrdersWithPayment = () => {
   })
 }
 
+const useAllOrders = () => {
+  return useQuery({
+    queryKey: ['all-orders'],
+    queryFn: getAllOrders,
+    staleTime: 1000 * 60 * 2,
+  })
+}
+
+const useAllOrderStatistics = () => {
+  return useQuery({
+    queryKey: ['all-order-statistics'],
+    queryFn: getAllOrderStatistics,
+    staleTime: 1000 * 60 * 5,
+  })
+}
+
+const useUpdateOrderWithTracking = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({
+      orderId,
+      status,
+      trackingNumber,
+      notes,
+      updatedBy,
+    }: {
+      orderId: string
+      status: Order['status']
+      trackingNumber?: string
+      notes?: string
+      updatedBy?: string
+    }) => {
+      const result = await updateOrderWithTracking(
+        orderId,
+        status,
+        trackingNumber,
+        notes,
+        updatedBy,
+      )
+
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to update order')
+      }
+
+      return result
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['all-orders'] })
+      queryClient.invalidateQueries({ queryKey: ['orders'] })
+      queryClient.invalidateQueries({ queryKey: ['order', variables.orderId] })
+      queryClient.invalidateQueries({ queryKey: ['all-order-statistics'] })
+      queryClient.invalidateQueries({ queryKey: ['order-statistics'] })
+    },
+    onError: (error) => {
+      console.error('Update order with tracking error:', error)
+    },
+  })
+}
+
 const useExpiredOrdersCheck = () => {
   const { profile } = useAuth()
 
@@ -296,14 +359,17 @@ const useExpiredOrdersCheck = () => {
 
 export {
   useCustomerOrders,
+  useAllOrders,
   useOrder,
   useCreateOrder,
   useCreateOrderWithPayment,
   useUpdateOrderStatus,
+  useUpdateOrderWithTracking,
   useOrderPaymentLink,
   useRefreshPaymentLink,
   useCancelOrder,
   useOrderStatistics,
+  useAllOrderStatistics,
   usePendingOrdersWithPayment,
   useExpiredOrdersCheck,
 }
