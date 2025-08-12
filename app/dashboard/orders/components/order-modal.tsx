@@ -298,13 +298,13 @@ export function OrderModal({
           </div>
 
           {(order.status === 'shipped' || order.status === 'delivered') &&
-            order.notes && (
+            order.tracking && (
               <>
                 <Separator />
                 <div>
                   <h4 className='mb-2 font-medium'>Tracking Information</h4>
                   <div className='rounded-lg bg-blue-50 p-3'>
-                    <p className='text-sm text-blue-900'>{order.notes}</p>
+                    <p className='text-sm text-blue-900'>{order.tracking}</p>
                     {order.shipped_at && (
                       <p className='mt-1 text-xs text-blue-700'>
                         Shipped on {formatDate(order.shipped_at)}
