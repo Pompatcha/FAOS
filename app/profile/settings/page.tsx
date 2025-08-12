@@ -1,5 +1,4 @@
 'use client'
-
 import { useEffect } from 'react'
 import { useForm, SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -16,13 +15,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import {
   User,
@@ -56,12 +48,11 @@ const profileSchema = z.object({
   address: z.string().optional(),
   city: z.string().optional(),
   country: z.string().optional(),
+  zipcode: z.string().optional(),
   notes: z.string().optional(),
 })
 
 type ProfileFormData = z.infer<typeof profileSchema>
-
-const countries = ['Thailand', 'United States', 'Japan']
 
 export default function ProfileSettingsPage() {
   const router = useRouter()
@@ -82,7 +73,6 @@ export default function ProfileSettingsPage() {
     formState: { errors: profileErrors },
     reset: resetProfile,
     watch: watchProfile,
-    setValue: setValueProfile,
   } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
@@ -92,6 +82,7 @@ export default function ProfileSettingsPage() {
       address: '',
       city: '',
       country: '',
+      zipcode: '',
       notes: '',
     },
   })
@@ -122,6 +113,7 @@ export default function ProfileSettingsPage() {
         address: profile.address || '',
         city: profile.city || '',
         country: profile.country || '',
+        zipcode: profile.zipcode || '',
         notes: profile.notes || '',
       })
     }
@@ -258,7 +250,6 @@ export default function ProfileSettingsPage() {
                         {...registerProfile('phone')}
                         disabled={updateProfileMutation.isPending}
                         className='pl-10'
-                        placeholder='Optional'
                       />
                     </div>
                     {profileErrors.phone && (
@@ -277,7 +268,6 @@ export default function ProfileSettingsPage() {
                         {...registerProfile('address')}
                         disabled={updateProfileMutation.isPending}
                         className='min-h-[80px] pl-10'
-                        placeholder='Optional'
                       />
                     </div>
                     {profileErrors.address && (
@@ -294,7 +284,6 @@ export default function ProfileSettingsPage() {
                         id='city'
                         {...registerProfile('city')}
                         disabled={updateProfileMutation.isPending}
-                        placeholder='Optional'
                       />
                       {profileErrors.city && (
                         <p className='text-sm text-red-500'>
@@ -305,27 +294,28 @@ export default function ProfileSettingsPage() {
 
                     <div className='space-y-2'>
                       <Label htmlFor='country'>Country</Label>
-                      <Select
-                        onValueChange={(value) =>
-                          setValueProfile('country', value)
-                        }
-                        defaultValue={watchProfile('country')}
+                      <Input
+                        id='city'
+                        {...registerProfile('country', { required: true })}
                         disabled={updateProfileMutation.isPending}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder='Select country (optional)' />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {countries.map((country) => (
-                            <SelectItem key={country} value={country}>
-                              {country}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      />
                       {profileErrors.country && (
                         <p className='text-sm text-red-500'>
                           {profileErrors.country.message}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className='space-y-2'>
+                      <Label htmlFor='country'>Zipcode</Label>
+                      <Input
+                        id='city'
+                        {...registerProfile('zipcode', { required: true })}
+                        disabled={updateProfileMutation.isPending}
+                      />
+                      {profileErrors.zipcode && (
+                        <p className='text-sm text-red-500'>
+                          {profileErrors.zipcode.message}
                         </p>
                       )}
                     </div>

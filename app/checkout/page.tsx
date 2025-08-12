@@ -4,7 +4,6 @@ import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import Image from 'next/image'
 import { useAuth } from '@/contexts/AuthContext'
 import { useCartDetails, useCartSummary, useClearCart } from '@/hooks/use-carts'
 import { createStripeInstantOrder } from '@/actions/orders'
@@ -74,9 +73,12 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     if (customerProfile?.address) {
-      form.setValue('shipping_address', customerProfile.address)
+      form.setValue(
+        'shipping_address',
+        `${customerProfile.full_name} ${customerProfile.phone} ${customerProfile.address} ${customerProfile.city} ${customerProfile.country} ${customerProfile.zipcode}`,
+      )
     }
-  }, [customerProfile?.address, form])
+  }, [customerProfile, form])
 
   const copyPaymentLink = async () => {
     if (!orderCreated?.paymentLink) return

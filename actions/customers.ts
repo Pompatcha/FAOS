@@ -11,6 +11,7 @@ const customerProfileSchema = z.object({
   address: z.string().optional(),
   city: z.string().optional(),
   country: z.string().optional(),
+  zipcode: z.string().optional(),
   notes: z.string().optional(),
 })
 
