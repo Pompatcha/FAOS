@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -37,6 +37,7 @@ import { Loading } from '@/components/Layout/Loading'
 import { Header } from '@/components/Layout/Header'
 import { Menu } from '@/components/Layout/Menu'
 import { Footer } from '@/components/Layout/Footer'
+import { useCustomer } from '@/hooks/ีuse-customers'
 
 const checkoutSchema = z.object({
   shipping_address: z.string().min(1, 'Shipping address is required'),
@@ -52,6 +53,7 @@ export default function CheckoutPage() {
   const router = useRouter()
   const { profile } = useAuth()
   const { data: cartDetails, isLoading: cartLoading } = useCartDetails()
+  const { data: customerProfile } = useCustomer()
   const { data: cartSummary } = useCartSummary()
   const clearCartMutation = useClearCart()
   const [isProcessing, setIsProcessing] = useState(false)
@@ -69,6 +71,12 @@ export default function CheckoutPage() {
       payment_method: 'card',
     },
   })
+
+  useEffect(() => {
+    if (customerProfile?.address) {
+      form.setValue('shipping_address', customerProfile.address)
+    }
+  }, [customerProfile?.address, form])
 
   const copyPaymentLink = async () => {
     if (!orderCreated?.paymentLink) return
@@ -252,12 +260,7 @@ export default function CheckoutPage() {
         <div className='container mx-auto px-4 py-8'>
           <div className='mb-8'>
             <div className='flex items-center gap-4'>
-              <Button
-                variant='ghost'
-                size='sm'
-                onClick={() => router.back()}
-                className='p-2'
-              >
+              <Button variant='ghost' size='sm' onClick={() => router.back()}>
                 <ArrowLeft className='h-4 w-4' />
               </Button>
 
@@ -282,7 +285,7 @@ export default function CheckoutPage() {
                     className='flex items-center space-x-4 py-4'
                   >
                     {item.product_image && (
-                      <Image
+                      <img
                         src={item.product_image}
                         alt={item.product_name}
                         width={64}

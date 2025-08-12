@@ -83,13 +83,12 @@ const ProductImageSlider = ({
           <div className='flex'>
             {images.map((image, index: number) => (
               <div key={index} className='w-full flex-none'>
-                <Image
+                <img
                   src={image.image_url}
                   alt={image.alt_text || `${productName} - ภาพที่ ${index + 1}`}
                   className='h-96 w-full object-cover'
                   width={400}
                   height={384}
-                  priority={index === 0}
                 />
               </div>
             ))}
@@ -128,7 +127,7 @@ const ProductImageSlider = ({
                 }`}
                 onClick={() => scrollTo(index)}
               >
-                <Image
+                <img
                   src={image.image_url}
                   alt={
                     image.alt_text || `${productName} - ภาพย่อที่ ${index + 1}`

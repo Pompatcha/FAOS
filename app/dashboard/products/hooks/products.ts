@@ -17,10 +17,10 @@ import {
   updateProductImage,
   deleteProductImage,
   reorderProductImages,
-  type Product,
   type ProductFormData,
   type ProductImageData,
 } from '@/actions/products'
+import { Product } from '@/types/product'
 
 export const productKeys = {
   all: ['products'] as const,

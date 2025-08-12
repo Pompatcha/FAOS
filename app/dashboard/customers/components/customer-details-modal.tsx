@@ -97,7 +97,7 @@ export function CustomerDetailsModal({
       <DialogContent className='max-h-[90vh] overflow-y-auto sm:max-w-[700px]'>
         <DialogHeader>
           <DialogTitle className='flex items-center gap-3'>
-            <Image
+            <img
               src={customer.avatar || '/placeholder.svg'}
               alt={customer.name}
               width={48}

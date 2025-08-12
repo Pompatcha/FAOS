@@ -68,19 +68,19 @@ export function OrderModal({
         )
       case 'processing':
         return (
-          <Badge variant='default' className='bg-blue-500'>
+          <Badge variant='default' className='bg-blue-500 text-white'>
             Processing
           </Badge>
         )
       case 'shipped':
         return (
-          <Badge variant='secondary' className='bg-purple-500'>
+          <Badge variant='secondary' className='bg-purple-500 text-white'>
             Shipped
           </Badge>
         )
       case 'delivered':
         return (
-          <Badge variant='default' className='bg-green-500'>
+          <Badge variant='default' className='bg-green-500 text-white'>
             Delivered
           </Badge>
         )

@@ -344,7 +344,7 @@ export default function CustomersPage() {
                   <TableRow key={customer.id}>
                     <TableCell>
                       <div className='flex items-center space-x-3'>
-                        <Image
+                        <img
                           src={customer.avatar || '/placeholder.svg'}
                           alt={customer.name}
                           width={40}

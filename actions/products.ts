@@ -23,6 +23,79 @@ const productImageSchema = z.object({
 export type ProductFormData = z.infer<typeof productSchema>
 export type ProductImageData = z.infer<typeof productImageSchema>
 
+const extractFilePathFromUrl = (url: string): string | null => {
+  try {
+    const urlParts = url.split('/storage/v1/object/public/')
+    if (urlParts.length === 2) {
+      const pathWithBucket = urlParts[1]
+      const pathParts = pathWithBucket.split('/')
+      if (pathParts.length > 1) {
+        pathParts.shift()
+        return pathParts.join('/')
+      }
+    }
+    return null
+  } catch (error) {
+    console.error('Error extracting file path from URL:', error)
+    return null
+  }
+}
+
+const deleteFileFromStorage = async (imageUrl: string): Promise<boolean> => {
+  try {
+    const supabase = createClient()
+    const filePath = extractFilePathFromUrl(imageUrl)
+
+    if (!filePath) {
+      console.warn('Could not extract file path from URL:', imageUrl)
+      return false
+    }
+
+    const { error } = await supabase.storage.from('images').remove([filePath])
+
+    if (error) {
+      console.error('Error deleting file from storage:', error)
+      return false
+    }
+
+    console.log('Successfully deleted file from storage:', filePath)
+    return true
+  } catch (error) {
+    console.error('Error in deleteFileFromStorage:', error)
+    return false
+  }
+}
+
+const deleteMultipleFilesFromStorage = async (
+  imageUrls: string[],
+): Promise<void> => {
+  const supabase = createClient()
+  const filePaths: string[] = []
+
+  imageUrls.forEach((url) => {
+    const filePath = extractFilePathFromUrl(url)
+    if (filePath) {
+      filePaths.push(filePath)
+    }
+  })
+
+  if (filePaths.length === 0) {
+    return
+  }
+
+  try {
+    const { error } = await supabase.storage.from('images').remove(filePaths)
+
+    if (error) {
+      console.error('Error deleting multiple files from storage:', error)
+    } else {
+      console.log('Successfully deleted files from storage:', filePaths)
+    }
+  } catch (error) {
+    console.error('Error in deleteMultipleFilesFromStorage:', error)
+  }
+}
+
 const getProducts = async () => {
   const supabase = createClient()
 
@@ -149,6 +222,11 @@ const updateProduct = async (
   }
 
   if (imageData !== undefined) {
+    const { data: existingImages } = await supabase
+      .from('product_images')
+      .select('image_url')
+      .eq('product_id', id)
+
     const { error: deleteError } = await supabase
       .from('product_images')
       .delete()
@@ -156,6 +234,13 @@ const updateProduct = async (
 
     if (deleteError) {
       console.error('Error deleting product images:', deleteError)
+    }
+
+    if (existingImages && existingImages.length > 0) {
+      const existingImageUrls = existingImages.map((img) => img.image_url)
+      deleteMultipleFilesFromStorage(existingImageUrls).catch((error) => {
+        console.error('Failed to delete old images from storage:', error)
+      })
     }
 
     if (imageData.length > 0) {
@@ -184,6 +269,11 @@ const updateProduct = async (
 const deleteProduct = async (id: string) => {
   const supabase = createClient()
 
+  const { data: productImages } = await supabase
+    .from('product_images')
+    .select('image_url')
+    .eq('product_id', id)
+
   const { error } = await supabase.from('products').delete().eq('id', id)
 
   if (error) {
@@ -192,6 +282,13 @@ const deleteProduct = async (id: string) => {
       error: 'Failed to delete product',
       details: error.message,
     }
+  }
+
+  if (productImages && productImages.length > 0) {
+    const imageUrls = productImages.map((img) => img.image_url)
+    deleteMultipleFilesFromStorage(imageUrls).catch((error) => {
+      console.error('Failed to delete product images from storage:', error)
+    })
   }
 
   revalidatePath('/products')
@@ -375,17 +472,37 @@ const updateProductImage = async (
 const deleteProductImage = async (imageId: string) => {
   const supabase = createClient()
 
-  const { error } = await supabase
+  const { data: imageData, error: fetchError } = await supabase
+    .from('product_images')
+    .select('image_url')
+    .eq('id', imageId)
+    .single()
+
+  if (fetchError) {
+    console.error('Error fetching image data:', fetchError)
+    return {
+      error: 'Failed to fetch image data',
+      details: fetchError.message,
+    }
+  }
+
+  const { error: deleteError } = await supabase
     .from('product_images')
     .delete()
     .eq('id', imageId)
 
-  if (error) {
-    console.error('Error deleting product image:', error)
+  if (deleteError) {
+    console.error('Error deleting product image:', deleteError)
     return {
       error: 'Failed to delete product image',
-      details: error.message,
+      details: deleteError.message,
     }
+  }
+
+  if (imageData?.image_url) {
+    await deleteFileFromStorage(imageData.image_url).catch((error) => {
+      console.error('Failed to delete image from storage:', error)
+    })
   }
 
   revalidatePath('/products')

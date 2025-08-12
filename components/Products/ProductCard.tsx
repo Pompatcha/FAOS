@@ -59,10 +59,9 @@ const ProductCard = ({ product }: ProductCardProps) => {
   return (
     <div className='overflow-hidden rounded-lg bg-white shadow-lg transition-shadow duration-300 hover:shadow-xl'>
       <div className='relative aspect-square h-[250px] w-full overflow-hidden'>
-        <Image
+        <img
           src={displayImage?.image_url || '/placeholder.svg'}
           alt={displayImage?.alt_text || `${product.name} placeholder`}
-          fill
           className='object-cover transition-transform duration-300 hover:scale-105'
           sizes='(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw'
         />
@@ -71,14 +70,14 @@ const ProductCard = ({ product }: ProductCardProps) => {
           <>
             <button
               onClick={prevImage}
-              className='bg-opacity-50 hover:bg-opacity-70 absolute top-1/2 left-2 -translate-y-1/2 transform cursor-pointer rounded-full bg-white/50 p-2 text-white transition-opacity hover:scale-105'
+              className='bg-opacity-50 hover:bg-opacity-70 absolute top-1/2 left-2 -translate-y-1/2 transform cursor-pointer rounded-full bg-white p-2 text-white transition-opacity hover:scale-105'
               aria-label='Previous image'
             >
               <ChevronLeft className='size-5 text-gray-500' />
             </button>
             <button
               onClick={nextImage}
-              className='bg-opacity-50 hover:bg-opacity-70 absolute top-1/2 right-2 -translate-y-1/2 transform cursor-pointer rounded-full bg-white/50 p-2 text-white transition-opacity hover:scale-105'
+              className='bg-opacity-50 hover:bg-opacity-70 absolute top-1/2 right-2 -translate-y-1/2 transform cursor-pointer rounded-full bg-white p-2 text-white transition-opacity hover:scale-105'
               aria-label='Next image'
             >
               <ChevronRight className='size-5 text-gray-500' />

@@ -30,7 +30,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
-import { Plus, Search, Edit, Trash2, Eye, Loader2 } from 'lucide-react'
+import { Plus, Search, Edit, Trash2, Loader2 } from 'lucide-react'
 import { ProductImageGallery } from './components/product-image-gallery'
 import { ProductModal } from './components/product-modal'
 import {
@@ -212,9 +212,6 @@ export default function ProductsPage() {
                       <TableCell>{getStatusBadge(product.status)}</TableCell>
                       <TableCell className='text-right'>
                         <div className='flex justify-end space-x-2'>
-                          <Button variant='ghost' size='sm'>
-                            <Eye className='h-4 w-4' />
-                          </Button>
                           <Button
                             variant='ghost'
                             size='sm'
