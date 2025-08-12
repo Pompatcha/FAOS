@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { Suspense, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useOrder } from '@/hooks/use-orders'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -10,7 +10,7 @@ import { Separator } from '@/components/ui/separator'
 import { CheckCircle, Package, Loader2 } from 'lucide-react'
 import { format } from 'date-fns'
 
-export default function CheckoutSuccessPage() {
+function CheckoutSuccessContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const orderId = searchParams.get('order_id')
@@ -174,5 +174,21 @@ export default function CheckoutSuccessPage() {
         )}
       </div>
     </div>
+  )
+}
+
+function CheckoutSuccessLoading() {
+  return (
+    <div className='container mx-auto flex justify-center px-4 py-8'>
+      <Loader2 className='h-8 w-8 animate-spin' />
+    </div>
+  )
+}
+
+export default function CheckoutSuccessPage() {
+  return (
+    <Suspense fallback={<CheckoutSuccessLoading />}>
+      <CheckoutSuccessContent />
+    </Suspense>
   )
 }

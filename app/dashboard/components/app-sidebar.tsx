@@ -1,4 +1,4 @@
-import { Home, Package, Receipt, Users } from 'lucide-react'
+import { Home, Package, Receipt } from 'lucide-react'
 import Link from 'next/link'
 import {
   Sidebar,
@@ -27,11 +27,6 @@ const items = [
     title: 'Orders',
     url: '/dashboard/orders',
     icon: Receipt,
-  },
-  {
-    title: 'Customers',
-    url: '/dashboard/customers',
-    icon: Users,
   },
 ]
 

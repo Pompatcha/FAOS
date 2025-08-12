@@ -1,11 +1,13 @@
 'use client'
+
+import { Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { XCircle, HelpCircle } from 'lucide-react'
+import { XCircle, HelpCircle, Loader2 } from 'lucide-react'
 
-export default function CheckoutCancelPage() {
+function CheckoutCancelContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const sessionId = searchParams.get('session_id')
@@ -86,5 +88,21 @@ export default function CheckoutCancelPage() {
         )}
       </div>
     </div>
+  )
+}
+
+function CheckoutCancelLoading() {
+  return (
+    <div className='container mx-auto flex justify-center px-4 py-8'>
+      <Loader2 className='h-8 w-8 animate-spin' />
+    </div>
+  )
+}
+
+export default function CheckoutCancelPage() {
+  return (
+    <Suspense fallback={<CheckoutCancelLoading />}>
+      <CheckoutCancelContent />
+    </Suspense>
   )
 }
