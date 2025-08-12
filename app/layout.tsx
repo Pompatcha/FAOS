@@ -53,6 +53,11 @@ export const metadata: Metadata = {
     'ไวน์โรส',
     'ไวน์สปาร์คกิ้ง',
     'Wellness',
+    'ฟาร์มผึ้ง',
+    'น้ำผึ้งแท้100%',
+    'น้ำผึ้งฟาว์ส',
+    'เบเกอรี่',
+    'น้ำผึ้งกรีก',
   ].join(', '),
   authors: [{ name: 'Patcharin Chanaphukdee' }],
   openGraph: {
