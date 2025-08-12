@@ -658,29 +658,30 @@ export default function CustomerOrdersPage() {
               </div>
 
               {(selectedOrder.status === 'shipped' ||
-                selectedOrder.status === 'delivered') && (
-                <div>
-                  <h3 className='mb-3 font-semibold'>Tracking Information</h3>
-                  <div className='rounded-lg bg-blue-50 p-3'>
-                    <div className='mb-2 flex items-center gap-2'>
-                      <Truck className='h-4 w-4 text-blue-600' />
-                      <span className='text-sm font-medium text-blue-900'>
-                        Tracking : {selectedOrder.tracking}
-                      </span>
+                selectedOrder.status === 'delivered') &&
+                selectedOrder?.tracking && (
+                  <div>
+                    <h3 className='mb-3 font-semibold'>Tracking Information</h3>
+                    <div className='rounded-lg bg-blue-50 p-3'>
+                      <div className='mb-2 flex items-center gap-2'>
+                        <Truck className='h-4 w-4 text-blue-600' />
+                        <span className='text-sm font-medium text-blue-900'>
+                          Tracking : {selectedOrder.tracking}
+                        </span>
+                      </div>
+                      {selectedOrder.shipped_at && (
+                        <p className='mb-1 text-xs text-blue-700'>
+                          Shipped on {formatDate(selectedOrder.shipped_at)}
+                        </p>
+                      )}
+                      {selectedOrder.delivered_at && (
+                        <p className='text-xs text-green-700'>
+                          Delivered on {formatDate(selectedOrder.delivered_at)}
+                        </p>
+                      )}
                     </div>
-                    {selectedOrder.shipped_at && (
-                      <p className='mb-1 text-xs text-blue-700'>
-                        Shipped on {formatDate(selectedOrder.shipped_at)}
-                      </p>
-                    )}
-                    {selectedOrder.delivered_at && (
-                      <p className='text-xs text-green-700'>
-                        Delivered on {formatDate(selectedOrder.delivered_at)}
-                      </p>
-                    )}
                   </div>
-                </div>
-              )}
+                )}
 
               {selectedOrder.notes && (
                 <div>
