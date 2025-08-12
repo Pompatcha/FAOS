@@ -19,16 +19,23 @@ interface ProfileUpdateData {
 }
 
 export async function GET(request: NextRequest) {
-  const { searchParams, origin } = new URL(request.url)
+  const { searchParams } = new URL(request.url)
   const code = searchParams.get('code')
   const next = searchParams.get('next') ?? '/'
   const error = searchParams.get('error')
   const error_description = searchParams.get('error_description')
 
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL
+
+  if (!baseUrl) {
+    console.error('NEXT_PUBLIC_BASE_URL is not defined')
+    return NextResponse.redirect('/?error=configuration_error')
+  }
+
   if (error) {
     console.error('OAuth Error:', error, error_description)
     return NextResponse.redirect(
-      `${origin}/?error=${encodeURIComponent(error_description || error)}`,
+      `${baseUrl}/?error=${encodeURIComponent(error_description || error)}`,
     )
   }
 
@@ -42,21 +49,21 @@ export async function GET(request: NextRequest) {
       if (exchangeError) {
         console.error('Code exchange error:', exchangeError)
         return NextResponse.redirect(
-          `${origin}/?error=${encodeURIComponent(exchangeError.message)}`,
+          `${baseUrl}/?error=${encodeURIComponent(exchangeError.message)}`,
         )
       }
 
       if (data.user) {
         await ensureUserProfile(supabase, data.user)
-        return NextResponse.redirect(`${origin}${next}`)
+        return NextResponse.redirect(`${baseUrl}${next}`)
       }
     } catch (err) {
       console.error('Unexpected error during OAuth callback:', err)
-      return NextResponse.redirect(`${origin}/?error=authentication_failed`)
+      return NextResponse.redirect(`${baseUrl}/?error=authentication_failed`)
     }
   }
 
-  return NextResponse.redirect(`${origin}/?error=invalid_callback`)
+  return NextResponse.redirect(`${baseUrl}/?error=invalid_callback`)
 }
 
 async function ensureUserProfile(
