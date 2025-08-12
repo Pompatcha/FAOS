@@ -1,7 +1,11 @@
 'use client'
 
+import { useAddToCart } from '@/hooks/use-carts'
+import { formatPrice } from '@/lib/currency'
 import { Product } from '@/types/product'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
 interface ProductCardProps {
@@ -9,7 +13,11 @@ interface ProductCardProps {
 }
 
 const ProductCard = ({ product }: ProductCardProps) => {
+  const router = useRouter()
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [quantity, setQuantity] = useState(1)
+
+  const addToCartMutation = useAddToCart()
 
   const sortedImages =
     product.images?.sort((a, b) => a.sort_order - b.sort_order) || []
@@ -33,17 +41,24 @@ const ProductCard = ({ product }: ProductCardProps) => {
     }
   }
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2,
-    }).format(price)
+  const handleAddToCart = async () => {
+    try {
+      await addToCartMutation.mutateAsync({
+        product_id: product.id,
+        quantity: quantity,
+      })
+
+      setQuantity(1)
+    } catch (error) {}
+  }
+
+  const handelMoreDetail = async () => {
+    router.push(`/product/${product.id}`)
   }
 
   return (
     <div className='overflow-hidden rounded-lg bg-white shadow-lg transition-shadow duration-300 hover:shadow-xl'>
-      <div className='relative aspect-square overflow-hidden'>
+      <div className='relative aspect-square h-[250px] w-full overflow-hidden'>
         <Image
           src={displayImage?.image_url || '/placeholder.svg'}
           alt={displayImage?.alt_text || `${product.name} placeholder`}
@@ -56,41 +71,17 @@ const ProductCard = ({ product }: ProductCardProps) => {
           <>
             <button
               onClick={prevImage}
-              className='bg-opacity-50 hover:bg-opacity-70 absolute top-1/2 left-2 -translate-y-1/2 transform rounded-full bg-[#dda600c1] p-2 text-white transition-opacity'
+              className='bg-opacity-50 hover:bg-opacity-70 absolute top-1/2 left-2 -translate-y-1/2 transform cursor-pointer rounded-full bg-white/50 p-2 text-white transition-opacity hover:scale-105'
               aria-label='Previous image'
             >
-              <svg
-                className='h-4 w-4'
-                fill='none'
-                stroke='currentColor'
-                viewBox='0 0 24 24'
-              >
-                <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  strokeWidth={2}
-                  d='M15 19l-7-7 7-7'
-                />
-              </svg>
+              <ChevronLeft className='size-5 text-gray-500' />
             </button>
             <button
               onClick={nextImage}
-              className='bg-opacity-50 hover:bg-opacity-70 absolute top-1/2 right-2 -translate-y-1/2 transform rounded-full bg-[#dda600c1] p-2 text-white transition-opacity'
+              className='bg-opacity-50 hover:bg-opacity-70 absolute top-1/2 right-2 -translate-y-1/2 transform cursor-pointer rounded-full bg-white/50 p-2 text-white transition-opacity hover:scale-105'
               aria-label='Next image'
             >
-              <svg
-                className='h-4 w-4'
-                fill='none'
-                stroke='currentColor'
-                viewBox='0 0 24 24'
-              >
-                <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  strokeWidth={2}
-                  d='M9 5l7 7-7 7'
-                />
-              </svg>
+              <ChevronRight className='size-5 text-gray-500' />
             </button>
           </>
         )}
@@ -130,12 +121,6 @@ const ProductCard = ({ product }: ProductCardProps) => {
           {product.name}
         </h3>
 
-        {product.description && (
-          <p className='mb-3 line-clamp-2 text-sm text-gray-600'>
-            {product.description}
-          </p>
-        )}
-
         <div className='mb-3 flex items-center justify-between'>
           <span className='text-2xl font-bold text-[#dda700]'>
             {formatPrice(product.price)}
@@ -145,10 +130,21 @@ const ProductCard = ({ product }: ProductCardProps) => {
 
         <div className='flex space-x-2'>
           <button
-            className='flex-1 rounded-lg bg-[#dda700] px-4 py-2 font-medium text-white transition-colors hover:bg-[#cc9600] disabled:cursor-not-allowed disabled:opacity-50'
-            disabled={product.stock === 0}
+            onClick={handleAddToCart}
+            disabled={product.stock === 0 || addToCartMutation.isPending}
+            className='flex-1 cursor-pointer rounded-lg bg-[#dda700] px-4 py-2 font-medium text-white transition-colors hover:bg-[#cc9600] disabled:cursor-not-allowed disabled:opacity-50'
           >
-            {product.stock > 0 ? 'Add to Cart' : 'Out of Stock'}
+            {addToCartMutation.isPending
+              ? 'Adding...'
+              : product.stock > 0
+                ? 'Add to Cart'
+                : 'Out of Stock'}
+          </button>
+          <button
+            onClick={handelMoreDetail}
+            className='cursor-pointer rounded-lg bg-gray-500 px-4 py-2 font-medium text-white transition-colors hover:bg-gray-400 disabled:cursor-not-allowed disabled:opacity-50'
+          >
+            More details
           </button>
         </div>
       </div>

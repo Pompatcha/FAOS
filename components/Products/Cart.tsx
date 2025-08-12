@@ -10,6 +10,7 @@ import {
   useRemoveFromCart,
   useClearCart,
 } from '@/hooks/use-carts'
+import { useRouter } from 'next/navigation'
 
 interface CartProps {
   isOpen: boolean
@@ -18,7 +19,7 @@ interface CartProps {
 
 const Cart = ({ isOpen, onClose }: CartProps) => {
   const { profile } = useAuth()
-
+  const router = useRouter()
   const { data: items = [], isLoading, error } = useCartDetails()
   const updateCartItem = useUpdateCartItem()
   const removeFromCart = useRemoveFromCart()
@@ -133,17 +134,18 @@ const Cart = ({ isOpen, onClose }: CartProps) => {
               {items.map((item) => (
                 <div
                   key={item.id}
-                  className='flex items-center gap-3 rounded-lg border border-gray-200 p-3'
+                  className='flex cursor-pointer items-center gap-3 border-b border-gray-200 p-3'
                 >
-                  {item.product_image && (
-                    <Image
-                      src={item.product_image}
-                      alt={item.product_name}
-                      width={48}
-                      height={48}
-                      className='h-12 w-12 rounded object-cover'
-                    />
-                  )}
+                  <Image
+                    onClick={() => {
+                      router.push(`/product/${item?.product_id}`)
+                    }}
+                    src={item.product_image || '/placeholder.svg'}
+                    alt={item.product_name}
+                    width={48}
+                    height={48}
+                    className='h-12 w-12 rounded object-cover'
+                  />
 
                   <div className='flex-1'>
                     <h3 className='font-medium text-gray-900'>
@@ -214,6 +216,10 @@ const Cart = ({ isOpen, onClose }: CartProps) => {
 
             <div className='space-y-2'>
               <button
+                onClick={() => {
+                  onClose()
+                  router.push('/checkout')
+                }}
                 className='w-full rounded-lg bg-[#e2b007] py-3 font-medium text-white transition-colors hover:bg-[#f3d27a] disabled:opacity-50'
                 disabled={updateCartItem.isPending || removeFromCart.isPending}
               >

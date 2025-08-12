@@ -33,8 +33,7 @@ const useCartSummary = () => {
   return useQuery({
     queryKey: ['cart', 'summary', profile?.id],
     queryFn: async () => {
-      if (!profile?.id) return null
-      return await getCartSummary(profile.id)
+      return await getCartSummary(profile!.id)
     },
     enabled: !!profile?.id,
     staleTime: 1000 * 30,

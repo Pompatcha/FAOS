@@ -25,8 +25,18 @@ const Profile = ({ isOpen, onClose }: ProfileProps) => {
   }
 
   const handleMenuClick = (action: string) => {
-    console.log(`${action} clicked`)
     onClose()
+
+    switch (action) {
+      case 'orders':
+        router.push('/profile/orders')
+        break
+      case 'settings':
+        router.push('/profile/settings')
+        break
+      default:
+        console.log(`${action} clicked`)
+    }
   }
 
   const menuItems = [
@@ -35,12 +45,6 @@ const Profile = ({ isOpen, onClose }: ProfileProps) => {
       title: 'My Orders',
       action: 'orders',
       description: 'Check order status',
-    },
-    {
-      icon: MapPin,
-      title: 'Shipping Address',
-      action: 'addresses',
-      description: 'Manage delivery addresses',
     },
     {
       icon: Settings,
