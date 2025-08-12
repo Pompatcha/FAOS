@@ -1,5 +1,4 @@
 'use client'
-
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -30,7 +29,6 @@ import {
 import { OrderWithDetails, Order } from '@/actions/orders'
 import { formatDate } from '@/lib/date'
 import { formatPrice } from '@/lib/currency'
-import { Loading } from '@/components/Layout/Loading'
 import { toast } from 'sonner'
 
 interface ConfirmModalState {
@@ -124,7 +122,7 @@ export default function OrdersPage() {
   }
 
   if (ordersLoading) {
-    return <Loading />
+    return null
   }
 
   const getStatusBadge = (status: Order['status']) => {
