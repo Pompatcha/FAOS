@@ -25,10 +25,10 @@ export async function GET(request: NextRequest) {
   const error = searchParams.get('error')
   const error_description = searchParams.get('error_description')
 
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL
+  const baseUrl = process.env.BASE_URL
 
   if (!baseUrl) {
-    console.error('NEXT_PUBLIC_BASE_URL is not defined')
+    console.error('BASE_URL is not defined')
     return NextResponse.redirect('/?error=configuration_error')
   }
 
