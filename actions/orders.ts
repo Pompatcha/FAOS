@@ -182,7 +182,7 @@ const createOrderWithPaymentLink = async (
     }
 
     const response = await fetch(
-      `${process.env.BASE_URL}/api/checkout/create-payment-intent`,
+      `${process.env.NEXT_PUBLIC_BASE_URL}/api/checkout/create-payment-intent`,
       {
         method: 'POST',
         headers: {
@@ -338,7 +338,7 @@ const refreshPaymentLink = async (
     }
 
     const response = await fetch(
-      `${process.env.BASE_URL}/api/checkout/create-payment-intent`,
+      `${process.env.NEXT_PUBLIC_BASE_URL}/api/checkout/create-payment-intent`,
       {
         method: 'POST',
         headers: {
