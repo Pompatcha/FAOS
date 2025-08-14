@@ -93,7 +93,7 @@ class AuthService {
       const { error } = await this.supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${process.env.BASE_URL}/auth/callback`,
+          redirectTo: `${process.env.NEXT_PUBLIC_BASE_URL}/auth/callback`,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
@@ -122,7 +122,7 @@ class AuthService {
       const { error } = await this.supabase.auth.signInWithOAuth({
         provider: 'facebook',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: `${process.env.NEXT_PUBLIC_BASE_URL}/auth/callback`,
           scopes: 'email public_profile',
         },
       })
@@ -243,7 +243,7 @@ class AuthService {
   async resetPassword(email: string): Promise<AuthResult> {
     try {
       const { error } = await this.supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/reset-password`,
+        redirectTo: `${process.env.NEXT_PUBLIC_BASE_URL}/auth/reset-password`,
       })
 
       if (error) {
