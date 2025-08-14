@@ -9,7 +9,9 @@ export async function POST(request: NextRequest) {
   try {
     const { orderId, amount, paymentMethod, metadata } = await request.json()
 
-    const baseUrl = process.env.BASE_URL
+    const protocol = request.headers.get('x-forwarded-proto') || 'https'
+    const host = request.headers.get('host')
+    const baseUrl = `${protocol}://${host}`
 
     if (paymentMethod === 'card') {
       const session = await stripe.checkout.sessions.create({
