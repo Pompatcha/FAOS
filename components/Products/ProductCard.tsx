@@ -1,10 +1,8 @@
 'use client'
-
 import { useAddToCart } from '@/hooks/use-carts'
 import { formatPrice } from '@/lib/currency'
 import { Product } from '@/types/product'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
@@ -49,7 +47,9 @@ const ProductCard = ({ product }: ProductCardProps) => {
       })
 
       setQuantity(1)
-    } catch (error) {}
+    } catch (error) {
+      alert(error)
+    }
   }
 
   const handelMoreDetail = async () => {

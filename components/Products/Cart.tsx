@@ -1,9 +1,7 @@
 'use client'
-
 import { useAuth } from '@/contexts/AuthContext'
 import { X, Plus, Minus, Trash2, ShoppingCart, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
-import Image from 'next/image'
 import {
   useCartDetails,
   useUpdateCartItem,

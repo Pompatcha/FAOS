@@ -1,9 +1,7 @@
 'use client'
-
 import { SetStateAction, useCallback, useEffect, useState } from 'react'
 import useEmblaCarousel from 'embla-carousel-react'
 import { ChevronLeft, ChevronRight, Minus, Plus } from 'lucide-react'
-import Image from 'next/image'
 import { Header } from '@/components/Layout/Header'
 import { Menu } from '@/components/Layout/Menu'
 import { Banner } from '@/components/Homepage/Banner'
@@ -157,7 +155,9 @@ const ProductDetail = ({ product }: ProductDetailProps) => {
       })
 
       setQuantity(1)
-    } catch (error) {}
+    } catch (error) {
+      alert(error)
+    }
   }
 
   const handleQuantityChange = (newQuantity: number) => {
