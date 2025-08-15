@@ -425,12 +425,6 @@ export default function CustomerOrdersPage() {
                             order.tracking && (
                               <div className='mb-4'>
                                 <div className='rounded-lg border border-blue-200 bg-blue-50 p-3'>
-                                  <div className='flex items-center gap-2'>
-                                    <Truck className='h-4 w-4 text-blue-600' />
-                                    <span className='text-sm font-medium text-blue-900'>
-                                      Tracking : {order.tracking}
-                                    </span>
-                                  </div>
                                   {order.shipped_at && (
                                     <p className='mt-1 text-xs text-blue-700'>
                                       Shipped on {formatDate(order.shipped_at)}
@@ -663,12 +657,6 @@ export default function CustomerOrdersPage() {
                   <div>
                     <h3 className='mb-3 font-semibold'>Tracking Information</h3>
                     <div className='rounded-lg bg-blue-50 p-3'>
-                      <div className='mb-2 flex items-center gap-2'>
-                        <Truck className='h-4 w-4 text-blue-600' />
-                        <span className='text-sm font-medium text-blue-900'>
-                          Tracking : {selectedOrder.tracking}
-                        </span>
-                      </div>
                       {selectedOrder.shipped_at && (
                         <p className='mb-1 text-xs text-blue-700'>
                           Shipped on {formatDate(selectedOrder.shipped_at)}

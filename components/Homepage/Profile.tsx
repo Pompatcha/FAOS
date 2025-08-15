@@ -1,7 +1,6 @@
 'use client'
-
 import { useAuth } from '@/contexts/AuthContext'
-import { X, User, Package, Settings, LogOut, MapPin } from 'lucide-react'
+import { X, User, Package, Settings, LogOut } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 interface ProfileProps {
@@ -55,6 +54,29 @@ const Profile = ({ isOpen, onClose }: ProfileProps) => {
   ]
 
   if (!isOpen) return null
+
+  if (!profile) {
+    return (
+      <div className='fixed inset-0 z-50'>
+        <div className='bg-opacity-50 absolute inset-0' onClick={onClose} />
+        <div className='absolute right-10 bottom-0 max-h-[80vh] w-80 overflow-hidden rounded-t-lg bg-white shadow-2xl'>
+          <div className='flex items-center justify-between border-b border-gray-200 bg-[#dda700] p-4 text-white'>
+            <h2 className='text-lg font-bold'>Profile</h2>
+            <button
+              onClick={onClose}
+              className='transition-colors hover:text-gray-200'
+            >
+              <X className='h-6 w-6' />
+            </button>
+          </div>
+          <div className='p-8 text-center text-gray-500'>
+            <User className='mx-auto mb-4 h-12 w-12 text-gray-300' />
+            <p>Please login to view profile</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className='fixed inset-0 z-50'>

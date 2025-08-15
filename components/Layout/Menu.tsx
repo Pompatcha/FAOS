@@ -139,22 +139,18 @@ const Menu = () => {
         </div>
 
         <div className='flex justify-center gap-4 pb-4'>
-          <ShowIfAuth>
-            <>
-              <button
-                onClick={handleProfileClick}
-                className='z-40 size-13 rounded-full border-2 border-white bg-[#e2b007] p-3 text-white shadow-lg transition-all duration-200 hover:scale-105 hover:bg-[#f3d27a]'
-                aria-label='Open profile'
-              >
-                <User className='h-6 w-6' />
-              </button>
+          <button
+            onClick={handleProfileClick}
+            className='z-40 size-13 rounded-full border-2 border-white bg-[#e2b007] p-3 text-white shadow-lg transition-all duration-200 hover:scale-105 hover:bg-[#f3d27a]'
+            aria-label='Open profile'
+          >
+            <User className='h-6 w-6' />
+          </button>
 
-              <Profile
-                isOpen={isProfileOpen}
-                onClose={() => setIsProfileOpen(false)}
-              />
-            </>
-          </ShowIfAuth>
+          <Profile
+            isOpen={isProfileOpen}
+            onClose={() => setIsProfileOpen(false)}
+          />
 
           <button
             onClick={handleCartClick}
