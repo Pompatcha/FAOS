@@ -272,7 +272,6 @@ const updateOrderStatus = async (
           order_id: orderId,
           status,
           notes,
-          created_by: updatedBy,
         },
       ])
 
