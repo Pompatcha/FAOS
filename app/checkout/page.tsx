@@ -130,7 +130,7 @@ export default function CheckoutPage() {
 
         setOrderCreated({
           orderId: result.data.order.id,
-          paymentLink: result.data.paymentLink,
+          paymentLink: result.data.paymentLink || '',
           orderNumber: result.data.order.order_number,
         })
 
