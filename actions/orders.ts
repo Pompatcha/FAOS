@@ -4,6 +4,7 @@ import { createClient } from '@/utils/supabase/client'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { generateCartHash } from '@/lib/cart-hash'
+import { createPaymentSession } from './stripe'
 
 export interface Order {
   id: string
@@ -181,36 +182,27 @@ const createOrderWithPaymentLink = async (
       throw itemsError
     }
 
-    const response = await fetch(
-      `${process.env.BASE_URL}/api/checkout/create-payment-intent`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          orderId: order.id,
-          amount: orderData.total_amount,
-          paymentMethod,
-          metadata: {
-            orderId: order.id,
-            customerAddress: orderData.shipping_address,
-          },
-        }),
+    const paymentResult = await createPaymentSession({
+      orderId: order.id,
+      amount: orderData.total_amount,
+      paymentMethod,
+      metadata: {
+        orderId: order.id,
+        customerAddress: orderData.shipping_address,
       },
-    )
+    })
 
-    if (!response.ok) {
-      throw new Error(`Payment API Error: ${response.status}`)
+    if (!paymentResult.success) {
+      throw new Error(
+        `Payment Error: ${paymentResult.error} - ${paymentResult.details}`,
+      )
     }
-
-    const paymentData = await response.json()
 
     const { data: updatedOrder, error: updateError } = await supabase
       .from('orders')
       .update({
-        payment_link: paymentData.url,
-        payment_session_id: paymentData.sessionId,
+        payment_link: paymentResult.url,
+        payment_session_id: paymentResult.sessionId,
       })
       .eq('id', order.id)
       .select()
@@ -233,8 +225,8 @@ const createOrderWithPaymentLink = async (
     return {
       data: updatedOrder || order,
       success: true,
-      paymentLink: paymentData.url,
-      sessionId: paymentData.sessionId,
+      paymentLink: paymentResult.url,
+      sessionId: paymentResult.sessionId,
     }
   } catch (error) {
     console.error('Error creating order:', error)
@@ -337,36 +329,27 @@ const refreshPaymentLink = async (
       return { error: 'Order not found or not pending' }
     }
 
-    const response = await fetch(
-      `${process.env.BASE_URL}/api/checkout/create-payment-intent`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          orderId: order.id,
-          amount: order.total_amount,
-          paymentMethod,
-          metadata: {
-            orderId: order.id,
-            customerAddress: order.shipping_address,
-          },
-        }),
+    const paymentResult = await createPaymentSession({
+      orderId: order.id,
+      amount: order.total_amount,
+      paymentMethod,
+      metadata: {
+        orderId: order.id,
+        customerAddress: order.shipping_address,
       },
-    )
+    })
 
-    if (!response.ok) {
-      throw new Error(`Payment API Error: ${response.status}`)
+    if (!paymentResult.success) {
+      throw new Error(
+        `Payment Error: ${paymentResult.error} - ${paymentResult.details}`,
+      )
     }
-
-    const paymentData = await response.json()
 
     const { error: updateError } = await supabase
       .from('orders')
       .update({
-        payment_link: paymentData.url,
-        payment_session_id: paymentData.sessionId,
+        payment_link: paymentResult.url,
+        payment_session_id: paymentResult.sessionId,
         session_expires_at: new Date(
           Date.now() + 7 * 24 * 60 * 60 * 1000,
         ).toISOString(),
@@ -379,8 +362,8 @@ const refreshPaymentLink = async (
 
     return {
       success: true,
-      paymentLink: paymentData.url,
-      sessionId: paymentData.sessionId,
+      paymentLink: paymentResult.url,
+      sessionId: paymentResult.sessionId,
     }
   } catch (error) {
     console.error('Error refreshing payment link:', error)

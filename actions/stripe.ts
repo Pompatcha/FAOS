@@ -1,17 +1,35 @@
-import { NextRequest, NextResponse } from 'next/server'
+'use server'
+
 import Stripe from 'stripe'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-07-30.basil',
 })
 
-export async function POST(request: NextRequest) {
-  try {
-    const { orderId, amount, paymentMethod, metadata } = await request.json()
+interface CreatePaymentParams {
+  orderId: string
+  amount: number
+  paymentMethod: 'card' | 'qr'
+  metadata?: Record<string, string>
+}
 
-    const protocol = request.headers.get('x-forwarded-proto') || 'https'
-    const host = request.headers.get('host')
-    const baseUrl = `${protocol}://${host}`
+interface PaymentResult {
+  sessionId?: string
+  url?: string | null
+  success: boolean
+  error?: string
+  details?: string
+  type?: string
+}
+
+export async function createPaymentSession({
+  orderId,
+  amount,
+  paymentMethod,
+  metadata = {},
+}: CreatePaymentParams): Promise<PaymentResult> {
+  try {
+    const baseUrl = process.env.BASE_URL
 
     if (paymentMethod === 'card') {
       const session = await stripe.checkout.sessions.create({
@@ -43,11 +61,11 @@ export async function POST(request: NextRequest) {
         customer_creation: 'always',
       })
 
-      return NextResponse.json({
+      return {
         sessionId: session.id,
         url: session.url,
         success: true,
-      })
+      }
     } else if (paymentMethod === 'qr') {
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ['promptpay'],
@@ -72,37 +90,33 @@ export async function POST(request: NextRequest) {
         },
       })
 
-      return NextResponse.json({
+      return {
         sessionId: session.id,
         url: session.url,
         success: true,
-      })
+      }
     } else {
-      return NextResponse.json(
-        { error: 'Invalid payment method' },
-        { status: 400 },
-      )
+      return {
+        success: false,
+        error: 'Invalid payment method',
+      }
     }
   } catch (error) {
     console.error('Stripe API Error:', error)
 
     if (error instanceof Stripe.errors.StripeError) {
-      return NextResponse.json(
-        {
-          error: 'Payment processing error',
-          details: error.message,
-          type: error.type,
-        },
-        { status: 400 },
-      )
+      return {
+        success: false,
+        error: 'Payment processing error',
+        details: error.message,
+        type: error.type,
+      }
     }
 
-    return NextResponse.json(
-      {
-        error: 'Internal server error',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 },
-    )
+    return {
+      success: false,
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : 'Unknown error',
+    }
   }
 }
