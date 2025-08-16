@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import Providers from '../contexts/QueryProviders'
 import { AuthProvider } from '@/contexts/AuthContext'
@@ -90,17 +90,18 @@ export const metadata: Metadata = {
   },
 }
 
+export const viewport: Viewport = {
+  width: '1920',
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
   return (
-    <html>
-      <head>
-        <meta name='viewport' content='width=1920' />
-      </head>
-      <body className={`antialiased`}>
+    <html lang='en'>
+      <body className='antialiased'>
         <Providers>
           <AuthProvider>{children}</AuthProvider>
         </Providers>
