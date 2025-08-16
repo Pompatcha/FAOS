@@ -97,6 +97,9 @@ export default function RootLayout({
 }>) {
   return (
     <html>
+      <head>
+        <meta name='viewport' content='width=1920' />
+      </head>
       <body className={`antialiased`}>
         <Providers>
           <AuthProvider>{children}</AuthProvider>

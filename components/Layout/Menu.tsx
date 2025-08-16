@@ -1,9 +1,7 @@
 'use client'
-
 import { useState } from 'react'
 import { ChevronDown, ShoppingCart, User } from 'lucide-react'
 import { Profile } from '../Homepage/Profile'
-import { ShowIfAuth } from '../Protected/RouteGuard'
 import { useRouter } from 'next/navigation'
 import Cart from '../Products/Cart'
 import { useCartCount } from '@/hooks/use-carts'

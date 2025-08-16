@@ -20,10 +20,6 @@ const Certification: FC = () => {
           className='size-28 object-contain duration-300 hover:scale-102'
           src='https://vectorseek.com/wp-content/uploads/2023/09/Bio-nach-EG-Oko-Verordnung-Logo-Vector.svg-.png'
         />
-        <img
-          className='size-28 object-contain duration-300 hover:scale-102'
-          src='https://iasiso-australia.com/wp-content/uploads/2023/02/HACCP-Training-705x662.png'
-        />
       </div>
     </div>
   )
