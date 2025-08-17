@@ -149,14 +149,18 @@ export const getBestSellingProducts = async (
       .from('order_items')
       .select(
         `
-        product_id,
-        product_name,
+        id,
         quantity,
-        total_price,
-        orders!inner(
-          created_at,
-          status
-        )
+        total,
+        product_options (
+          id,
+          option_name,
+          products (
+            id,
+            name
+          )
+        ),
+        orders!inner(created_at, status)
       `,
       )
       .gte('orders.created_at', currentMonthStart.toISOString())
@@ -172,22 +176,31 @@ export const getBestSellingProducts = async (
       {
         id: string
         name: string
+        option: string
         totalQuantity: number
         totalRevenue: number
       }
     >()
 
     data.forEach((item) => {
-      const existing = productMap.get(item.product_id)
+      const option = item.product_options[0]
+      const product = option.products[0]
+      const optionName = option.option_name
+      if (!product) return
+
+      const key = `${product?.id}-${optionName}`
+
+      const existing = productMap.get(key)
       if (existing) {
         existing.totalQuantity += item.quantity
-        existing.totalRevenue += Number(item.total_price)
+        existing.totalRevenue += Number(item.total)
       } else {
-        productMap.set(item.product_id, {
-          id: item.product_id,
-          name: item.product_name,
+        productMap.set(key, {
+          id: product.id,
+          name: product.name,
+          option: optionName,
           totalQuantity: item.quantity,
-          totalRevenue: Number(item.total_price),
+          totalRevenue: Number(item.total),
         })
       }
     })
@@ -197,7 +210,7 @@ export const getBestSellingProducts = async (
       .slice(0, limit)
       .map((product) => ({
         id: product.id,
-        name: product.name,
+        name: `${product.name} (${product.option})`,
         unitsSold: product.totalQuantity,
         totalRevenue: product.totalRevenue,
       }))

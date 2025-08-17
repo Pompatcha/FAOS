@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.12 (cd3cf9e)"
@@ -28,6 +28,7 @@ export type Database = {
           phone: string | null
           role: string | null
           updated_at: string
+          zipcode: string | null
         }
         Insert: {
           address?: string | null
@@ -42,6 +43,7 @@ export type Database = {
           phone?: string | null
           role?: string | null
           updated_at?: string
+          zipcode?: string | null
         }
         Update: {
           address?: string | null
@@ -56,6 +58,7 @@ export type Database = {
           phone?: string | null
           role?: string | null
           updated_at?: string
+          zipcode?: string | null
         }
         Relationships: []
       }
@@ -64,31 +67,34 @@ export type Database = {
           created_at: string | null
           id: string
           order_id: string
+          price: number
           product_id: string
-          product_name: string
+          product_option_id: string
           quantity: number
-          total_price: number
-          unit_price: number
+          total: number | null
+          updated_at: string | null
         }
         Insert: {
           created_at?: string | null
           id?: string
           order_id: string
+          price: number
           product_id: string
-          product_name: string
+          product_option_id: string
           quantity: number
-          total_price: number
-          unit_price: number
+          total?: number | null
+          updated_at?: string | null
         }
         Update: {
           created_at?: string | null
           id?: string
           order_id?: string
+          price?: number
           product_id?: string
-          product_name?: string
+          product_option_id?: string
           quantity?: number
-          total_price?: number
-          unit_price?: number
+          total?: number | null
+          updated_at?: string | null
         }
         Relationships: [
           {
@@ -113,10 +119,10 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "order_items_product_id_fkey"
-            columns: ["product_id"]
+            foreignKeyName: "order_items_product_option_id_fkey"
+            columns: ["product_option_id"]
             isOneToOne: false
-            referencedRelation: "products_stock"
+            referencedRelation: "product_options"
             referencedColumns: ["id"]
           },
         ]
@@ -264,11 +270,45 @@ export type Database = {
             referencedRelation: "products"
             referencedColumns: ["id"]
           },
+        ]
+      }
+      product_options: {
+        Row: {
+          created_at: string | null
+          id: string
+          option_name: string
+          price: number
+          product_id: string
+          reserved_stock: number | null
+          stock: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          option_name: string
+          price: number
+          product_id: string
+          reserved_stock?: number | null
+          stock?: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          option_name?: string
+          price?: number
+          product_id?: string
+          reserved_stock?: number | null
+          stock?: number
+          updated_at?: string | null
+        }
+        Relationships: [
           {
-            foreignKeyName: "product_images_product_id_fkey"
+            foreignKeyName: "product_options_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
-            referencedRelation: "products_stock"
+            referencedRelation: "products"
             referencedColumns: ["id"]
           },
         ]
@@ -280,10 +320,7 @@ export type Database = {
           description: string | null
           id: string
           name: string
-          price: number
-          reserved_stock: number | null
           status: string | null
-          stock: number
           updated_at: string | null
         }
         Insert: {
@@ -292,10 +329,7 @@ export type Database = {
           description?: string | null
           id?: string
           name: string
-          price: number
-          reserved_stock?: number | null
           status?: string | null
-          stock?: number
           updated_at?: string | null
         }
         Update: {
@@ -304,10 +338,7 @@ export type Database = {
           description?: string | null
           id?: string
           name?: string
-          price?: number
-          reserved_stock?: number | null
           status?: string | null
-          stock?: number
           updated_at?: string | null
         }
         Relationships: []
@@ -345,85 +376,10 @@ export type Database = {
             referencedRelation: "customers"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "shopping_cart_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "shopping_cart_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products_stock"
-            referencedColumns: ["id"]
-          },
         ]
       }
     }
     Views: {
-      cart_details: {
-        Row: {
-          created_at: string | null
-          customer_id: string | null
-          id: string | null
-          image_count: number | null
-          product_category: string | null
-          product_description: string | null
-          product_id: string | null
-          product_image: string | null
-          product_name: string | null
-          product_price: number | null
-          product_status: string | null
-          product_stock: number | null
-          quantity: number | null
-          subtotal: number | null
-          updated_at: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "shopping_cart_customer_id_fkey"
-            columns: ["customer_id"]
-            isOneToOne: false
-            referencedRelation: "customers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "shopping_cart_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "shopping_cart_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products_stock"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      cart_summary: {
-        Row: {
-          cart_identifier: string | null
-          customer_id: string | null
-          last_updated: string | null
-          total_amount: number | null
-          total_items: number | null
-          total_quantity: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "shopping_cart_customer_id_fkey"
-            columns: ["customer_id"]
-            isOneToOne: false
-            referencedRelation: "customers"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       orders_summary: {
         Row: {
           avg_value: number | null
@@ -471,51 +427,6 @@ export type Database = {
           },
         ]
       }
-      products_stock: {
-        Row: {
-          available_stock: number | null
-          category: string | null
-          created_at: string | null
-          description: string | null
-          id: string | null
-          in_stock: boolean | null
-          name: string | null
-          price: number | null
-          reserved_stock: number | null
-          status: string | null
-          stock: number | null
-          updated_at: string | null
-        }
-        Insert: {
-          available_stock?: never
-          category?: string | null
-          created_at?: string | null
-          description?: string | null
-          id?: string | null
-          in_stock?: never
-          name?: string | null
-          price?: number | null
-          reserved_stock?: number | null
-          status?: string | null
-          stock?: number | null
-          updated_at?: string | null
-        }
-        Update: {
-          available_stock?: never
-          category?: string | null
-          created_at?: string | null
-          description?: string | null
-          id?: string | null
-          in_stock?: never
-          name?: string | null
-          price?: number | null
-          reserved_stock?: number | null
-          status?: string | null
-          stock?: number | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
     }
     Functions: {
       cleanup_expired_orders: {
@@ -533,12 +444,12 @@ export type Database = {
       get_pending_orders_with_payment_link: {
         Args: { customer_uuid: string }
         Returns: {
+          created_at: string
           id: string
           order_number: string
-          total_amount: number
           payment_link: string
-          created_at: string
           session_expires_at: string
+          total_amount: number
         }[]
       }
       update_customer_stats: {
