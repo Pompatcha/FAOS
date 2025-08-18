@@ -9,8 +9,6 @@ const productSchema = z.object({
   name: z.string().min(1, 'Product name is required').max(255),
   description: z.string().optional(),
   category: z.string().min(1, 'Category is required').max(100),
-  price: z.number().positive('Price must be positive'),
-  stock: z.number().int().min(0, 'Stock must be 0 or greater'),
   status: z.enum(['active', 'inactive', 'out_of_stock']).default('active'),
 })
 
@@ -20,8 +18,17 @@ const productImageSchema = z.object({
   sort_order: z.number().int().min(0).default(0),
 })
 
+const productOptionSchema = z.object({
+  id: z.string().uuid().optional(), // เพิ่ม id สำหรับการอัปเดต
+  option_name: z.string().min(1, 'Option name is required').max(100),
+  price: z.number().min(0, 'Price must be a positive number'),
+  stock: z.number().int().min(0, 'Stock must be a non-negative integer'),
+  reserved_stock: z.number().int().min(0).optional().default(0),
+})
+
 export type ProductFormData = z.infer<typeof productSchema>
 export type ProductImageData = z.infer<typeof productImageSchema>
+export type ProductOptionData = z.infer<typeof productOptionSchema>
 
 const extractFilePathFromUrl = (url: string): string | null => {
   try {
@@ -105,16 +112,18 @@ const getProducts = async () => {
       `
       *,
       images:product_images(*)
+      product_options('option_name', 'price', 'stock')
     `,
     )
     .order('created_at', { ascending: false })
+    .order('sort_order', { referencedTable: 'images', ascending: true })
 
   if (error) {
     console.error('Error fetching products:', error)
     throw new Error('Failed to fetch products')
   }
 
-  return data as Product[]
+  return data
 }
 
 const getProduct = async (id: string) => {
@@ -126,9 +135,11 @@ const getProduct = async (id: string) => {
       `
       *,
       images:product_images(*)
+      product_options('option_name', 'price', 'stock')
     `,
     )
     .eq('id', id)
+    .order('sort_order', { referencedTable: 'images', ascending: true })
     .single()
 
   if (error) {
@@ -136,11 +147,12 @@ const getProduct = async (id: string) => {
     throw new Error('Failed to fetch product')
   }
 
-  return data as Product
+  return data
 }
 
 const createProduct = async (
   formData: ProductFormData,
+  optionsData: ProductOptionData[] = [],
   imageData?: ProductImageData[],
 ) => {
   const supabase = createClient()
@@ -165,6 +177,27 @@ const createProduct = async (
     return {
       error: 'Failed to create product',
       details: productError.message,
+    }
+  }
+
+  if (optionsData.length > 0) {
+    const optionsToInsert = optionsData.map((opt) => ({
+      ...opt,
+      product_id: product.id,
+    }))
+
+    const { error: optionsError } = await supabase
+      .from('product_options')
+      .insert(optionsToInsert)
+
+    if (optionsError) {
+      console.error('Error creating product options:', optionsError)
+      await supabase.from('products').delete().eq('id', product.id)
+      return {
+        error:
+          'Failed to create product options. Product creation rolled back.',
+        details: optionsError.message,
+      }
     }
   }
 

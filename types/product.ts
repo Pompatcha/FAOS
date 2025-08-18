@@ -3,9 +3,12 @@ type Product = {
   name: string
   description?: string
   category: string
-  price: number
-  stock: number
   status: 'active' | 'inactive' | 'out_of_stock'
+  product_options: {
+    option_name: string
+    price: number
+    stock: number
+  }[]
   created_at: string
   updated_at: string
   images?: ProductImage[]

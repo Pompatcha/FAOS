@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { useForm, Controller } from 'react-hook-form'
+import { useForm, Controller, useFieldArray } from 'react-hook-form'
 import {
   Dialog,
   DialogContent,
@@ -29,6 +29,7 @@ import {
   ImageIcon,
   AlertCircle,
   CheckCircle2,
+  Plus,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
@@ -51,10 +52,13 @@ type ProductStatus = 'active' | 'inactive' | 'out_of_stock'
 interface FormData {
   name: string
   category: string
-  price: string
-  stock: string
   status: ProductStatus
   description: string
+  product_options: {
+    option_name: string
+    price: number
+    stock: number
+  }[]
 }
 
 interface ProductModalProps {
@@ -81,10 +85,9 @@ interface ImageUpload {
 const defaultValues: FormData = {
   name: '',
   category: '',
-  price: '',
-  stock: '',
   status: 'active',
   description: '',
+  product_options: [{ option_name: '', price: 0, stock: 0 }],
 }
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024
@@ -124,18 +127,18 @@ export function ProductModal({ isOpen, onClose, product }: ProductModalProps) {
     mode: 'onChange',
   })
 
+  const { fields, append, remove } = useFieldArray({
+    name: 'product_options',
+    control,
+  })
+
   const productName = watch('name')
 
   useEffect(() => {
     if (isOpen) {
       if (product) {
         reset({
-          name: product.name,
-          category: product.category,
-          price: product.price.toString(),
-          stock: product.stock.toString(),
-          status: product.status,
-          description: product.description || '',
+          ...product,
         })
 
         if (product.images && product.images.length > 0) {
@@ -477,12 +480,7 @@ export function ProductModal({ isOpen, onClose, product }: ProductModalProps) {
         }))
 
       const submitData = {
-        name: data.name,
-        category: data.category,
-        price: Number.parseFloat(data.price),
-        stock: Number.parseInt(data.stock),
-        status: data.status,
-        description: data.description,
+        ...data,
       }
 
       if (isEditing && product) {
@@ -615,79 +613,153 @@ export function ProductModal({ isOpen, onClose, product }: ProductModalProps) {
               </div>
             </div>
 
-            <div className='grid grid-cols-4 items-center gap-4'>
-              <Label htmlFor='price' className='text-right'>
-                Price (฿)
-              </Label>
-              <div className='col-span-3'>
-                <Controller
-                  name='price'
-                  control={control}
-                  rules={{
-                    required: 'Price is required',
-                    pattern: {
-                      value: /^\d+(\.\d{1,2})?$/,
-                      message: 'Please enter a valid price',
-                    },
-                    min: {
-                      value: 0.01,
-                      message: 'Price must be greater than 0',
-                    },
-                  }}
-                  render={({ field }) => (
-                    <Input
-                      {...field}
-                      id='price'
-                      type='number'
-                      step='0.01'
-                      min='0'
-                      disabled={isLoading}
-                      className={errors.price ? 'border-red-500' : ''}
-                    />
-                  )}
-                />
-                {errors.price && (
-                  <p className='mt-1 text-sm text-red-500'>
-                    {errors.price.message}
-                  </p>
-                )}
+            <div className='space-y-4'>
+              <div className='flex items-center justify-between'>
+                <Label className='text-right'>Product Options</Label>
+                <Button
+                  type='button'
+                  variant='outline'
+                  onClick={() =>
+                    append({ option_name: '', price: 0, stock: 0 })
+                  }
+                  disabled={isLoading}
+                >
+                  Add Option <Plus />
+                </Button>
               </div>
-            </div>
-
-            <div className='grid grid-cols-4 items-center gap-4'>
-              <Label htmlFor='stock' className='text-right'>
-                Stock Quantity
-              </Label>
-              <div className='col-span-3'>
-                <Controller
-                  name='stock'
-                  control={control}
-                  rules={{
-                    required: 'Stock quantity is required',
-                    min: { value: 0, message: 'Stock cannot be negative' },
-                    pattern: {
-                      value: /^\d+$/,
-                      message: 'Stock must be a whole number',
-                    },
-                  }}
-                  render={({ field }) => (
-                    <Input
-                      {...field}
-                      id='stock'
-                      type='number'
-                      min='0'
-                      step='1'
-                      disabled={isLoading}
-                      className={errors.stock ? 'border-red-500' : ''}
-                    />
-                  )}
-                />
-                {errors.stock && (
-                  <p className='mt-1 text-sm text-red-500'>
-                    {errors.stock.message}
-                  </p>
-                )}
-              </div>
+              {fields.length > 0 ? (
+                <div className='flex flex-col items-end justify-end space-y-4'>
+                  {fields.map((item, index) => (
+                    <div key={item.id} className='flex items-end gap-4'>
+                      <Controller
+                        name={`product_options.${index}.option_name`}
+                        control={control}
+                        rules={{ required: 'Option name is required' }}
+                        render={({ field }) => (
+                          <div>
+                            <Label
+                              htmlFor={`option_name-${index}`}
+                              className='mb-2.5'
+                            >
+                              Option Name
+                            </Label>
+                            <Input
+                              {...field}
+                              id={`option_name-${index}`}
+                              placeholder='Option Name (e.g., Small, 500g)'
+                              disabled={isLoading}
+                              className={
+                                errors.product_options?.[index]?.option_name
+                                  ? 'border-red-500'
+                                  : ''
+                              }
+                            />
+                            {errors.product_options?.[index]?.option_name && (
+                              <p className='mt-1 text-xs text-red-500'>
+                                {
+                                  errors.product_options[index].option_name
+                                    .message
+                                }
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      />
+                      <Controller
+                        name={`product_options.${index}.price`}
+                        control={control}
+                        rules={{
+                          required: 'Price is required',
+                          min: {
+                            value: 0.01,
+                            message: 'Price must be greater than 0',
+                          },
+                        }}
+                        render={({ field }) => (
+                          <div>
+                            <Label
+                              htmlFor={`price-${index}`}
+                              className='mb-2.5'
+                            >
+                              Price
+                            </Label>
+                            <Input
+                              {...field}
+                              id={`price-${index}`}
+                              type='number'
+                              step='0.01'
+                              placeholder='Price'
+                              disabled={isLoading}
+                              className={
+                                errors.product_options?.[index]?.price
+                                  ? 'border-red-500'
+                                  : ''
+                              }
+                            />
+                            {errors.product_options?.[index]?.price && (
+                              <p className='mt-1 text-xs text-red-500'>
+                                {errors.product_options[index].price.message}
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      />
+                      <Controller
+                        name={`product_options.${index}.stock`}
+                        control={control}
+                        rules={{
+                          required: 'Stock is required',
+                          min: {
+                            value: 0,
+                            message: 'Stock cannot be negative',
+                          },
+                        }}
+                        render={({ field }) => (
+                          <div>
+                            <Label
+                              htmlFor={`stock-${index}`}
+                              className='mb-2.5'
+                            >
+                              Stock
+                            </Label>
+                            <Input
+                              {...field}
+                              id={`stock-${index}`}
+                              type='number'
+                              step='1'
+                              placeholder='Stock'
+                              disabled={isLoading}
+                              className={
+                                errors.product_options?.[index]?.stock
+                                  ? 'border-red-500'
+                                  : ''
+                              }
+                            />
+                            {errors.product_options?.[index]?.stock && (
+                              <p className='mt-1 text-xs text-red-500'>
+                                {errors.product_options[index].stock.message}
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      />
+                      <Button
+                        type='button'
+                        variant='destructive'
+                        size='icon'
+                        onClick={() => remove(index)}
+                        disabled={isLoading}
+                      >
+                        <X className='h-4 w-4' />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className='text-center text-sm text-gray-500'>
+                  No options added. Click &quot;Add Option&quot; to create one.
+                </p>
+              )}
             </div>
 
             <div className='grid grid-cols-4 items-center gap-4'>
