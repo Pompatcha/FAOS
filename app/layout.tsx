@@ -1,9 +1,17 @@
-import type { Metadata, Viewport } from 'next'
 import './globals.css'
-import Providers from '../contexts/QueryProviders'
-import { AuthProvider } from '@/contexts/AuthContext'
+import type { Metadata } from 'next'
+import type { FC, PropsWithChildren } from 'react'
+import { IBM_Plex_Sans_Thai } from 'next/font/google'
 
-export const metadata: Metadata = {
+const IBMPlexSansThai = IBM_Plex_Sans_Thai({
+  weight: ['400', '700'],
+})
+
+import Providers from '../contexts/QueryProviders'
+import AuthProvider from '@/contexts/AuthProvider'
+import { Toaster } from '@/components/ui/sonner'
+
+const metadata: Metadata = {
   title:
     'FAOS Premium Organic Collection | Premium Olive Oil and Honey | Organics Olive Oil | Organic Honey',
   description:
@@ -90,18 +98,11 @@ export const metadata: Metadata = {
   },
 }
 
-export const viewport: Viewport = {
-  width: '1920',
-}
-
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode
-}>) {
+const RootLayout: FC<PropsWithChildren> = ({ children }) => {
   return (
     <html lang='en'>
-      <body className='antialiased'>
+      <body className={`${IBMPlexSansThai.className} antialiased`}>
+        <Toaster />
         <Providers>
           <AuthProvider>{children}</AuthProvider>
         </Providers>
@@ -109,3 +110,6 @@ export default function RootLayout({
     </html>
   )
 }
+
+export default RootLayout
+export { metadata }

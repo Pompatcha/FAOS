@@ -1,8 +1,32 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { FC, useState } from 'react'
+import { useForm, useFieldArray, Controller } from 'react-hook-form'
+import { SumCard } from '../components/SumCard'
+import { IndexLayout } from '@/components/Layout/Index'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Switch } from '@/components/ui/switch'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent } from '@/components/ui/card'
+import { Download, Plus, Trash2, Upload, X, Edit, Eye } from 'lucide-react'
+import { formatDate } from '@/lib/date'
+import { formatPrice } from '@/lib/price'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -12,278 +36,879 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog'
-import { Plus, Search, Edit, Trash2, Loader2 } from 'lucide-react'
-import { ProductImageGallery } from './components/product-image-gallery'
-import { ProductModal } from './components/product-modal'
-import {
-  useProducts,
-  useSearchProducts,
-  useDeleteProduct,
-} from './hooks/products'
-import { Product } from '@/types/product'
 
-function useDebounce<T>(value: T, delay: number): T {
-  const [debouncedValue, setDebouncedValue] = useState<T>(value)
+const mockProducts = [
+  {
+    id: 1,
+    name: 'iPhone 15 Pro',
+    brand: 'Apple',
+    sku: 'APL-IP15P-128',
+    category_id: 1,
+    is_active: true,
+    base_price: 39900,
+    sale_price: 35900,
+    is_on_sale: true,
+    stock_quantity: 25,
+    created_at: '2024-01-15T10:00:00Z',
+  },
+  {
+    id: 2,
+    name: 'Samsung Galaxy S24',
+    brand: 'Samsung',
+    sku: 'SAM-GS24-256',
+    category_id: 1,
+    is_active: true,
+    base_price: 32900,
+    sale_price: null,
+    is_on_sale: false,
+    stock_quantity: 18,
+    created_at: '2024-01-20T14:30:00Z',
+  },
+]
 
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedValue(value)
-    }, delay)
+const mockCategories = [
+  { id: 1, name: 'Smartphones' },
+  { id: 2, name: 'Tablets' },
+  { id: 3, name: 'Laptops' },
+  { id: 4, name: 'Accessories' },
+]
 
-    return () => {
-      clearTimeout(handler)
-    }
-  }, [value, delay])
-
-  return debouncedValue
+interface ProductFormData {
+  name: string
+  description: string
+  short_description: string
+  category_id: string
+  brand: string
+  sku: string
+  is_active: boolean
+  weight: string
+  dimensions: {
+    width: string
+    height: string
+    depth: string
+  }
+  prices: {
+    base_price: string
+    sale_price: string
+    cost_price: string
+    is_on_sale: boolean
+    sale_start_date: string
+    sale_end_date: string
+  }
+  options: Array<{
+    option_name: string
+    option_value: string
+    additional_price: string
+    stock_quantity: string
+    sku: string
+    is_available: boolean
+  }>
+  images: Array<{
+    image_url: string
+    alt_text: string
+    display_order: string
+    is_primary: boolean
+  }>
 }
 
-export default function ProductsPage() {
-  const [searchTerm, setSearchTerm] = useState('')
+const ProductPage: FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null)
-  const [galleryState, setGalleryState] = useState({
-    isOpen: false,
-    images: [],
-    productName: '',
-    initialIndex: 0,
+  const [products, setProducts] = useState(mockProducts)
+
+  const form = useForm<ProductFormData>({
+    defaultValues: {
+      name: '',
+      description: '',
+      short_description: '',
+      category_id: '',
+      brand: '',
+      sku: '',
+      is_active: true,
+      weight: '',
+      dimensions: {
+        width: '',
+        height: '',
+        depth: '',
+      },
+      prices: {
+        base_price: '',
+        sale_price: '',
+        cost_price: '',
+        is_on_sale: false,
+        sale_start_date: '',
+        sale_end_date: '',
+      },
+      options: [],
+      images: [],
+    },
   })
 
-  const debouncedSearchTerm = useDebounce(searchTerm, 300)
+  const { control, handleSubmit, reset, watch, setValue } = form
 
   const {
-    data: allProducts,
-    isLoading: isLoadingProducts,
-    error: productsError,
-  } = useProducts()
+    fields: optionFields,
+    append: appendOption,
+    remove: removeOption,
+  } = useFieldArray({
+    control,
+    name: 'options',
+  })
 
-  const { data: searchResults, isLoading: isSearching } =
-    useSearchProducts(debouncedSearchTerm)
+  const {
+    fields: imageFields,
+    append: appendImage,
+    remove: removeImage,
+  } = useFieldArray({
+    control,
+    name: 'images',
+  })
 
-  const products = debouncedSearchTerm.length > 0 ? searchResults : allProducts
-  const isLoading =
-    debouncedSearchTerm.length > 0 ? isSearching : isLoadingProducts
+  const watchIsOnSale = watch('prices.is_on_sale')
 
-  const deleteProductMutation = useDeleteProduct()
-
-  const handleDeleteProduct = async (id: string) => {
-    try {
-      await deleteProductMutation.mutateAsync(id)
-    } catch (error) {
-      console.error('Failed to delete product:', error)
+  const onSubmit = (data: ProductFormData) => {
+    console.log('Form Data:', data)
+    const newProduct = {
+      id: products.length + 1,
+      name: data.name,
+      brand: data.brand,
+      sku: data.sku,
+      category_id: parseInt(data.category_id),
+      is_active: data.is_active,
+      base_price: parseFloat(data.prices.base_price),
+      sale_price: data.prices.sale_price
+        ? parseFloat(data.prices.sale_price)
+        : null,
+      is_on_sale: data.prices.is_on_sale,
+      stock_quantity: data.options.reduce(
+        (sum, opt) => sum + parseInt(opt.stock_quantity || '0'),
+        0,
+      ),
+      created_at: new Date().toISOString(),
     }
+
+    setProducts((prev) => [...prev, newProduct])
+    setIsModalOpen(false)
+    reset()
   }
 
-  const openAddModal = () => {
-    setEditingProduct(null)
-    setIsModalOpen(true)
+  const addOption = () => {
+    appendOption({
+      option_name: '',
+      option_value: '',
+      additional_price: '0',
+      stock_quantity: '0',
+      sku: '',
+      is_available: true,
+    })
   }
 
-  const openEditModal = (product: Product) => {
-    setEditingProduct(product)
-    setIsModalOpen(true)
-  }
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'active':
-        return <Badge variant='default'>Active</Badge>
-      case 'out_of_stock':
-        return <Badge variant='destructive'>Out of Stock</Badge>
-      case 'inactive':
-        return <Badge variant='secondary'>Inactive</Badge>
-      default:
-        return <Badge variant='outline'>Unknown</Badge>
-    }
-  }
-
-  if (productsError) {
-    return (
-      <div className='space-y-6'>
-        <div className='py-8 text-center'>
-          <p className='text-destructive'>Failed to load products</p>
-          <Button variant='outline' onClick={() => window.location.reload()}>
-            Try Again
-          </Button>
-        </div>
-      </div>
-    )
+  const addImage = () => {
+    appendImage({
+      image_url: '',
+      alt_text: '',
+      display_order: (imageFields.length + 1).toString(),
+      is_primary: imageFields.length === 0,
+    })
   }
 
   return (
-    <div className='space-y-6'>
-      <div className='flex items-center justify-between'>
-        <div>
-          <h1 className='text-3xl font-bold'>Product Management</h1>
-          <p className='text-muted-foreground'>Manage your store products</p>
+    <IndexLayout>
+      <div className='flex justify-between'>
+        <div className='flex flex-col gap-2.5 text-white'>
+          <span className='text-4xl'>Products</span>
+          <span>
+            Manage your online store inventory with ease. <br />
+            Add, edit, and track your products and stock levels efficiently.
+          </span>
         </div>
-        <Button onClick={openAddModal}>
-          <Plus className='mr-2 h-4 w-4' />
-          Add New Product
-        </Button>
+        <div className='flex gap-5'>
+          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+            <DialogTrigger asChild>
+              <Button className='w-fit cursor-pointer rounded-xl bg-white p-5 text-[#4a2c00] hover:bg-white/50'>
+                <Plus /> Add Product
+              </Button>
+            </DialogTrigger>
+            <DialogContent className='max-h-[90vh] min-w-4xl overflow-y-auto'>
+              <DialogHeader>
+                <DialogTitle className='text-2xl'>Add New Product</DialogTitle>
+              </DialogHeader>
+
+              <div onSubmit={handleSubmit(onSubmit)} className='space-y-6'>
+                <Card>
+                  <CardContent className='p-6'>
+                    <h3 className='mb-4 text-lg font-semibold'>
+                      Basic Information
+                    </h3>
+                    <div className='grid grid-cols-2 gap-4'>
+                      <div>
+                        <Label htmlFor='name'>Product Name *</Label>
+                        <Controller
+                          name='name'
+                          control={control}
+                          rules={{ required: 'Product name is required' }}
+                          render={({ field, fieldState }) => (
+                            <div>
+                              <Input
+                                {...field}
+                                placeholder='Enter product name'
+                                className='mt-1'
+                              />
+                              {fieldState.error && (
+                                <p className='mt-1 text-sm text-red-500'>
+                                  {fieldState.error.message}
+                                </p>
+                              )}
+                            </div>
+                          )}
+                        />
+                      </div>
+
+                      <div>
+                        <Label htmlFor='brand'>Brand</Label>
+                        <Controller
+                          name='brand'
+                          control={control}
+                          render={({ field }) => (
+                            <Input
+                              {...field}
+                              placeholder='Enter brand name'
+                              className='mt-1'
+                            />
+                          )}
+                        />
+                      </div>
+
+                      <div>
+                        <Label htmlFor='sku'>SKU *</Label>
+                        <Controller
+                          name='sku'
+                          control={control}
+                          rules={{ required: 'SKU is required' }}
+                          render={({ field, fieldState }) => (
+                            <div>
+                              <Input
+                                {...field}
+                                placeholder='Enter SKU'
+                                className='mt-1'
+                              />
+                              {fieldState.error && (
+                                <p className='mt-1 text-sm text-red-500'>
+                                  {fieldState.error.message}
+                                </p>
+                              )}
+                            </div>
+                          )}
+                        />
+                      </div>
+
+                      <div>
+                        <Label htmlFor='category'>Category</Label>
+                        <Controller
+                          name='category_id'
+                          control={control}
+                          render={({ field }) => (
+                            <Select
+                              value={field.value}
+                              onValueChange={field.onChange}
+                            >
+                              <SelectTrigger className='mt-1'>
+                                <SelectValue placeholder='Select category' />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {mockCategories.map((category) => (
+                                  <SelectItem
+                                    key={category.id}
+                                    value={category.id.toString()}
+                                  >
+                                    {category.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          )}
+                        />
+                      </div>
+
+                      <div>
+                        <Label htmlFor='weight'>Weight (kg)</Label>
+                        <Controller
+                          name='weight'
+                          control={control}
+                          render={({ field }) => (
+                            <Input
+                              {...field}
+                              type='number'
+                              step='0.01'
+                              placeholder='0.00'
+                              className='mt-1'
+                            />
+                          )}
+                        />
+                      </div>
+
+                      <div className='flex items-center space-x-2'>
+                        <Controller
+                          name='is_active'
+                          control={control}
+                          render={({ field }) => (
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          )}
+                        />
+                        <Label>Active Product</Label>
+                      </div>
+                    </div>
+
+                    <div className='mt-4'>
+                      <Label htmlFor='short_description'>
+                        Short Description
+                      </Label>
+                      <Controller
+                        name='short_description'
+                        control={control}
+                        render={({ field }) => (
+                          <Textarea
+                            {...field}
+                            placeholder='Brief product description'
+                            className='mt-1'
+                            rows={2}
+                          />
+                        )}
+                      />
+                    </div>
+
+                    <div className='mt-4'>
+                      <Label htmlFor='description'>Full Description</Label>
+                      <Controller
+                        name='description'
+                        control={control}
+                        render={({ field }) => (
+                          <Textarea
+                            {...field}
+                            placeholder='Detailed product description'
+                            className='mt-1'
+                            rows={4}
+                          />
+                        )}
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className='p-6'>
+                    <h3 className='mb-4 text-lg font-semibold'>
+                      Dimensions (cm)
+                    </h3>
+                    <div className='grid grid-cols-3 gap-4'>
+                      <div>
+                        <Label>Width</Label>
+                        <Controller
+                          name='dimensions.width'
+                          control={control}
+                          render={({ field }) => (
+                            <Input
+                              {...field}
+                              type='number'
+                              step='0.1'
+                              placeholder='0.0'
+                              className='mt-1'
+                            />
+                          )}
+                        />
+                      </div>
+                      <div>
+                        <Label>Height</Label>
+                        <Controller
+                          name='dimensions.height'
+                          control={control}
+                          render={({ field }) => (
+                            <Input
+                              {...field}
+                              type='number'
+                              step='0.1'
+                              placeholder='0.0'
+                              className='mt-1'
+                            />
+                          )}
+                        />
+                      </div>
+                      <div>
+                        <Label>Depth</Label>
+                        <Controller
+                          name='dimensions.depth'
+                          control={control}
+                          render={({ field }) => (
+                            <Input
+                              {...field}
+                              type='number'
+                              step='0.1'
+                              placeholder='0.0'
+                              className='mt-1'
+                            />
+                          )}
+                        />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className='p-6'>
+                    <h3 className='mb-4 text-lg font-semibold'>Pricing</h3>
+                    <div className='grid grid-cols-2 gap-4'>
+                      <div>
+                        <Label>Base Price (THB) *</Label>
+                        <Controller
+                          name='prices.base_price'
+                          control={control}
+                          rules={{ required: 'Base price is required' }}
+                          render={({ field, fieldState }) => (
+                            <div>
+                              <Input
+                                {...field}
+                                type='number'
+                                step='0.01'
+                                placeholder='0.00'
+                                className='mt-1'
+                              />
+                              {fieldState.error && (
+                                <p className='mt-1 text-sm text-red-500'>
+                                  {fieldState.error.message}
+                                </p>
+                              )}
+                            </div>
+                          )}
+                        />
+                      </div>
+                      <div>
+                        <Label>Cost Price (THB)</Label>
+                        <Controller
+                          name='prices.cost_price'
+                          control={control}
+                          render={({ field }) => (
+                            <Input
+                              {...field}
+                              type='number'
+                              step='0.01'
+                              placeholder='0.00'
+                              className='mt-1'
+                            />
+                          )}
+                        />
+                      </div>
+                    </div>
+
+                    <div className='mt-4 flex items-center space-x-2'>
+                      <Controller
+                        name='prices.is_on_sale'
+                        control={control}
+                        render={({ field }) => (
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        )}
+                      />
+                      <Label>On Sale</Label>
+                    </div>
+
+                    {watchIsOnSale && (
+                      <div className='mt-4 grid grid-cols-3 gap-4'>
+                        <div>
+                          <Label>Sale Price (THB)</Label>
+                          <Controller
+                            name='prices.sale_price'
+                            control={control}
+                            render={({ field }) => (
+                              <Input
+                                {...field}
+                                type='number'
+                                step='0.01'
+                                placeholder='0.00'
+                                className='mt-1'
+                              />
+                            )}
+                          />
+                        </div>
+                        <div>
+                          <Label>Sale Start Date</Label>
+                          <Controller
+                            name='prices.sale_start_date'
+                            control={control}
+                            render={({ field }) => (
+                              <Input
+                                {...field}
+                                type='datetime-local'
+                                className='mt-1'
+                              />
+                            )}
+                          />
+                        </div>
+                        <div>
+                          <Label>Sale End Date</Label>
+                          <Controller
+                            name='prices.sale_end_date'
+                            control={control}
+                            render={({ field }) => (
+                              <Input
+                                {...field}
+                                type='datetime-local'
+                                className='mt-1'
+                              />
+                            )}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className='p-6'>
+                    <div className='mb-4 flex items-center justify-between'>
+                      <h3 className='text-lg font-semibold'>Product Options</h3>
+                      <Button
+                        type='button'
+                        onClick={addOption}
+                        variant='outline'
+                        size='sm'
+                      >
+                        <Plus className='mr-2 h-4 w-4' />
+                        Add Option
+                      </Button>
+                    </div>
+
+                    <div className='space-y-4'>
+                      {optionFields.map((field, index) => (
+                        <Card key={field.id} className='p-4'>
+                          <div className='mb-4 flex items-start justify-between'>
+                            <h4 className='font-medium'>Option {index + 1}</h4>
+                            <Button
+                              type='button'
+                              onClick={() => removeOption(index)}
+                              variant='ghost'
+                              size='sm'
+                              className='text-red-500 hover:text-red-700'
+                            >
+                              <X className='h-4 w-4' />
+                            </Button>
+                          </div>
+
+                          <div className='grid grid-cols-2 gap-4'>
+                            <div>
+                              <Label>Option Name</Label>
+                              <Controller
+                                name={`options.${index}.option_name`}
+                                control={control}
+                                render={({ field }) => (
+                                  <Input
+                                    {...field}
+                                    placeholder='e.g., Color, Size'
+                                    className='mt-1'
+                                  />
+                                )}
+                              />
+                            </div>
+                            <div>
+                              <Label>Option Value</Label>
+                              <Controller
+                                name={`options.${index}.option_value`}
+                                control={control}
+                                render={({ field }) => (
+                                  <Input
+                                    {...field}
+                                    placeholder='e.g., Red, Large'
+                                    className='mt-1'
+                                  />
+                                )}
+                              />
+                            </div>
+                            <div>
+                              <Label>Additional Price (THB)</Label>
+                              <Controller
+                                name={`options.${index}.additional_price`}
+                                control={control}
+                                render={({ field }) => (
+                                  <Input
+                                    {...field}
+                                    type='number'
+                                    step='0.01'
+                                    placeholder='0.00'
+                                    className='mt-1'
+                                  />
+                                )}
+                              />
+                            </div>
+                            <div>
+                              <Label>Stock Quantity</Label>
+                              <Controller
+                                name={`options.${index}.stock_quantity`}
+                                control={control}
+                                render={({ field }) => (
+                                  <Input
+                                    {...field}
+                                    type='number'
+                                    placeholder='0'
+                                    className='mt-1'
+                                  />
+                                )}
+                              />
+                            </div>
+                            <div>
+                              <Label>Option SKU</Label>
+                              <Controller
+                                name={`options.${index}.sku`}
+                                control={control}
+                                render={({ field }) => (
+                                  <Input
+                                    {...field}
+                                    placeholder='Optional SKU'
+                                    className='mt-1'
+                                  />
+                                )}
+                              />
+                            </div>
+                            <div className='mt-6 flex items-center space-x-2'>
+                              <Controller
+                                name={`options.${index}.is_available`}
+                                control={control}
+                                render={({ field }) => (
+                                  <Switch
+                                    checked={field.value}
+                                    onCheckedChange={field.onChange}
+                                  />
+                                )}
+                              />
+                              <Label>Available</Label>
+                            </div>
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className='p-6'>
+                    <div className='mb-4 flex items-center justify-between'>
+                      <h3 className='text-lg font-semibold'>Product Images</h3>
+                      <Button
+                        type='button'
+                        onClick={addImage}
+                        variant='outline'
+                        size='sm'
+                      >
+                        <Upload className='mr-2 h-4 w-4' />
+                        Add Image
+                      </Button>
+                    </div>
+
+                    <div className='space-y-4'>
+                      {imageFields.map((field, index) => (
+                        <Card key={field.id} className='p-4'>
+                          <div className='mb-4 flex items-start justify-between'>
+                            <h4 className='font-medium'>Image {index + 1}</h4>
+                            <Button
+                              type='button'
+                              onClick={() => removeImage(index)}
+                              variant='ghost'
+                              size='sm'
+                              className='text-red-500 hover:text-red-700'
+                            >
+                              <X className='h-4 w-4' />
+                            </Button>
+                          </div>
+
+                          <div className='grid grid-cols-2 gap-4'>
+                            <div className='col-span-2'>
+                              <Label>Image URL</Label>
+                              <Controller
+                                name={`images.${index}.image_url`}
+                                control={control}
+                                render={({ field }) => (
+                                  <Input
+                                    {...field}
+                                    placeholder='https://example.com/image.jpg'
+                                    className='mt-1'
+                                  />
+                                )}
+                              />
+                            </div>
+                            <div>
+                              <Label>Alt Text</Label>
+                              <Controller
+                                name={`images.${index}.alt_text`}
+                                control={control}
+                                render={({ field }) => (
+                                  <Input
+                                    {...field}
+                                    placeholder='Image description'
+                                    className='mt-1'
+                                  />
+                                )}
+                              />
+                            </div>
+                            <div>
+                              <Label>Display Order</Label>
+                              <Controller
+                                name={`images.${index}.display_order`}
+                                control={control}
+                                render={({ field }) => (
+                                  <Input
+                                    {...field}
+                                    type='number'
+                                    placeholder='1'
+                                    className='mt-1'
+                                  />
+                                )}
+                              />
+                            </div>
+                            <div className='mt-6 flex items-center space-x-2'>
+                              <Controller
+                                name={`images.${index}.is_primary`}
+                                control={control}
+                                render={({ field }) => (
+                                  <Switch
+                                    checked={field.value}
+                                    onCheckedChange={(checked) => {
+                                      if (checked) {
+                                        imageFields.forEach((_, i) => {
+                                          if (i !== index) {
+                                            setValue(
+                                              `images.${i}.is_primary`,
+                                              false,
+                                            )
+                                          }
+                                        })
+                                      }
+                                      field.onChange(checked)
+                                    }}
+                                  />
+                                )}
+                              />
+                              <Label>Primary Image</Label>
+                            </div>
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <div className='flex justify-end gap-4'>
+                  <Button
+                    type='button'
+                    variant='outline'
+                    onClick={() => setIsModalOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type='submit'
+                    className='bg-[#4a2c00] hover:bg-[#4a2c00]/80'
+                    onClick={handleSubmit(onSubmit)}
+                  >
+                    Create Product
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          <Button className='w-fit cursor-pointer rounded-xl bg-white p-5 text-[#4a2c00] hover:bg-white/50'>
+            <Download /> Export Products
+          </Button>
+        </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Product List</CardTitle>
-          <CardDescription>
-            {isLoading ? (
-              <span className='flex items-center gap-2'>
-                <Loader2 className='h-4 w-4 animate-spin' />
-                Loading products...
-              </span>
-            ) : (
-              `Total ${products?.length || 0} products`
-            )}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className='mb-4 flex items-center space-x-2'>
-            <div className='relative max-w-sm flex-1'>
-              <Search className='text-muted-foreground absolute top-2.5 left-2 h-4 w-4' />
-              <Input
-                placeholder='Search products...'
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className='pl-8'
-              />
-              {isSearching && searchTerm && (
-                <Loader2 className='absolute top-2.5 right-2 h-4 w-4 animate-spin' />
-              )}
-            </div>
-          </div>
+      <div>
+        <div className='grid grid-cols-4 gap-5 text-[#4a2c00]'>
+          <SumCard
+            label={'Total Products'}
+            value={products.length}
+            href={'/dashboard/products'}
+          />
+        </div>
+      </div>
 
-          <div className='rounded-md border'>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Product Name</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Price</TableHead>
-                  <TableHead>Stock</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className='text-right'>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className='py-8 text-center'>
-                      <Loader2 className='mx-auto h-6 w-6 animate-spin' />
-                    </TableCell>
-                  </TableRow>
-                ) : products && products.length > 0 ? (
-                  products.map((product) => (
-                    <TableRow key={product.id}>
-                      <TableCell className='font-medium'>
-                        {product.name}
-                      </TableCell>
-                      <TableCell>{product.category}</TableCell>
-                      <TableCell>฿{product.price.toLocaleString()}</TableCell>
-                      <TableCell>
-                        <span
-                          className={
-                            product.stock <= 10
-                              ? 'text-destructive font-semibold'
-                              : ''
-                          }
-                        >
-                          {product.stock}
+      <div className='rounded-xl bg-white p-5'>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Product Name</TableHead>
+              <TableHead>Brand</TableHead>
+              <TableHead>SKU</TableHead>
+              <TableHead>Price</TableHead>
+              <TableHead>Stock</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Created</TableHead>
+              <TableHead className='text-right'>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {products.map((product) => (
+              <TableRow key={product.id}>
+                <TableCell className='font-medium'>{product.name}</TableCell>
+                <TableCell>{product.brand}</TableCell>
+                <TableCell>
+                  <code className='rounded bg-gray-100 px-2 py-1 text-sm'>
+                    {product.sku}
+                  </code>
+                </TableCell>
+                <TableCell>
+                  <div className='flex flex-col'>
+                    {product.is_on_sale && product.sale_price ? (
+                      <>
+                        <span className='text-sm text-gray-500 line-through'>
+                          {formatPrice(product.base_price)}
                         </span>
-                      </TableCell>
-                      <TableCell>{getStatusBadge(product.status)}</TableCell>
-                      <TableCell className='text-right'>
-                        <div className='flex justify-end space-x-2'>
-                          <Button
-                            variant='ghost'
-                            size='sm'
-                            onClick={() => openEditModal(product)}
-                          >
-                            <Edit className='h-4 w-4' />
-                          </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant='ghost' size='sm'>
-                                <Trash2 className='h-4 w-4' />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>
-                                  Delete Product
-                                </AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Are you sure you want to delete &quot;
-                                  {product.name}&quot;? This action cannot be
-                                  undone.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() =>
-                                    handleDeleteProduct(product.id)
-                                  }
-                                  disabled={deleteProductMutation.isPending}
-                                >
-                                  {deleteProductMutation.isPending ? (
-                                    <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                                  ) : null}
-                                  Delete
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={6} className='py-8 text-center'>
-                      {searchTerm
-                        ? 'No products found'
-                        : 'No products available'}
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
-
-      <ProductModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        product={editingProduct}
-      />
-
-      <ProductImageGallery
-        images={galleryState.images}
-        productName={galleryState.productName}
-        isOpen={galleryState.isOpen}
-        onClose={() => setGalleryState((prev) => ({ ...prev, isOpen: false }))}
-        initialIndex={galleryState.initialIndex}
-      />
-    </div>
+                        <span className='font-semibold text-red-600'>
+                          {formatPrice(product.sale_price)}
+                        </span>
+                      </>
+                    ) : (
+                      <span>{formatPrice(product.base_price)}</span>
+                    )}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <Badge
+                    variant={
+                      product.stock_quantity > 10 ? 'default' : 'destructive'
+                    }
+                  >
+                    {product.stock_quantity}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <Badge variant={product.is_active ? 'default' : 'secondary'}>
+                    {product.is_active ? 'Active' : 'Inactive'}
+                  </Badge>
+                </TableCell>
+                <TableCell>{formatDate(product.created_at)}</TableCell>
+                <TableCell className='text-right'>
+                  <div className='flex justify-end gap-2'>
+                    <Button variant='ghost' size='sm'>
+                      <Eye className='h-4 w-4' />
+                    </Button>
+                    <Button variant='ghost' size='sm'>
+                      <Edit className='h-4 w-4' />
+                    </Button>
+                    <Button variant='ghost' size='sm' className='text-red-600'>
+                      <Trash2 className='h-4 w-4' />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </IndexLayout>
   )
 }
+
+export default ProductPage

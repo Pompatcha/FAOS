@@ -1,105 +1,207 @@
 'use client'
 
-import { Certification } from '@/components/Homepage/Certification'
-import { Footer } from '@/components/Layout/Footer'
-import { Header } from '@/components/Layout/Header'
-import { HeaderImageSlider } from '@/components/Homepage/HeaderImageSlider'
-import { Menu } from '@/components/Layout/Menu'
-import { FollowUs } from '@/components/Homepage/FollowUs'
-import { Research } from '@/components/Homepage/Research'
-import { AuthPanel } from '@/components/Protected/LoginPanel'
-import { Benefit } from '@/components/Homepage/Benefit'
-import { Shipping } from '@/components/Homepage/Shipping'
-import { Payment } from '@/components/Homepage/Payment'
-import { FacebookProvider, Page } from 'react-facebook'
-import { Banner } from '@/components/Homepage/Banner'
+import { NatureGoldBanner } from '@/components/NatureGoldBanner'
+import { IndexLayout } from '@/components/Layout/Index'
+import { HeaderImageSlider } from '@/components/ImageSlider'
+import { ArrowUpRight, CircleCheck } from 'lucide-react'
+import { Benefit } from '@/components/Benefit'
+import { SocialIcon } from 'react-social-icons'
 
 export default function Home() {
   return (
-    <div className='flex flex-col items-center bg-[#dda700]'>
-      <Header />
-      <Menu />
+    <IndexLayout>
+      <NatureGoldBanner />
+      <HeaderImageSlider />
 
-      <div className='flex w-full gap-5 p-5'>
-        <div className='flex flex-1 flex-col gap-5'>
-          <Banner />
-
-          <div className='flex justify-center'>
-            <HeaderImageSlider />
-          </div>
-
-          <div className='flex w-full flex-col rounded-lg bg-[#bfa046] p-2.5 text-center shadow'>
-            <span className='text-2xl font-bold text-[#00332f]'>
-              🌿 FAOS Premium Organic Collection – Premium Olive Oil and Real
-              Honey 🌿
-            </span>
-          </div>
-
-          <div className='flex w-full items-center gap-5 rounded-lg bg-white p-5'>
-            <div className='size-20 flex-shrink-0 overflow-hidden rounded-full'>
-              <img
-                src='https://i.ibb.co/351rJLyB/IMG-8438.jpg'
-                className='h-full w-full object-cover'
-              />
-            </div>
-            <span className='w-full text-xl'>
-              Created for Health, Elegance and Well-Being. Elevate patient care
-              and hospitality with the FAOS Collection, a luxurious blend of
-              Thai-Greek heritage, organic purity and health innovation.
-              Designed for discerning healthcare environments that prioritize
-              natural healing and quality without compromise.
-            </span>
-          </div>
-
-          <div className='flex w-full flex-col rounded-lg bg-[#bfa046] p-2.5 text-center shadow'>
-            <span className='text-2xl font-bold text-[#00332f]'>
-              🌿 🏥 Why FAOS is Needed for Private Hospitals 🏥
-            </span>
-          </div>
-
-          <div className='flex w-full flex-col rounded-lg bg-white p-5'>
-            <span className='text-xl'>
-              <span className='font-bold'>✅ Hospital-grade Safety:</span>{' '}
-              Complies with hygiene and food handling standards.
-            </span>
-            <span className='text-xl'>
-              <span className='font-bold'>✅ Luxury Branding:</span> Enhances
-              the hospital&apos;s premium image and patient experience.
-            </span>
-            <span className='text-xl'>
-              <span className='font-bold'>✅ Sustainably Sourced:</span>{' '}
-              Environmentally conscious practices that reflect healthcare&apos;s
-              commitment to the planet.
-            </span>
-          </div>
-
-          <Benefit />
-
-          <Certification />
-
-          <div className='grid w-full grid-cols-2 gap-5'>
-            <FollowUs />
-            <Research />
-            <Shipping />
-            <Payment />
-          </div>
-
-          <Footer />
+      <div className='flex flex-col'>
+        <div className='bg-secondary flex w-full flex-col rounded-t-lg p-2.5 text-center shadow'>
+          <span className='text-2xl font-bold text-red-800'>
+            FAOS Premium Organic Collection – Premium Olive Oil and Real Honey
+          </span>
         </div>
 
-        <div className='sticky top-5 h-fit w-80 flex-shrink-0'>
-          <AuthPanel />
+        <div className='flex w-full flex-col items-center gap-5 rounded-b-lg bg-white p-5 sm:flex-row'>
+          <div className='size-28 flex-shrink-0 overflow-hidden'>
+            <img
+              src='https://i.ibb.co/351rJLyB/IMG-8438.jpg'
+              className='h-full w-full rounded-full object-cover'
+            />
+          </div>
+          <span className='w-full text-xl'>
+            Created for Health, Elegance and Well-Being. Elevate patient care
+            and hospitality with the FAOS Collection, a luxurious blend of
+            Thai-Greek heritage, organic purity and health innovation. Designed
+            for discerning healthcare environments that prioritize natural
+            healing and quality without compromise. (Patcharin Chanaphukdee)
+          </span>
+        </div>
+      </div>
 
-          <div className='mt-5'>
-            <FacebookProvider appId='your-app-id'>
-              <Page
-                href='https://www.facebook.com/FAOShertitagefood'
-                tabs='timeline'
-              />
-            </FacebookProvider>
+      <div className='flex flex-col'>
+        <div className='bg-secondary flex w-full flex-col rounded-t-lg p-2.5 text-center shadow'>
+          <span className='text-2xl font-bold text-red-800'>
+            Why FAOS is Needed for Private Hospitals
+          </span>
+        </div>
+
+        <div className='flex w-full flex-col gap-2.5 rounded-b-lg bg-white p-5'>
+          <div className='flex gap-2.5'>
+            <CircleCheck size={30} className='text-green-800' />
+            <span className='w-full text-xl'>
+              <b>Hospital-grade Safety:</b> Complies with hygiene and food
+              handling standards.
+            </span>
+          </div>
+
+          <div className='flex gap-2.5'>
+            <CircleCheck size={30} className='text-green-800' />
+            <span className='w-full text-xl'>
+              <b> Luxury Branding:</b> Enhances the hospital&apos;s premium
+              image and patient experience.
+            </span>
+          </div>
+
+          <div className='flex gap-2.5'>
+            <CircleCheck size={30} className='text-green-800' />
+            <span className='w-full text-xl'>
+              <b> Sustainably Sourced:</b> Environmentally conscious practices
+              that reflect healthcare&apos;s commitment to the planet.
+            </span>
           </div>
         </div>
       </div>
-    </div>
+
+      <Benefit />
+
+      <div className='flex flex-col'>
+        <div className='bg-secondary flex w-full flex-col rounded-t-lg p-2.5 text-center shadow'>
+          <span className='text-2xl font-bold text-red-800'>
+            Certification compliance with organic, safety, and <br /> hygiene
+            standards
+          </span>
+        </div>
+
+        <div className='flex w-full flex-col gap-5 rounded-b-lg bg-white p-5'>
+          <div className='flex justify-center gap-5'>
+            <img
+              className='size-18 object-contain duration-300 hover:scale-102 sm:size-28'
+              src='https://seajoy.com/images/company-news/AB_eurofeuille.png'
+            />
+            <img
+              className='size-18 object-contain duration-300 hover:scale-102 sm:size-28'
+              src='https://1.bp.blogspot.com/-lofZ1ZddkjA/VrRvD8Y24KI/AAAAAAAACpM/QsG8-zh5pY8/s1600/iso_icon.png'
+            />
+            <img
+              className='size-18 object-contain duration-300 hover:scale-102 sm:size-28'
+              src='https://vectorseek.com/wp-content/uploads/2023/09/Bio-nach-EG-Oko-Verordnung-Logo-Vector.svg-.png'
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className='flex flex-col justify-between gap-5 lg:flex-row'>
+        <div className='flex w-full flex-col'>
+          <div className='bg-secondary flex w-full flex-col rounded-t-lg p-2.5 text-center shadow'>
+            <span className='text-2xl font-bold text-red-800'>Follow Us</span>
+          </div>
+
+          <div className='grid w-full grid-cols-1 gap-5 rounded-b-lg bg-white p-5 sm:grid-cols-2'>
+            <div className='flex cursor-pointer items-center gap-2.5'>
+              <SocialIcon
+                network='facebook'
+                style={{ width: 38, height: 38 }}
+              />
+
+              <span>Facebook (FAOS.Honey and Olive oil)</span>
+            </div>
+
+            <div className='flex cursor-pointer items-center gap-2.5'>
+              <SocialIcon
+                network='instagram'
+                style={{ width: 38, height: 38 }}
+              />
+
+              <span>Instagram</span>
+            </div>
+
+            <div className='flex cursor-pointer items-center gap-2.5'>
+              <SocialIcon
+                network='whatsapp'
+                style={{ width: 38, height: 38 }}
+              />
+
+              <span>WhatsApp</span>
+            </div>
+
+            <div className='flex cursor-pointer items-center gap-2.5'>
+              <SocialIcon network='tiktok' style={{ width: 38, height: 38 }} />
+
+              <span>TikTok</span>
+            </div>
+
+            <div className='flex cursor-pointer items-center gap-2.5'>
+              <SocialIcon network='line.me' style={{ width: 38, height: 38 }} />
+
+              <span>LINE Official</span>
+            </div>
+          </div>
+        </div>
+
+        <div className='flex w-full flex-col'>
+          <div className='bg-secondary flex w-full flex-col rounded-t-lg p-2.5 text-center shadow'>
+            <span className='text-2xl font-bold text-red-800'>
+              Research & References
+            </span>
+          </div>
+
+          <div className='flex w-full flex-col gap-5 rounded-b-lg bg-white p-5'>
+            <div className='flex cursor-pointer gap-2.5'>
+              <div className='flex size-8 items-center justify-center rounded-full border border-black'>
+                <ArrowUpRight />
+              </div>
+              <span className='w-full text-xl'>
+                Olive oil is beneficial for maternal-fetal health
+              </span>
+            </div>
+
+            <div className='flex cursor-pointer gap-2.5'>
+              <div className='flex size-8 items-center justify-center rounded-full border border-black'>
+                <ArrowUpRight />
+              </div>
+              <span className='w-full text-xl'>
+                Healthline: Benefits of Honey
+              </span>
+            </div>
+
+            <div className='flex cursor-pointer gap-2.5'>
+              <div className='flex size-8 items-center justify-center rounded-full border border-black'>
+                <ArrowUpRight />
+              </div>
+              <span className='w-full text-xl'>
+                Olive Oil~ A Key Component of the Mediterranean Diet
+              </span>
+            </div>
+
+            <div className='flex cursor-pointer gap-2.5'>
+              <div className='flex size-8 items-center justify-center rounded-full border border-black'>
+                <ArrowUpRight />
+              </div>
+              <span className='w-full text-xl'>
+                Using Greek Honey for Beautiful Skin, Hair, and Anti-Aging
+              </span>
+            </div>
+
+            <div className='flex cursor-pointer gap-2.5'>
+              <div className='flex size-8 items-center justify-center rounded-full border border-black'>
+                <ArrowUpRight />
+              </div>
+              <span className='w-full text-xl'>
+                Everything to Know About the Health Benefits of Honey
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </IndexLayout>
   )
 }

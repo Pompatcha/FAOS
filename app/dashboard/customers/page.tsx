@@ -13,27 +13,32 @@ import {
   TableRow,
 } from '@/components/ui/table'
 
-const OrderPage: FC = () => {
+const CustomerPage: FC = () => {
   return (
     <IndexLayout>
       <div className='flex justify-between'>
         <div className='flex flex-col gap-2.5 text-white'>
-          <span className='text-4xl'>Orders</span>
+          <span className='text-4xl'>Customers</span>
           <span>
-            Track and manage all your customer orders in one place. <br />
-            Process payments, update order status, and ensure timely delivery.
+            Manage your customer relationships and data. <br />
+            View customer profiles, order history, and build lasting
+            connections.
           </span>
         </div>
         <div className='flex gap-5'>
           <Button className='w-fit cursor-pointer rounded-xl bg-white p-5 text-[#4a2c00] hover:bg-white/50'>
-            <Download /> Export Orders
+            <Download /> Export Customers
           </Button>
         </div>
       </div>
 
       <div>
         <div className='grid grid-cols-4 gap-5 text-[#4a2c00]'>
-          <SumCard label={'New Orders'} value={50} href={'/dashboard/orders'} />
+          <SumCard
+            label={'New Customers'}
+            value={50}
+            href={'/dashboard/customers'}
+          />
         </div>
       </div>
 
@@ -61,4 +66,4 @@ const OrderPage: FC = () => {
   )
 }
 
-export default OrderPage
+export default CustomerPage

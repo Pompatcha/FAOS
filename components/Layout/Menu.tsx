@@ -1,174 +1,325 @@
 'use client'
-import { useState } from 'react'
-import { ChevronDown, ShoppingCart, User } from 'lucide-react'
-import { Profile } from '../Homepage/Profile'
+import { ChevronDown, Menu as MenuIcon, X } from 'lucide-react'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import Cart from '../Products/Cart'
-import { useCartCount } from '@/hooks/use-carts'
+import React from 'react'
+import { useState, useCallback, useMemo, useRef, useEffect } from 'react'
+
+interface SubMenuItem {
+  title: string
+  href: string
+}
+
+interface MenuItem {
+  title: string
+  href?: string
+  submenu?: SubMenuItem[]
+}
+
+const MENU_ITEMS: MenuItem[] = [
+  { title: 'Home', href: '/' },
+  { title: 'Honey', href: '/category/honey' },
+  { title: 'Olive oil', href: '/category/olive-oil' },
+  { title: 'Organic skin care', href: '/category/organic-skin-care' },
+  {
+    title: 'Our Shop',
+    submenu: [
+      { title: 'Bangkok', href: '/our-shop/bangkok' },
+      { title: 'Pattaya', href: '/our-shop/pattaya' },
+      { title: 'Chiang Mai', href: '/our-shop/chiang-mai' },
+      { title: 'Phuket', href: '/our-shop/phuket' },
+      { title: 'Krabi', href: '/our-shop/krabi' },
+      { title: 'Prachinburi', href: '/our-shop/prachinburi' },
+      { title: 'Hua Hin', href: '/our-shop/hua-hin' },
+    ],
+  },
+  { title: 'About me', href: '/about' },
+  {
+    title: 'Admin Control',
+    href: '/',
+    submenu: [
+      { title: 'Dashboard', href: '/dashboard' },
+      { title: 'Products', href: '/dashboard/products' },
+      { title: 'Orders', href: '/dashboard/orders' },
+      { title: 'Customers', href: '/dashboard/customers' },
+    ],
+  },
+]
 
 const Menu = () => {
   const router = useRouter()
   const [activeMenu, setActiveMenu] = useState<string | null>(null)
-  const [isCartOpen, setIsCartOpen] = useState(false)
-  const [isProfileOpen, setIsProfileOpen] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [expandedMobileSubmenu, setExpandedMobileSubmenu] = useState<
+    string | null
+  >(null)
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  const { data: cartCount = 0 } = useCartCount()
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setIsMobileMenuOpen(false)
+        setExpandedMobileSubmenu(null)
+      }
+    }
 
-  const menuItems = [
-    {
-      title: 'Home',
-      href: '/',
-    },
-    {
-      title: 'Honey',
-      href: '/category/honey',
-    },
-    {
-      title: 'Olive oil',
-      href: '/category/olive-oil',
-    },
-    {
-      title: 'Organic skin care',
-      href: '/category/organic-skin-care',
-    },
-    {
-      title: 'Our Shop',
-      submenu: [
-        { title: 'Bangkok', href: '/our-shop/bangkok' },
-        { title: 'Pattaya', href: '/our-shop/pattaya' },
-        { title: 'Chiang Mai', href: '/our-shop/chiang-mai' },
-        { title: 'Phuket', href: '/our-shop/phuket' },
-        { title: 'Krabi', href: '/our-shop/krabi' },
-        { title: 'Prachinburi', href: '/our-shop/prachinburi' },
-        { title: 'Hua Hin', href: '/our-shop/hua-hin' },
-      ],
-    },
-    {
-      title: 'About me',
-      href: '/about',
-    },
-  ]
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
-  const handleMenuClick = (
-    href: string | undefined,
-    hasSubmenu: boolean = false,
-  ) => {
-    if (!hasSubmenu && href) {
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [isMobileMenuOpen])
+
+  const handleMenuClick = useCallback(
+    (href?: string, hasSubmenu: boolean = false) => {
+      if (!hasSubmenu && href) {
+        router.push(href)
+        setActiveMenu(null)
+        setIsMobileMenuOpen(false)
+      }
+    },
+    [router],
+  )
+
+  const handleSubmenuClick = useCallback(
+    (href: string) => {
       router.push(href)
       setActiveMenu(null)
+      setIsMobileMenuOpen(false)
+      setExpandedMobileSubmenu(null)
+    },
+    [router],
+  )
+
+  const handleMenuEnter = useCallback((menuTitle: string) => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current)
+      timeoutRef.current = null
     }
-  }
+    setActiveMenu(menuTitle)
+  }, [])
 
-  const handleSubmenuClick = (href: string) => {
-    router.push(href)
-    setActiveMenu(null)
-  }
+  const handleMenuLeave = useCallback(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current)
+    }
 
-  const handleMenuHover = (menuId: string) => {
-    setActiveMenu(menuId)
-  }
-
-  const handleMenuLeave = () => {
-    setTimeout(() => {
+    timeoutRef.current = setTimeout(() => {
       setActiveMenu(null)
+      timeoutRef.current = null
     }, 150)
-  }
+  }, [])
 
-  const handleProfileClick = () => {
-    setIsProfileOpen(true)
-  }
+  const toggleMobileSubmenu = useCallback((menuTitle: string) => {
+    setExpandedMobileSubmenu((prev) => (prev === menuTitle ? null : menuTitle))
+  }, [])
 
-  const handleCartClick = () => {
-    setIsCartOpen(true)
-  }
+  const renderDesktopSubmenu = useMemo(
+    // eslint-disable-next-line react/display-name
+    () => (item: MenuItem) => {
+      if (!item.submenu) return null
+
+      const isActive = activeMenu === item.title
+
+      return (
+        <div
+          className={`bg-primary absolute top-full left-0 z-50 min-w-[200px] origin-top rounded-xl border-2 shadow-xl transition-all duration-200 ${
+            isActive
+              ? 'visible scale-y-100 opacity-100'
+              : 'invisible scale-y-0 opacity-0'
+          }`}
+          onMouseEnter={() => handleMenuEnter(item.title)}
+          onMouseLeave={handleMenuLeave}
+        >
+          <div className='py-2'>
+            {item.submenu.map((subItem) => (
+              <button
+                key={subItem.href}
+                onClick={() => handleSubmenuClick(subItem.href)}
+                className='hover:bg-primary/80 block w-full cursor-pointer px-4 py-3 text-left text-white transition-colors duration-150 hover:underline'
+              >
+                {subItem.title}
+              </button>
+            ))}
+          </div>
+        </div>
+      )
+    },
+    [activeMenu, handleMenuEnter, handleMenuLeave, handleSubmenuClick],
+  )
+
+  const renderMobileSubmenu = useCallback(
+    (item: MenuItem) => {
+      if (!item.submenu) return null
+
+      const isExpanded = expandedMobileSubmenu === item.title
+
+      return (
+        <div
+          className={`overflow-hidden transition-all duration-300 ${
+            isExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+          }`}
+        >
+          <div className='bg-primary/80'>
+            {item.submenu.map((subItem) => (
+              <button
+                key={subItem.href}
+                onClick={() => handleSubmenuClick(subItem.href)}
+                className='hover:bg-primary/60 block w-full px-8 py-3 text-left text-white/90 transition-colors duration-150'
+              >
+                - {subItem.title}
+              </button>
+            ))}
+          </div>
+        </div>
+      )
+    },
+    [expandedMobileSubmenu, handleSubmenuClick],
+  )
+
+  React.useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
+      }
+    }
+  }, [])
 
   return (
-    <>
-      <nav className='sticky top-0 z-50 w-full border-8 border-[#e2b007] bg-[#e2b007] shadow-lg'>
-        <div className='item flex justify-center'>
-          {menuItems.map((item) => (
-            <div
-              key={item.title}
-              className='group relative'
-              onMouseEnter={() => item.submenu && handleMenuHover(item.title)}
-              onMouseLeave={() => item.submenu && handleMenuLeave()}
-            >
-              <button
-                className={`flex items-center gap-2 px-6 py-4 font-bold text-white transition-colors duration-200 hover:bg-[#f3d27a] hover:text-white`}
-                onClick={() => handleMenuClick(item.href, !!item.submenu)}
+    <div className='sticky top-0 z-40'>
+      <div className='bg-secondary flex w-full justify-center'>
+        <Image
+          src='/logo.png'
+          width={120}
+          height={120}
+          alt='FAOS Logo'
+          priority
+          className='object-contain'
+        />
+      </div>
+
+      <nav className='bg-primary w-full p-2.5 shadow-lg'>
+        <div className='hidden justify-center lg:flex'>
+          {MENU_ITEMS.map((item) => {
+            const hasSubmenu = Boolean(item.submenu)
+
+            return (
+              <div
+                key={item.title}
+                className='group relative'
+                onMouseEnter={
+                  hasSubmenu ? () => handleMenuEnter(item.title) : undefined
+                }
+                onMouseLeave={hasSubmenu ? handleMenuLeave : undefined}
               >
-                <span className='font-medium whitespace-nowrap'>
-                  {item.title}
-                </span>
-                {item.submenu && (
-                  <ChevronDown
-                    className={`h-4 w-4 transition-transform duration-200 ${
-                      activeMenu === item.title ? 'rotate-180' : ''
-                    }`}
-                  />
-                )}
-              </button>
-
-              {item.submenu && (
-                <div
-                  className={`absolute top-full left-0 z-50 min-w-[200px] origin-top border-2 border-[#f3d27a] bg-[#e2b007] shadow-xl transition-all duration-200 ${
-                    activeMenu === item.title
-                      ? 'visible scale-y-100 opacity-100'
-                      : 'invisible scale-y-0 opacity-0'
-                  } `}
-                  onMouseEnter={() => setActiveMenu(item.title)}
-                  onMouseLeave={handleMenuLeave}
+                <button
+                  className='hover:bg-primary/80 flex cursor-pointer items-center gap-2 px-6 py-4 font-bold text-white transition-colors duration-200 hover:underline'
+                  onClick={() => handleMenuClick(item.href, hasSubmenu)}
+                  type='button'
                 >
-                  <div className='py-2'>
-                    {item.submenu.map((subItem, index) => (
-                      <button
-                        key={index}
-                        onClick={() => handleSubmenuClick(subItem.href)}
-                        className='block w-full px-4 py-3 text-left text-white transition-colors duration-150 hover:bg-[#f3d27a] hover:text-white'
-                      >
-                        <span>{subItem.title}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
+                  <span className='font-medium whitespace-nowrap'>
+                    {item.title}
+                  </span>
+                  {hasSubmenu && (
+                    <ChevronDown
+                      className={`transition-transform duration-200 ${
+                        activeMenu === item.title ? 'rotate-180' : ''
+                      }`}
+                      aria-hidden='true'
+                    />
+                  )}
+                </button>
+
+                {renderDesktopSubmenu(item)}
+              </div>
+            )
+          })}
         </div>
 
-        <div className='flex justify-center gap-4 pb-4'>
+        <div className='flex items-center justify-between px-4 py-3 lg:hidden'>
+          <span className='text-lg font-bold text-white'>FAOS Co.,Ltd.</span>
           <button
-            onClick={handleProfileClick}
-            className='z-40 size-13 rounded-full border-2 border-white bg-[#e2b007] p-3 text-white shadow-lg transition-all duration-200 hover:scale-105 hover:bg-[#f3d27a]'
-            aria-label='Open profile'
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className='hover:bg-primary/80 p-2 text-white transition-colors duration-200'
+            aria-label='Toggle mobile menu'
           >
-            <User className='h-6 w-6' />
+            {isMobileMenuOpen ? (
+              <X className='h-6 w-6' />
+            ) : (
+              <MenuIcon className='h-6 w-6' />
+            )}
           </button>
+        </div>
 
-          <Profile
-            isOpen={isProfileOpen}
-            onClose={() => setIsProfileOpen(false)}
+        {isMobileMenuOpen && (
+          <div
+            className='fixed inset-0 z-40 bg-black/50 lg:hidden'
+            onClick={() => setIsMobileMenuOpen(false)}
           />
+        )}
 
-          <button
-            onClick={handleCartClick}
-            className='z-40 size-13 rounded-full border-2 border-white bg-[#e2b007] p-3 text-white shadow-lg transition-all duration-200 hover:scale-105 hover:bg-[#f3d27a]'
-            aria-label={`Open cart with ${cartCount} items`}
-          >
-            <div className='relative'>
-              <ShoppingCart className='h-6 w-6' />
-              {cartCount > 0 && (
-                <span className='absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white'>
-                  {cartCount > 99 ? '99+' : cartCount}
-                </span>
-              )}
-            </div>
-          </button>
+        <div
+          className={`bg-primary fixed top-0 right-0 z-50 h-full w-80 max-w-[85vw] transform border-l-8 shadow-2xl transition-transform duration-300 lg:hidden ${
+            isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
+          }`}
+        >
+          <div className='flex items-center justify-end p-4'>
+            <button
+              onClick={() => setIsMobileMenuOpen(false)}
+              className='hover:bg-primary/80 rounded p-2 text-white transition-colors duration-200'
+              aria-label='Close mobile menu'
+            >
+              <X className='h-6 w-6' />
+            </button>
+          </div>
+
+          <div className='h-full overflow-y-auto pb-20'>
+            {MENU_ITEMS.map((item) => {
+              const hasSubmenu = Boolean(item.submenu)
+
+              return (
+                <div key={item.title}>
+                  <button
+                    className='hover:bg-primary/80 flex w-full items-center justify-between px-4 py-4 text-left font-medium text-white transition-colors duration-200'
+                    onClick={() => {
+                      if (hasSubmenu) {
+                        toggleMobileSubmenu(item.title)
+                      } else {
+                        handleMenuClick(item.href, hasSubmenu)
+                      }
+                    }}
+                    type='button'
+                  >
+                    <span>{item.title}</span>
+                    {hasSubmenu && (
+                      <ChevronDown
+                        className={`transition-transform duration-300 ${
+                          expandedMobileSubmenu === item.title
+                            ? 'rotate-180'
+                            : ''
+                        }`}
+                        aria-hidden='true'
+                      />
+                    )}
+                  </button>
+
+                  {renderMobileSubmenu(item)}
+                </div>
+              )
+            })}
+          </div>
         </div>
-
-        <Cart isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
       </nav>
-    </>
+    </div>
   )
 }
 

@@ -1,0 +1,37 @@
+'use client'
+
+import { LucideArrowUpRight } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { FC } from 'react'
+
+type SumCardProps = {
+  label: string
+  value: number
+  href?: string
+}
+
+const SumCard: FC<SumCardProps> = ({ label, value, href }) => {
+  const router = useRouter()
+
+  return (
+    <div className='flex flex-col justify-between rounded-xl bg-white p-5'>
+      <div className='flex justify-between'>
+        <span className='text-[#4a2c00]'>{label}</span>
+
+        {href && (
+          <div
+            onClick={() => {
+              router.push(href)
+            }}
+            className='flex size-10 cursor-pointer items-center justify-center rounded-full border border-black'
+          >
+            <LucideArrowUpRight />
+          </div>
+        )}
+      </div>
+      <span className='text-4xl font-bold text-red-800'>{value}</span>
+    </div>
+  )
+}
+
+export { SumCard }
