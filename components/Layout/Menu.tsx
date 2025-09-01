@@ -23,15 +23,7 @@ const MENU_ITEMS: MenuItem[] = [
   { title: 'Organic skin care', href: '/category/organic-skin-care' },
   {
     title: 'Our Shop',
-    submenu: [
-      { title: 'Bangkok', href: '/our-shop/bangkok' },
-      { title: 'Pattaya', href: '/our-shop/pattaya' },
-      { title: 'Chiang Mai', href: '/our-shop/chiang-mai' },
-      { title: 'Phuket', href: '/our-shop/phuket' },
-      { title: 'Krabi', href: '/our-shop/krabi' },
-      { title: 'Prachinburi', href: '/our-shop/prachinburi' },
-      { title: 'Hua Hin', href: '/our-shop/hua-hin' },
-    ],
+    href: '/ourshop',
   },
   { title: 'About me', href: '/about' },
   {
