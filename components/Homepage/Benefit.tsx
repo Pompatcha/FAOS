@@ -16,7 +16,7 @@ const BENEFIT_DATA = {
   oliveOil: [
     {
       id: 1,
-      title: 'High olive oil consumption associated with longevity',
+      title: 'Olive oil for weight Loss',
       image:
         'https://aspirabody.com/storage/elementor/thumbs/Longevity-By-Aspira-Aesthetic-Center-Corp-in-FALL-RIVER-MA-1-qf3mmqufpzghgabxyk3vkfparc8mgbv9docbwy38ts.jpeg',
     },

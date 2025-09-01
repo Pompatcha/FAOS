@@ -4,7 +4,7 @@ const Banner: FC = () => {
   return (
     <div className='flex flex-col rounded-lg border-4 border-[#f3d27a] bg-gradient-to-r from-[#f9e6b3] to-[#f3d27a] p-5 text-center'>
       <span className='text-xl text-[#4a2c00] italic'>
-        High Premium Olive oil and High Premium honey 🐝 are the gold of nature—pure, natural, and filled. <Gold Natrual></Gold>
+        High Premium Olive oil and High Premium honey 🐝 are the gold of nature—pure, natural, and filled. 
         with life-enhancing properties.
       </span>
       <span className='text-2xl font-bold text-red-800'>
