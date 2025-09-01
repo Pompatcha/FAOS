@@ -10,7 +10,7 @@ const Footer: FC<FooterProps> = ({ className }) => {
     <div className={cn('pb-2.5 text-center text-white', className)}>
       <span>
         © 2024 Premium Organic Collection | Crafted with Passion &
-        Sustainability
+        Sustainability 
       </span>
     </div>
   )
