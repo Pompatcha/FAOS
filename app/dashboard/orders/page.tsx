@@ -12,6 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
 
 const OrderPage: FC = () => {
   return (
@@ -41,18 +42,62 @@ const OrderPage: FC = () => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className='w-[100px]'>Invoice</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Method</TableHead>
-              <TableHead className='text-right'>Amount</TableHead>
+              <TableHead className='w-[120px]'>Order Number</TableHead>
+              <TableHead>Customer</TableHead>
+              <TableHead>Order Status</TableHead>
+              <TableHead>Payment Status</TableHead>
+              <TableHead>Payment Method</TableHead>
+              <TableHead>Items</TableHead>
+              <TableHead className='text-right'>Total Amount</TableHead>
+              <TableHead>Order Date</TableHead>
+              <TableHead className='text-center'>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             <TableRow>
-              <TableCell className='font-medium'>INV001</TableCell>
-              <TableCell>Paid</TableCell>
+              <TableCell className='font-medium'>#ORD-001</TableCell>
+              <TableCell>John Doe</TableCell>
+              <TableCell>
+                <Badge>Pending</Badge>
+              </TableCell>
+              <TableCell>
+                <Badge>Paid</Badge>
+                {/* <span className='rounded-full bg-green-100 px-2 py-1 text-xs text-green-800'>
+                  Paid
+                </span> */}
+              </TableCell>
               <TableCell>Credit Card</TableCell>
-              <TableCell className='text-right'>$250.00</TableCell>
+              <TableCell>3 items</TableCell>
+              <TableCell className='text-right'>฿1,250.00</TableCell>
+              <TableCell>2025-09-01</TableCell>
+              <TableCell className='text-center'>
+                <Button variant='outline' size='sm'>
+                  View
+                </Button>
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className='font-medium'>#ORD-002</TableCell>
+              <TableCell>Jane Smith</TableCell>
+              <TableCell>
+                <span className='rounded-full bg-blue-100 px-2 py-1 text-xs text-blue-800'>
+                  Processing
+                </span>
+              </TableCell>
+              <TableCell>
+                <span className='rounded-full bg-red-100 px-2 py-1 text-xs text-red-800'>
+                  Unpaid
+                </span>
+              </TableCell>
+              <TableCell>Bank Transfer</TableCell>
+              <TableCell>1 item</TableCell>
+              <TableCell className='text-right'>฿850.00</TableCell>
+              <TableCell>2025-08-31</TableCell>
+              <TableCell className='text-center'>
+                <Button variant='outline' size='sm'>
+                  View
+                </Button>
+              </TableCell>
             </TableRow>
           </TableBody>
         </Table>
