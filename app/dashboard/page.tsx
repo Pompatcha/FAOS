@@ -24,11 +24,6 @@ const DashboardPage: FC = () => {
             value={50}
             href={'/dashboard/products'}
           />
-          <SumCard
-            label={'New Customers'}
-            value={50}
-            href={'/dashboard/customers'}
-          />
         </div>
       </div>
     </IndexLayout>

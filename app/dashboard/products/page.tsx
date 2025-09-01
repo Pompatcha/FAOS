@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
-import { Download, Plus, Trash2, Upload, X, Edit, Eye } from 'lucide-react'
+import { Plus, Trash2, Upload, X, Edit, Eye } from 'lucide-react'
 import { formatDate } from '@/lib/date'
 import { formatPrice } from '@/lib/price'
 import {
@@ -37,7 +37,7 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 
-const mockProducts = [
+const PRODUCTS_MOCKUP_DATA = [
   {
     id: 1,
     name: 'iPhone 15 Pro',
@@ -66,7 +66,7 @@ const mockProducts = [
   },
 ]
 
-const mockCategories = [
+const PRODUCT_CATEGORIES = [
   { id: 1, name: 'Smartphones' },
   { id: 2, name: 'Tablets' },
   { id: 3, name: 'Laptops' },
@@ -95,7 +95,7 @@ interface ProductFormData {
     sale_start_date: string
     sale_end_date: string
   }
-  options: Array<{
+  productOptions: Array<{
     option_name: string
     option_value: string
     additional_price: string
@@ -103,7 +103,7 @@ interface ProductFormData {
     sku: string
     is_available: boolean
   }>
-  images: Array<{
+  productImages: Array<{
     image_url: string
     alt_text: string
     display_order: string
@@ -112,10 +112,11 @@ interface ProductFormData {
 }
 
 const ProductPage: FC = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [products, setProducts] = useState(mockProducts)
+  const [isCreateProductDialogOpen, setIsCreateProductDialogOpen] =
+    useState(false)
+  const [productList, setProductList] = useState(PRODUCTS_MOCKUP_DATA)
 
-  const form = useForm<ProductFormData>({
+  const productForm = useForm<ProductFormData>({
     defaultValues: {
       name: '',
       description: '',
@@ -138,61 +139,63 @@ const ProductPage: FC = () => {
         sale_start_date: '',
         sale_end_date: '',
       },
-      options: [],
-      images: [],
+      productOptions: [],
+      productImages: [],
     },
   })
 
-  const { control, handleSubmit, reset, watch, setValue } = form
+  const { control, handleSubmit, reset, watch, setValue } = productForm
 
   const {
-    fields: optionFields,
-    append: appendOption,
-    remove: removeOption,
+    fields: productOptionFields,
+    append: addProductOptionField,
+    remove: removeProductOptionField,
   } = useFieldArray({
     control,
-    name: 'options',
+    name: 'productOptions',
   })
 
   const {
-    fields: imageFields,
-    append: appendImage,
-    remove: removeImage,
+    fields: productImageFields,
+    append: addProductImageField,
+    remove: removeProductImageField,
   } = useFieldArray({
     control,
-    name: 'images',
+    name: 'productImages',
   })
 
-  const watchIsOnSale = watch('prices.is_on_sale')
+  const isProductOnSale = watch('prices.is_on_sale')
 
-  const onSubmit = (data: ProductFormData) => {
-    console.log('Form Data:', data)
+  const handleCreateProduct = (formData: ProductFormData) => {
+    console.log('Product Form Data:', formData)
+
     const newProduct = {
-      id: products.length + 1,
-      name: data.name,
-      brand: data.brand,
-      sku: data.sku,
-      category_id: parseInt(data.category_id),
-      is_active: data.is_active,
-      base_price: parseFloat(data.prices.base_price),
-      sale_price: data.prices.sale_price
-        ? parseFloat(data.prices.sale_price)
+      id: productList.length + 1,
+      name: formData.name,
+      brand: formData.brand,
+      sku: formData.sku,
+      category_id: parseInt(formData.category_id),
+      is_active: formData.is_active,
+      base_price: parseFloat(formData.prices.base_price),
+      sale_price: formData.prices.sale_price
+        ? parseFloat(formData.prices.sale_price)
         : null,
-      is_on_sale: data.prices.is_on_sale,
-      stock_quantity: data.options.reduce(
-        (sum, opt) => sum + parseInt(opt.stock_quantity || '0'),
+      is_on_sale: formData.prices.is_on_sale,
+      stock_quantity: formData.productOptions.reduce(
+        (totalStock, productOption) =>
+          totalStock + parseInt(productOption.stock_quantity || '0'),
         0,
       ),
       created_at: new Date().toISOString(),
     }
 
-    setProducts((prev) => [...prev, newProduct])
-    setIsModalOpen(false)
+    setProductList((previousProducts) => [...previousProducts, newProduct])
+    setIsCreateProductDialogOpen(false)
     reset()
   }
 
-  const addOption = () => {
-    appendOption({
+  const handleAddProductOption = () => {
+    addProductOptionField({
       option_name: '',
       option_value: '',
       additional_price: '0',
@@ -202,13 +205,38 @@ const ProductPage: FC = () => {
     })
   }
 
-  const addImage = () => {
-    appendImage({
+  const handleAddProductImage = () => {
+    addProductImageField({
       image_url: '',
       alt_text: '',
-      display_order: (imageFields.length + 1).toString(),
-      is_primary: imageFields.length === 0,
+      display_order: (productImageFields.length + 1).toString(),
+      is_primary: productImageFields.length === 0,
     })
+  }
+
+  const handlePrimaryImageChange = (
+    selectedImageIndex: number,
+    isSelectedPrimary: boolean,
+  ) => {
+    if (isSelectedPrimary) {
+      productImageFields.forEach((_, imageIndex) => {
+        if (imageIndex !== selectedImageIndex) {
+          setValue(`productImages.${imageIndex}.is_primary`, false)
+        }
+      })
+    }
+  }
+
+  const getStockBadgeVariant = (stockQuantity: number) => {
+    return stockQuantity > 10 ? 'default' : 'destructive'
+  }
+
+  const getProductStatusBadgeVariant = (isActive: boolean) => {
+    return isActive ? 'default' : 'secondary'
+  }
+
+  const getProductStatusDisplayText = (isActive: boolean) => {
+    return isActive ? 'Active' : 'Inactive'
   }
 
   return (
@@ -222,7 +250,10 @@ const ProductPage: FC = () => {
           </span>
         </div>
         <div className='flex gap-5'>
-          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+          <Dialog
+            open={isCreateProductDialogOpen}
+            onOpenChange={setIsCreateProductDialogOpen}
+          >
             <DialogTrigger asChild>
               <Button className='w-fit cursor-pointer rounded-xl bg-white p-5 text-[#4a2c00] hover:bg-white/50'>
                 <Plus /> Add Product
@@ -233,7 +264,10 @@ const ProductPage: FC = () => {
                 <DialogTitle className='text-2xl'>Add New Product</DialogTitle>
               </DialogHeader>
 
-              <div onSubmit={handleSubmit(onSubmit)} className='space-y-6'>
+              <div
+                onSubmit={handleSubmit(handleCreateProduct)}
+                className='space-y-6'
+              >
                 <Card>
                   <CardContent className='p-6'>
                     <h3 className='mb-4 text-lg font-semibold'>
@@ -315,7 +349,7 @@ const ProductPage: FC = () => {
                                 <SelectValue placeholder='Select category' />
                               </SelectTrigger>
                               <SelectContent>
-                                {mockCategories.map((category) => (
+                                {PRODUCT_CATEGORIES.map((category) => (
                                   <SelectItem
                                     key={category.id}
                                     value={category.id.toString()}
@@ -515,7 +549,7 @@ const ProductPage: FC = () => {
                       <Label>On Sale</Label>
                     </div>
 
-                    {watchIsOnSale && (
+                    {isProductOnSale && (
                       <div className='mt-4 grid grid-cols-3 gap-4'>
                         <div>
                           <Label>Sale Price (THB)</Label>
@@ -572,7 +606,7 @@ const ProductPage: FC = () => {
                       <h3 className='text-lg font-semibold'>Product Options</h3>
                       <Button
                         type='button'
-                        onClick={addOption}
+                        onClick={handleAddProductOption}
                         variant='outline'
                         size='sm'
                       >
@@ -582,111 +616,117 @@ const ProductPage: FC = () => {
                     </div>
 
                     <div className='space-y-4'>
-                      {optionFields.map((field, index) => (
-                        <Card key={field.id} className='p-4'>
-                          <div className='mb-4 flex items-start justify-between'>
-                            <h4 className='font-medium'>Option {index + 1}</h4>
-                            <Button
-                              type='button'
-                              onClick={() => removeOption(index)}
-                              variant='ghost'
-                              size='sm'
-                              className='text-red-500 hover:text-red-700'
-                            >
-                              <X className='h-4 w-4' />
-                            </Button>
-                          </div>
+                      {productOptionFields.map(
+                        (productOptionField, productOptionIndex) => (
+                          <Card key={productOptionField.id} className='p-4'>
+                            <div className='mb-4 flex items-start justify-between'>
+                              <h4 className='font-medium'>
+                                Option {productOptionIndex + 1}
+                              </h4>
+                              <Button
+                                type='button'
+                                onClick={() =>
+                                  removeProductOptionField(productOptionIndex)
+                                }
+                                variant='ghost'
+                                size='sm'
+                                className='text-red-500 hover:text-red-700'
+                              >
+                                <X className='h-4 w-4' />
+                              </Button>
+                            </div>
 
-                          <div className='grid grid-cols-2 gap-4'>
-                            <div>
-                              <Label>Option Name</Label>
-                              <Controller
-                                name={`options.${index}.option_name`}
-                                control={control}
-                                render={({ field }) => (
-                                  <Input
-                                    {...field}
-                                    placeholder='e.g., Color, Size'
-                                    className='mt-1'
-                                  />
-                                )}
-                              />
+                            <div className='grid grid-cols-2 gap-4'>
+                              <div>
+                                <Label>Option Name</Label>
+                                <Controller
+                                  name={`productOptions.${productOptionIndex}.option_name`}
+                                  control={control}
+                                  render={({ field }) => (
+                                    <Input
+                                      {...field}
+                                      placeholder='e.g., Color, Size'
+                                      className='mt-1'
+                                    />
+                                  )}
+                                />
+                              </div>
+                              <div>
+                                <Label>Option Value</Label>
+                                <Controller
+                                  name={`productOptions.${productOptionIndex}.option_value`}
+                                  control={control}
+                                  render={({ field }) => (
+                                    <Input
+                                      {...field}
+                                      placeholder='e.g., Red, Large'
+                                      className='mt-1'
+                                    />
+                                  )}
+                                />
+                              </div>
+                              <div>
+                                <Label>Additional Price (THB)</Label>
+                                <Controller
+                                  name={`productOptions.${productOptionIndex}.additional_price`}
+                                  control={control}
+                                  render={({ field }) => (
+                                    <Input
+                                      {...field}
+                                      type='number'
+                                      step='0.01'
+                                      placeholder='0.00'
+                                      className='mt-1'
+                                    />
+                                  )}
+                                />
+                              </div>
+                              <div>
+                                <Label>Stock Quantity</Label>
+                                <Controller
+                                  name={`productOptions.${productOptionIndex}.stock_quantity`}
+                                  control={control}
+                                  render={({ field }) => (
+                                    <Input
+                                      {...field}
+                                      type='number'
+                                      placeholder='0'
+                                      className='mt-1'
+                                    />
+                                  )}
+                                />
+                              </div>
+                              <div>
+                                <Label>Option SKU</Label>
+                                <Controller
+                                  name={`productOptions.${productOptionIndex}.sku`}
+                                  control={control}
+                                  render={({ field }) => (
+                                    <Input
+                                      {...field}
+                                      placeholder='Optional SKU'
+                                      className='mt-1'
+                                    />
+                                  )}
+                                />
+                              </div>
+                              <div className='mt-6 flex items-center space-x-2'>
+                                <Controller
+                                  name={`productOptions.${productOptionIndex}.is_available`}
+                                  control={control}
+                                  render={({ field }) => (
+                                    <Switch
+                                      checked={field.value}
+                                      onCheckedChange={field.onChange}
+                                    />
+                                  )}
+                                />
+                                <Label>Available</Label>
+                              </div>
                             </div>
-                            <div>
-                              <Label>Option Value</Label>
-                              <Controller
-                                name={`options.${index}.option_value`}
-                                control={control}
-                                render={({ field }) => (
-                                  <Input
-                                    {...field}
-                                    placeholder='e.g., Red, Large'
-                                    className='mt-1'
-                                  />
-                                )}
-                              />
-                            </div>
-                            <div>
-                              <Label>Additional Price (THB)</Label>
-                              <Controller
-                                name={`options.${index}.additional_price`}
-                                control={control}
-                                render={({ field }) => (
-                                  <Input
-                                    {...field}
-                                    type='number'
-                                    step='0.01'
-                                    placeholder='0.00'
-                                    className='mt-1'
-                                  />
-                                )}
-                              />
-                            </div>
-                            <div>
-                              <Label>Stock Quantity</Label>
-                              <Controller
-                                name={`options.${index}.stock_quantity`}
-                                control={control}
-                                render={({ field }) => (
-                                  <Input
-                                    {...field}
-                                    type='number'
-                                    placeholder='0'
-                                    className='mt-1'
-                                  />
-                                )}
-                              />
-                            </div>
-                            <div>
-                              <Label>Option SKU</Label>
-                              <Controller
-                                name={`options.${index}.sku`}
-                                control={control}
-                                render={({ field }) => (
-                                  <Input
-                                    {...field}
-                                    placeholder='Optional SKU'
-                                    className='mt-1'
-                                  />
-                                )}
-                              />
-                            </div>
-                            <div className='mt-6 flex items-center space-x-2'>
-                              <Controller
-                                name={`options.${index}.is_available`}
-                                control={control}
-                                render={({ field }) => (
-                                  <Switch
-                                    checked={field.value}
-                                    onCheckedChange={field.onChange}
-                                  />
-                                )}
-                              />
-                              <Label>Available</Label>
-                            </div>
-                          </div>
-                        </Card>
-                      ))}
+                          </Card>
+                        ),
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -697,7 +737,7 @@ const ProductPage: FC = () => {
                       <h3 className='text-lg font-semibold'>Product Images</h3>
                       <Button
                         type='button'
-                        onClick={addImage}
+                        onClick={handleAddProductImage}
                         variant='outline'
                         size='sm'
                       >
@@ -707,93 +747,93 @@ const ProductPage: FC = () => {
                     </div>
 
                     <div className='space-y-4'>
-                      {imageFields.map((field, index) => (
-                        <Card key={field.id} className='p-4'>
-                          <div className='mb-4 flex items-start justify-between'>
-                            <h4 className='font-medium'>Image {index + 1}</h4>
-                            <Button
-                              type='button'
-                              onClick={() => removeImage(index)}
-                              variant='ghost'
-                              size='sm'
-                              className='text-red-500 hover:text-red-700'
-                            >
-                              <X className='h-4 w-4' />
-                            </Button>
-                          </div>
+                      {productImageFields.map(
+                        (productImageField, productImageIndex) => (
+                          <Card key={productImageField.id} className='p-4'>
+                            <div className='mb-4 flex items-start justify-between'>
+                              <h4 className='font-medium'>
+                                Image {productImageIndex + 1}
+                              </h4>
+                              <Button
+                                type='button'
+                                onClick={() =>
+                                  removeProductImageField(productImageIndex)
+                                }
+                                variant='ghost'
+                                size='sm'
+                                className='text-red-500 hover:text-red-700'
+                              >
+                                <X className='h-4 w-4' />
+                              </Button>
+                            </div>
 
-                          <div className='grid grid-cols-2 gap-4'>
-                            <div className='col-span-2'>
-                              <Label>Image URL</Label>
-                              <Controller
-                                name={`images.${index}.image_url`}
-                                control={control}
-                                render={({ field }) => (
-                                  <Input
-                                    {...field}
-                                    placeholder='https://example.com/image.jpg'
-                                    className='mt-1'
-                                  />
-                                )}
-                              />
+                            <div className='grid grid-cols-2 gap-4'>
+                              <div className='col-span-2'>
+                                <Label>Image URL</Label>
+                                <Controller
+                                  name={`productImages.${productImageIndex}.image_url`}
+                                  control={control}
+                                  render={({ field }) => (
+                                    <Input
+                                      {...field}
+                                      placeholder='https://example.com/image.jpg'
+                                      className='mt-1'
+                                    />
+                                  )}
+                                />
+                              </div>
+                              <div>
+                                <Label>Alt Text</Label>
+                                <Controller
+                                  name={`productImages.${productImageIndex}.alt_text`}
+                                  control={control}
+                                  render={({ field }) => (
+                                    <Input
+                                      {...field}
+                                      placeholder='Image description'
+                                      className='mt-1'
+                                    />
+                                  )}
+                                />
+                              </div>
+                              <div>
+                                <Label>Display Order</Label>
+                                <Controller
+                                  name={`productImages.${productImageIndex}.display_order`}
+                                  control={control}
+                                  render={({ field }) => (
+                                    <Input
+                                      {...field}
+                                      type='number'
+                                      placeholder='1'
+                                      className='mt-1'
+                                    />
+                                  )}
+                                />
+                              </div>
+                              <div className='mt-6 flex items-center space-x-2'>
+                                <Controller
+                                  name={`productImages.${productImageIndex}.is_primary`}
+                                  control={control}
+                                  render={({ field }) => (
+                                    <Switch
+                                      checked={field.value}
+                                      onCheckedChange={(isSelectedPrimary) => {
+                                        handlePrimaryImageChange(
+                                          productImageIndex,
+                                          isSelectedPrimary,
+                                        )
+                                        field.onChange(isSelectedPrimary)
+                                      }}
+                                    />
+                                  )}
+                                />
+                                <Label>Primary Image</Label>
+                              </div>
                             </div>
-                            <div>
-                              <Label>Alt Text</Label>
-                              <Controller
-                                name={`images.${index}.alt_text`}
-                                control={control}
-                                render={({ field }) => (
-                                  <Input
-                                    {...field}
-                                    placeholder='Image description'
-                                    className='mt-1'
-                                  />
-                                )}
-                              />
-                            </div>
-                            <div>
-                              <Label>Display Order</Label>
-                              <Controller
-                                name={`images.${index}.display_order`}
-                                control={control}
-                                render={({ field }) => (
-                                  <Input
-                                    {...field}
-                                    type='number'
-                                    placeholder='1'
-                                    className='mt-1'
-                                  />
-                                )}
-                              />
-                            </div>
-                            <div className='mt-6 flex items-center space-x-2'>
-                              <Controller
-                                name={`images.${index}.is_primary`}
-                                control={control}
-                                render={({ field }) => (
-                                  <Switch
-                                    checked={field.value}
-                                    onCheckedChange={(checked) => {
-                                      if (checked) {
-                                        imageFields.forEach((_, i) => {
-                                          if (i !== index) {
-                                            setValue(
-                                              `images.${i}.is_primary`,
-                                              false,
-                                            )
-                                          }
-                                        })
-                                      }
-                                      field.onChange(checked)
-                                    }}
-                                  />
-                                )}
-                              />
-                              <Label>Primary Image</Label>
-                            </div>
-                          </div>
-                        </Card>
-                      ))}
+                          </Card>
+                        ),
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -802,14 +842,14 @@ const ProductPage: FC = () => {
                   <Button
                     type='button'
                     variant='outline'
-                    onClick={() => setIsModalOpen(false)}
+                    onClick={() => setIsCreateProductDialogOpen(false)}
                   >
                     Cancel
                   </Button>
                   <Button
                     type='submit'
                     className='bg-[#4a2c00] hover:bg-[#4a2c00]/80'
-                    onClick={handleSubmit(onSubmit)}
+                    onClick={handleSubmit(handleCreateProduct)}
                   >
                     Create Product
                   </Button>
@@ -817,10 +857,6 @@ const ProductPage: FC = () => {
               </div>
             </DialogContent>
           </Dialog>
-
-          <Button className='w-fit cursor-pointer rounded-xl bg-white p-5 text-[#4a2c00] hover:bg-white/50'>
-            <Download /> Export Products
-          </Button>
         </div>
       </div>
 
@@ -828,7 +864,7 @@ const ProductPage: FC = () => {
         <div className='grid grid-cols-4 gap-5 text-[#4a2c00]'>
           <SumCard
             label={'Total Products'}
-            value={products.length}
+            value={productList.length}
             href={'/dashboard/products'}
           />
         </div>
@@ -849,7 +885,7 @@ const ProductPage: FC = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {products.map((product) => (
+            {productList.map((product) => (
               <TableRow key={product.id}>
                 <TableCell className='font-medium'>{product.name}</TableCell>
                 <TableCell>{product.brand}</TableCell>
@@ -875,30 +911,32 @@ const ProductPage: FC = () => {
                   </div>
                 </TableCell>
                 <TableCell>
-                  <Badge
-                    variant={
-                      product.stock_quantity > 10 ? 'default' : 'destructive'
-                    }
-                  >
+                  <Badge variant={getStockBadgeVariant(product.stock_quantity)}>
                     {product.stock_quantity}
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  <Badge variant={product.is_active ? 'default' : 'secondary'}>
-                    {product.is_active ? 'Active' : 'Inactive'}
+                  <Badge
+                    variant={getProductStatusBadgeVariant(product.is_active)}
+                  >
+                    {getProductStatusDisplayText(product.is_active)}
                   </Badge>
                 </TableCell>
                 <TableCell>{formatDate(product.created_at)}</TableCell>
                 <TableCell className='text-right'>
                   <div className='flex justify-end gap-2'>
-                    <Button variant='ghost' size='sm'>
-                      <Eye className='h-4 w-4' />
+                    <Button variant='outline' size='sm'>
+                      <Eye className='h-4 w-4' /> View
                     </Button>
-                    <Button variant='ghost' size='sm'>
-                      <Edit className='h-4 w-4' />
+                    <Button variant='outline' size='sm'>
+                      <Edit className='h-4 w-4' /> Edit
                     </Button>
-                    <Button variant='ghost' size='sm' className='text-red-600'>
-                      <Trash2 className='h-4 w-4' />
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      className='text-red-600'
+                    >
+                      <Trash2 className='h-4 w-4' /> Delete
                     </Button>
                   </div>
                 </TableCell>

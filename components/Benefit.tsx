@@ -1,3 +1,5 @@
+import { cn } from '@/lib/utils'
+import { ChevronRight } from 'lucide-react'
 import type { FC } from 'react'
 
 interface BenefitItem {
@@ -13,7 +15,12 @@ interface BenefitSectionProps {
   hasHoverEffect?: boolean
 }
 
-const BENEFIT_DATA = {
+interface BenefitSectionConfig {
+  title: string
+  items: BenefitItem[]
+}
+
+const BENEFIT_ITEMS_BY_CATEGORY = {
   oliveOil: [
     {
       id: 1,
@@ -102,97 +109,79 @@ const BENEFIT_DATA = {
   ],
 }
 
-const BenefitCard: FC<{ item: BenefitItem; hasHoverEffect?: boolean }> = ({
-  item,
-}) => {
+interface BenefitCardProps {
+  benefitItem: BenefitItem
+}
+
+const BenefitCard: FC<BenefitCardProps> = ({ benefitItem }) => {
+  const handleReadMoreClick = () => {
+    window.open(benefitItem.href, '_blank', 'noopener,noreferrer')
+  }
+
   return (
     <div
-      className={`overflow-hidden rounded-xl bg-white shadow-lg transition-all duration-300`}
+      onClick={handleReadMoreClick}
+      className='cursor-pointer overflow-hidden rounded-xl bg-white shadow-lg transition-all duration-200 hover:scale-[1.02]'
     >
       <img
-        src={item.image}
-        alt={item.title}
+        src={benefitItem.image}
+        alt={benefitItem.title}
         className='h-[250px] w-full object-cover'
+        loading='lazy'
       />
       <div className='mt-2.5 px-5 pb-5'>
         <h3 className='text-lg leading-tight font-semibold text-gray-800'>
-          {item.title}
+          {benefitItem.title}
         </h3>
         <button
-          onClick={() => {
-            window.open(item.href)
-          }}
-          className='mt-2.5 inline-flex cursor-pointer items-center font-medium text-blue-600 transition-colors duration-200 hover:text-blue-800'
+          className='group text-primary mt-2.5 inline-flex cursor-pointer items-center font-medium transition-colors duration-200'
+          aria-label={`Read more about ${benefitItem.title}`}
         >
           Read more
-          <svg
-            className='ml-1 h-4 w-4 transition-transform duration-200 group-hover:translate-x-1'
-            fill='none'
-            stroke='currentColor'
-            viewBox='0 0 24 24'
-          >
-            <path
-              strokeLinecap='round'
-              strokeLinejoin='round'
-              strokeWidth={2}
-              d='M9 5l7 7-7 7'
-            />
-          </svg>
+          <ChevronRight className='transition-transform duration-200 group-hover:translate-x-1' />
         </button>
       </div>
     </div>
   )
 }
 
-const BenefitSection: FC<BenefitSectionProps> = ({
-  title,
-  items,
-  hasHoverEffect = false,
-}) => (
+const BenefitSection: FC<BenefitSectionProps> = ({ title, items }) => (
   <section className='flex w-full flex-col gap-5'>
     <div className='bg-secondary flex w-full flex-col rounded-lg p-2.5 text-center shadow'>
-      <span className='text-2xl font-bold text-red-800'>{title}</span>
+      <h2 className='text-2xl font-bold text-red-800'>{title}</h2>
     </div>
 
     <div className='grid grid-cols-1 gap-5 sm:grid-cols-2'>
-      {items.map((item) => (
-        <BenefitCard
-          key={item.id}
-          item={item}
-          hasHoverEffect={hasHoverEffect}
-        />
+      {items.map((benefitItem) => (
+        <BenefitCard key={benefitItem.id} benefitItem={benefitItem} />
       ))}
     </div>
   </section>
 )
 
 const Benefit: FC = () => {
-  const sections = [
+  const benefitSectionConfigs: BenefitSectionConfig[] = [
     {
       title: 'The Benefit of Olive Oil',
-      items: BENEFIT_DATA.oliveOil,
-      hasHoverEffect: true,
+      items: BENEFIT_ITEMS_BY_CATEGORY.oliveOil,
     },
     {
       title: 'The Benefit of Honey & Healthy Menu',
-      items: BENEFIT_DATA.honey,
-      hasHoverEffect: true,
+      items: BENEFIT_ITEMS_BY_CATEGORY.honey,
     },
     {
       title: 'The Benefit of Wine & Thai Food pairing',
-      items: BENEFIT_DATA.wine,
-      hasHoverEffect: true,
+      items: BENEFIT_ITEMS_BY_CATEGORY.wine,
     },
   ]
 
   return (
     <div className='flex w-full flex-col gap-2.5'>
-      {sections.map((section, index) => (
+      {benefitSectionConfigs.map((sectionConfig, sectionIndex) => (
         <BenefitSection
-          key={index}
-          title={section.title}
-          items={section.items}
-          hasHoverEffect={section.hasHoverEffect}
+          key={`benefit-section-${sectionIndex}`}
+          title={sectionConfig.title}
+          items={sectionConfig.items}
         />
       ))}
     </div>

@@ -4,7 +4,7 @@ import {
   DialogContent,
   DialogTitle,
   DialogDescription,
-} from '@radix-ui/react-dialog'
+} from '@/components/ui/dialog'
 import { FC, useState } from 'react'
 import { Button } from '../ui/button'
 import { DialogHeader } from '../ui/dialog'

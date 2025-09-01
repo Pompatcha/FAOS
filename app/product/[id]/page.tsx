@@ -9,12 +9,37 @@ import React from 'react'
 import { Minus, PlusIcon } from 'lucide-react'
 import { toast } from 'sonner'
 
-const productData = {
-  id: 1,
+interface ProductVariant {
+  size: string
+  price: number
+}
+
+interface ProductDetails {
+  id: string
+  name: string
+  description: string
+  image: string
+  imageAlt?: string
+  variants: ProductVariant[]
+  currency?: string
+}
+
+interface ProductPageProps {
+  params: Promise<{ slug: string }>
+}
+
+interface ProductFormData {
+  selectedSize: string
+  selectedQuantity: number
+}
+
+const PRODUCT_MOCKUP_DATA: ProductDetails = {
+  id: '1',
   name: 'Premium T-Shirt',
   description:
     'High-quality t-shirt with soft fabric, comfortable to wear, suitable for all occasions',
   image: '/placeholder.svg',
+  imageAlt: 'Premium T-Shirt product image',
   variants: [
     { size: 'S', price: 590 },
     { size: 'M', price: 590 },
@@ -22,45 +47,92 @@ const productData = {
     { size: 'XL', price: 650 },
     { size: 'XXL', price: 720 },
   ],
+  currency: '$',
 }
 
-interface FormData {
-  size: string
-  quantity: number
-}
+const QUANTITY_LIMITS = {
+  min: 1,
+  max: 99,
+} as const
 
-const ProductPage = ({ params }: { params: Promise<{ slug: string }> }) => {
-  const { slug } = use(params)
-  const [selectedPrice, setSelectedPrice] = useState(
-    productData.variants[0].price,
+const ProductPage = ({ params }: ProductPageProps) => {
+  const { slug: productSlug } = use(params)
+
+  const productDetails = PRODUCT_MOCKUP_DATA
+  const defaultVariant = productDetails.variants[0]
+
+  const [currentSelectedPrice, setCurrentSelectedPrice] = useState(
+    defaultVariant.price,
   )
 
-  const { register, watch, handleSubmit, setValue } = useForm<FormData>({
+  const productForm = useForm<ProductFormData>({
     defaultValues: {
-      size: productData.variants[0].size,
-      quantity: 1,
+      selectedSize: defaultVariant.size,
+      selectedQuantity: QUANTITY_LIMITS.min,
     },
   })
 
-  const watchedSize = watch('size')
-  const watchedQuantity = watch('quantity')
+  const { register, watch, handleSubmit, setValue } = productForm
+
+  const currentSelectedSize = watch('selectedSize')
+  const currentSelectedQuantity = watch('selectedQuantity')
 
   React.useEffect(() => {
-    const selectedVariant = productData.variants.find(
-      (v) => v.size === watchedSize,
+    const matchingVariant = productDetails.variants.find(
+      (variant) => variant.size === currentSelectedSize,
     )
-    if (selectedVariant) {
-      setSelectedPrice(selectedVariant.price)
+    if (matchingVariant) {
+      setCurrentSelectedPrice(matchingVariant.price)
     }
-  }, [watchedSize])
+  }, [currentSelectedSize, productDetails.variants])
 
-  const onSubmit = (data: FormData) => {
-    console.log('Form submitted:', data)
-    console.log('Total price:', selectedPrice * data.quantity)
+  const handleProductFormSubmit = (formData: ProductFormData) => {
+    const totalPrice = currentSelectedPrice * formData.selectedQuantity
+
+    console.log('Product form submitted:', formData)
+    console.log('Total price:', totalPrice)
+
     toast.success(
-      `Item added to cart!\nSize: ${data.size}\nQuantity: ${data.quantity}\nTotal Price: $${(selectedPrice * data.quantity).toLocaleString()}`,
+      `Item added to cart!\nSize: ${formData.selectedSize}\nQuantity: ${formData.selectedQuantity}\nTotal Price: ${productDetails.currency}${totalPrice.toLocaleString()}`,
     )
   }
+
+  const handleQuantityDecrease = () => {
+    if (currentSelectedQuantity > QUANTITY_LIMITS.min) {
+      setValue('selectedQuantity', currentSelectedQuantity - 1)
+    }
+  }
+
+  const handleQuantityIncrease = () => {
+    if (currentSelectedQuantity < QUANTITY_LIMITS.max) {
+      setValue('selectedQuantity', currentSelectedQuantity + 1)
+    }
+  }
+
+  const calculateTotalPrice = () => {
+    return currentSelectedPrice * currentSelectedQuantity
+  }
+
+  const formatPrice = (price: number) => {
+    return `${productDetails.currency}${price.toLocaleString()}`
+  }
+
+  const getSizeOptionClassName = (variantSize: string) => {
+    const baseClasses =
+      'relative flex cursor-pointer items-center justify-center rounded-lg border-2 p-3 transition-all'
+    const selectedClasses =
+      'border-primary bg-primary/10 text-primary font-medium'
+    const unselectedClasses = 'border-gray-300 hover:border-gray-400'
+
+    return `${baseClasses} ${
+      currentSelectedSize === variantSize ? selectedClasses : unselectedClasses
+    }`
+  }
+
+  const isDecreaseButtonDisabled =
+    currentSelectedQuantity <= QUANTITY_LIMITS.min
+  const isIncreaseButtonDisabled =
+    currentSelectedQuantity >= QUANTITY_LIMITS.max
 
   return (
     <IndexLayout>
@@ -68,50 +140,54 @@ const ProductPage = ({ params }: { params: Promise<{ slug: string }> }) => {
         <div className='grid grid-cols-1 gap-5 lg:grid-cols-2'>
           <div className='aspect-square'>
             <img
-              src={productData.image}
-              alt={productData.name}
+              src={productDetails.image}
+              alt={productDetails.imageAlt || productDetails.name}
               className='h-full w-full rounded-xl object-cover'
+              loading='lazy'
             />
           </div>
 
           <div className='h-fit rounded-xl bg-gradient-to-r from-[#f9e6b3] to-[#f3d27a]'>
             <div className='flex flex-col gap-2.5 p-5'>
               <div className='text-[#4a2c00]'>
-                <h1 className='mb-2 text-3xl font-bold'>{productData.name}</h1>
-                <p className='text-lg'>{productData.description}</p>
+                <h1 className='mb-2 text-3xl font-bold'>
+                  {productDetails.name}
+                </h1>
+                <p className='text-lg'>{productDetails.description}</p>
               </div>
 
               <div className='flex items-center gap-2 text-red-800'>
                 <span className='text-3xl font-bold'>
-                  ${selectedPrice.toLocaleString()}
+                  {formatPrice(currentSelectedPrice)}
                 </span>
               </div>
             </div>
 
             <Card>
               <CardContent className='p-5'>
-                <form onSubmit={handleSubmit(onSubmit)} className='space-y-6'>
+                <form
+                  onSubmit={handleSubmit(handleProductFormSubmit)}
+                  className='space-y-6'
+                >
                   <div>
                     <label className='mb-3 block text-sm font-medium text-gray-700'>
                       Select Size
                     </label>
                     <div className='grid grid-cols-5 gap-2'>
-                      {productData.variants.map((variant) => (
+                      {productDetails.variants.map((productVariant) => (
                         <label
-                          key={variant.size}
-                          className={`relative flex cursor-pointer items-center justify-center rounded-lg border-2 p-3 transition-all ${
-                            watchedSize === variant.size
-                              ? 'border-primary bg-primary/10 text-primary font-medium'
-                              : 'border-gray-300 hover:border-gray-400'
-                          } `}
+                          key={productVariant.size}
+                          className={getSizeOptionClassName(
+                            productVariant.size,
+                          )}
                         >
                           <input
                             type='radio'
-                            value={variant.size}
-                            {...register('size')}
+                            value={productVariant.size}
+                            {...register('selectedSize')}
                             className='sr-only'
                           />
-                          <span className='text-sm'>{variant.size}</span>
+                          <span className='text-sm'>{productVariant.size}</span>
                         </label>
                       ))}
                     </div>
@@ -130,22 +206,23 @@ const ProductPage = ({ params }: { params: Promise<{ slug: string }> }) => {
                         variant='outline'
                         size='sm'
                         className='cursor-pointer'
-                        onClick={() => {
-                          if (watchedQuantity > 1) {
-                            setValue('quantity', watchedQuantity - 1)
-                          }
-                        }}
-                        disabled={watchedQuantity <= 1}
+                        onClick={handleQuantityDecrease}
+                        disabled={isDecreaseButtonDisabled}
+                        aria-label='Decrease quantity'
                       >
                         <Minus />
                       </Button>
 
                       <input
                         type='number'
-                        min='1'
-                        max='99'
-                        {...register('quantity', { min: 1, max: 99 })}
+                        min={QUANTITY_LIMITS.min}
+                        max={QUANTITY_LIMITS.max}
+                        {...register('selectedQuantity', {
+                          min: QUANTITY_LIMITS.min,
+                          max: QUANTITY_LIMITS.max,
+                        })}
                         className='w-16 rounded-md border border-gray-300 py-1 text-center'
+                        aria-label='Product quantity'
                       />
 
                       <Button
@@ -153,12 +230,9 @@ const ProductPage = ({ params }: { params: Promise<{ slug: string }> }) => {
                         variant='outline'
                         className='cursor-pointer'
                         size='sm'
-                        onClick={() => {
-                          if (watchedQuantity < 99) {
-                            setValue('quantity', watchedQuantity + 1)
-                          }
-                        }}
-                        disabled={watchedQuantity >= 99}
+                        onClick={handleQuantityIncrease}
+                        disabled={isIncreaseButtonDisabled}
+                        aria-label='Increase quantity'
                       >
                         <PlusIcon />
                       </Button>
@@ -169,7 +243,7 @@ const ProductPage = ({ params }: { params: Promise<{ slug: string }> }) => {
                     <div className='flex items-center justify-between pt-2 text-lg font-bold text-gray-900'>
                       <span>Total Price:</span>
                       <span className='text-primary'>
-                        ${(selectedPrice * watchedQuantity).toLocaleString()}
+                        {formatPrice(calculateTotalPrice())}
                       </span>
                     </div>
                   </div>
