@@ -66,7 +66,7 @@ const BENEFIT_DATA = {
       title:
         'Greek Wine pairing with Pad Thai (The Health Benefits of Brown Rice Pad Thai Noodles)',
       image:
-        'https://www.lucariscrystal.com/wp-content/uploads/2019/10/eve5.jpg',
+        'https://i.ibb.co/DHnk9YZS/Screenshot-2568-09-01-at-19-43-02.png',
     },
     {
       id: 2,
