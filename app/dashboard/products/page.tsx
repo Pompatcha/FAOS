@@ -1,13 +1,11 @@
 'use client'
-
-import { Plus, Upload, X, Edit, Eye, Loader2 } from 'lucide-react'
+import { Plus, Upload, X, Edit, Eye } from 'lucide-react'
 import { useState } from 'react'
 import { useForm, useFieldArray, Controller } from 'react-hook-form'
 
 import type { FC } from 'react'
 
 import { IndexLayout } from '@/components/Layout/Index'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import {
@@ -36,27 +34,11 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Textarea } from '@/components/ui/textarea'
-// import {
-//   AlertDialog,
-//   AlertDialogAction,
-//   AlertDialogCancel,
-//   AlertDialogContent,
-//   AlertDialogDescription,
-//   AlertDialogFooter,
-//   AlertDialogHeader,
-//   AlertDialogTitle,
-//   AlertDialogTrigger,
-// } from '@/components/ui/alert-dialog'
-import {
-  useProducts,
-  useCreateProduct,
-  useUpdateProduct,
-  useDeleteProduct,
-} from '@/hooks/products'
 import { formatDate } from '@/lib/date'
-import { formatPrice } from '@/lib/price'
 
 import { SumCard } from '../components/SumCard'
+import { useQuery } from '@tanstack/react-query'
+import { getProducts } from '@/actions/products'
 
 const PRODUCT_CATEGORIES = [
   { id: 1, name: 'Smartphones' },
@@ -108,10 +90,9 @@ const ProductPage: FC = () => {
     useState(false)
   const [editingProduct, setEditingProduct] = useState(null)
 
-  const { data: products = [], isLoading, error } = useProducts()
-  const createProductMutation = useCreateProduct()
-  const updateProductMutation = useUpdateProduct()
-  const deleteProductMutation = useDeleteProduct()
+  const { data: products } = useQuery({
+    queryFn: getProducts,
+  })
 
   const productForm = useForm<ProductFormData>({
     defaultValues: {
@@ -163,159 +144,6 @@ const ProductPage: FC = () => {
 
   const isProductOnSale = watch('prices.is_on_sale')
 
-  // Helper function to transform form data
-  const transformFormData = (formData: ProductFormData) => {
-    const productData = {
-      name: formData.name,
-      description: formData.description || undefined,
-      short_description: formData.short_description || undefined,
-      category_id: formData.category_id
-        ? parseInt(formData.category_id)
-        : undefined,
-      brand: formData.brand || undefined,
-      sku: formData.sku || undefined,
-      is_active: formData.is_active,
-      weight: formData.weight ? parseFloat(formData.weight) : undefined,
-      dimensions: {
-        width: formData.dimensions.width
-          ? parseFloat(formData.dimensions.width)
-          : undefined,
-        height: formData.dimensions.height
-          ? parseFloat(formData.dimensions.height)
-          : undefined,
-        depth: formData.dimensions.depth
-          ? parseFloat(formData.dimensions.depth)
-          : undefined,
-      },
-    }
-
-    const priceData = {
-      base_price: parseFloat(formData.prices.base_price),
-      sale_price: formData.prices.sale_price
-        ? parseFloat(formData.prices.sale_price)
-        : undefined,
-      cost_price: formData.prices.cost_price
-        ? parseFloat(formData.prices.cost_price)
-        : undefined,
-      is_on_sale: formData.prices.is_on_sale,
-      sale_start_date: formData.prices.sale_start_date || undefined,
-      sale_end_date: formData.prices.sale_end_date || undefined,
-    }
-
-    const optionData = formData.productOptions.map((option) => ({
-      option_name: option.option_name,
-      option_value: option.option_value,
-      additional_price: parseFloat(option.additional_price) || 0,
-      stock_quantity: parseInt(option.stock_quantity) || 0,
-      sku: option.sku || undefined,
-      is_available: option.is_available,
-    }))
-
-    const imageData = formData.productImages.map((image) => ({
-      image_url: image.image_url,
-      alt_text: image.alt_text || undefined,
-      display_order: parseInt(image.display_order) || 0,
-      is_primary: image.is_primary,
-    }))
-
-    return { productData, priceData, optionData, imageData }
-  }
-
-  const handleCreateProduct = async (formData: ProductFormData) => {
-    const { productData, priceData, optionData, imageData } =
-      transformFormData(formData)
-
-    try {
-      await createProductMutation.mutateAsync({
-        productData,
-        priceData,
-        imageData,
-        optionData,
-      })
-      setIsCreateProductDialogOpen(false)
-      reset()
-    } catch (error) {
-      // Error is handled in the mutation
-    }
-  }
-
-  const handleUpdateProduct = async (formData: ProductFormData) => {
-    if (!editingProduct) return
-
-    const { productData, priceData, optionData, imageData } =
-      transformFormData(formData)
-
-    try {
-      await updateProductMutation.mutateAsync({
-        id: editingProduct.id.toString(),
-        productData,
-        priceData,
-        imageData,
-        optionData,
-      })
-      setEditingProduct(null)
-      reset()
-    } catch (error) {
-      // Error is handled in the mutation
-    }
-  }
-
-  const handleDeleteProduct = async (id: string) => {
-    try {
-      await deleteProductMutation.mutateAsync(id)
-    } catch (error) {
-      // Error is handled in the mutation
-    }
-  }
-
-  const handleEditProduct = (product) => {
-    setEditingProduct(product)
-
-    // Populate form with existing data
-    const formData: ProductFormData = {
-      name: product.name || '',
-      description: product.description || '',
-      short_description: product.short_description || '',
-      category_id: product.category_id?.toString() || '',
-      brand: product.brand || '',
-      sku: product.sku || '',
-      is_active: product.is_active ?? true,
-      weight: product.weight?.toString() || '',
-      dimensions: {
-        width: product.dimensions?.width?.toString() || '',
-        height: product.dimensions?.height?.toString() || '',
-        depth: product.dimensions?.depth?.toString() || '',
-      },
-      prices: {
-        base_price: product.prices?.[0]?.base_price?.toString() || '',
-        sale_price: product.prices?.[0]?.sale_price?.toString() || '',
-        cost_price: product.prices?.[0]?.cost_price?.toString() || '',
-        is_on_sale: product.prices?.[0]?.is_on_sale || false,
-        sale_start_date: product.prices?.[0]?.sale_start_date || '',
-        sale_end_date: product.prices?.[0]?.sale_end_date || '',
-      },
-      productOptions:
-        product.options?.map((option) => ({
-          option_name: option.option_name || '',
-          option_value: option.option_value || '',
-          additional_price: option.additional_price?.toString() || '0',
-          stock_quantity: option.stock_quantity?.toString() || '0',
-          sku: option.sku || '',
-          is_available: option.is_available ?? true,
-        })) || [],
-      productImages:
-        product.images?.map((image) => ({
-          image_url: image.image_url || '',
-          alt_text: image.alt_text || '',
-          display_order: image.display_order?.toString() || '0',
-          is_primary: image.is_primary || false,
-        })) || [],
-    }
-
-    reset(formData)
-    setIsCreateProductDialogOpen(true)
-  }
-
   const handleAddProductOption = () => {
     addProductOptionField({
       option_name: '',
@@ -336,68 +164,10 @@ const ProductPage: FC = () => {
     })
   }
 
-  const handlePrimaryImageChange = (
-    selectedImageIndex: number,
-    isSelectedPrimary: boolean,
-  ) => {
-    if (isSelectedPrimary) {
-      productImageFields.forEach((_, imageIndex) => {
-        if (imageIndex !== selectedImageIndex) {
-          setValue(`productImages.${imageIndex}.is_primary`, false)
-        }
-      })
-    }
-  }
-
-  const getStockBadgeVariant = (stockQuantity: number) => {
-    return stockQuantity > 10 ? 'default' : 'destructive'
-  }
-
-  const getProductStatusBadgeVariant = (isActive: boolean) => {
-    return isActive ? 'default' : 'secondary'
-  }
-
-  const getProductStatusDisplayText = (isActive: boolean) => {
-    return isActive ? 'Active' : 'Inactive'
-  }
-
-  const calculateTotalStock = (product) => {
-    if (!product.options || product.options.length === 0) return 0
-    return product.options.reduce(
-      (total: number, option) => total + (option.stock_quantity || 0),
-      0,
-    )
-  }
-
-  const getProductPrice = (product) => {
-    const price = product.prices?.[0]
-    if (!price) return { base_price: 0, sale_price: null, is_on_sale: false }
-    return {
-      base_price: price.base_price || 0,
-      sale_price: price.sale_price,
-      is_on_sale: price.is_on_sale || false,
-    }
-  }
-
   const closeDialog = () => {
     setIsCreateProductDialogOpen(false)
     setEditingProduct(null)
     reset()
-  }
-
-  if (error) {
-    return (
-      <IndexLayout>
-        <div className='flex min-h-[400px] items-center justify-center'>
-          <div className='text-center text-red-600'>
-            <p>Error loading products: {error.message}</p>
-            <Button onClick={() => window.location.reload()} className='mt-4'>
-              Retry
-            </Button>
-          </div>
-        </div>
-      </IndexLayout>
-    )
   }
 
   return (
@@ -976,10 +746,10 @@ const ProductPage: FC = () => {
                                     <Switch
                                       checked={field.value}
                                       onCheckedChange={(isSelectedPrimary) => {
-                                        handlePrimaryImageChange(
-                                          productImageIndex,
-                                          isSelectedPrimary,
-                                        )
+                                        // handlePrimaryImageChange(
+                                        //   productImageIndex,
+                                        //   isSelectedPrimary,
+                                        // )
                                         field.onChange(isSelectedPrimary)
                                       }}
                                     />
@@ -1002,20 +772,7 @@ const ProductPage: FC = () => {
                   <Button
                     type='button'
                     className='bg-[#4a2c00] hover:bg-[#4a2c00]/80'
-                    onClick={handleSubmit(
-                      editingProduct
-                        ? handleUpdateProduct
-                        : handleCreateProduct,
-                    )}
-                    disabled={
-                      createProductMutation.isPending ||
-                      updateProductMutation.isPending
-                    }
                   >
-                    {(createProductMutation.isPending ||
-                      updateProductMutation.isPending) && (
-                      <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                    )}
                     {editingProduct ? 'Update Product' : 'Create Product'}
                   </Button>
                 </div>
@@ -1027,53 +784,41 @@ const ProductPage: FC = () => {
 
       <div>
         <div className='grid grid-cols-4 gap-5 text-[#4a2c00]'>
-          <SumCard
-            label='Total Products'
-            value={products.length}
-            href='/dashboard/products'
-          />
+          <SumCard label='Total Products' value={0} />
         </div>
       </div>
 
       <div className='rounded-xl bg-white p-5'>
-        {isLoading ? (
-          <div className='flex items-center justify-center p-8'>
-            <Loader2 className='h-8 w-8 animate-spin' />
-            <span className='ml-2'>Loading products...</span>
-          </div>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Product Name</TableHead>
-                <TableHead>Brand</TableHead>
-                <TableHead>SKU</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead>Stock</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead className='text-right'>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {products.map((product) => {
-                const { base_price, sale_price, is_on_sale } =
-                  getProductPrice(product)
-                const totalStock = calculateTotalStock(product)
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Product Name</TableHead>
+              <TableHead>Brand</TableHead>
+              <TableHead>SKU</TableHead>
+              <TableHead>Price</TableHead>
+              <TableHead>Stock</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Created</TableHead>
+              <TableHead className='text-right'>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {products.map((product) => {
+              // const { base_price, sale_price, is_on_sale } =
+              //   getProductPrice(product)
+              // const totalStock = calculateTotalStock(product)
 
-                return (
-                  <TableRow key={product.id}>
-                    <TableCell className='font-medium'>
-                      {product.name}
-                    </TableCell>
-                    <TableCell>{product.brand || '-'}</TableCell>
-                    <TableCell>
-                      <code className='rounded bg-gray-100 px-2 py-1 text-sm'>
-                        {product.sku || '-'}
-                      </code>
-                    </TableCell>
-                    <TableCell>
-                      <div className='flex flex-col'>
+              return (
+                <TableRow key={product.id}>
+                  <TableCell className='font-medium'>{product.name}</TableCell>
+                  <TableCell>{product.brand || '-'}</TableCell>
+                  <TableCell>
+                    <code className='rounded bg-gray-100 px-2 py-1 text-sm'>
+                      {product.sku || '-'}
+                    </code>
+                  </TableCell>
+                  <TableCell>
+                    {/* <div className='flex flex-col'>
                         {is_on_sale && sale_price ? (
                           <>
                             <span className='text-sm text-gray-500 line-through'>
@@ -1086,79 +831,42 @@ const ProductPage: FC = () => {
                         ) : (
                           <span>{formatPrice(base_price)}</span>
                         )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={getStockBadgeVariant(totalStock)}>
+                      </div> */}
+                  </TableCell>
+                  <TableCell>
+                    {/* <Badge variant={getStockBadgeVariant(totalStock)}>
                         {totalStock}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge
+                      </Badge> */}
+                  </TableCell>
+                  <TableCell>
+                    {/* <Badge
                         variant={getProductStatusBadgeVariant(
                           product.is_active,
                         )}
                       >
                         {getProductStatusDisplayText(product.is_active)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{formatDate(product.created_at)}</TableCell>
-                    <TableCell className='text-right'>
-                      <div className='flex justify-end gap-2'>
-                        <Button variant='outline' size='sm'>
-                          <Eye className='h-4 w-4' /> View
-                        </Button>
-                        <Button
-                          variant='outline'
-                          size='sm'
-                          onClick={() => handleEditProduct(product)}
-                        >
-                          <Edit className='h-4 w-4' /> Edit
-                        </Button>
-                        {/* <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button
-                              variant='outline'
-                              size='sm'
-                              className='text-red-600'
-                              disabled={deleteProductMutation.isPending}
-                            >
-                              <Trash2 className='h-4 w-4' /> Delete
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                This action cannot be undone. This will
-                                permanently delete the product "{product.name}"
-                                and all related data.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() =>
-                                  handleDeleteProduct(product.id.toString())
-                                }
-                                className='bg-red-600 hover:bg-red-700'
-                              >
-                                {deleteProductMutation.isPending && (
-                                  <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                                )}
-                                Delete Product
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog> */}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                )
-              })}
-            </TableBody>
-          </Table>
-        )}
+                      </Badge> */}
+                  </TableCell>
+                  <TableCell>{formatDate(product.created_at)}</TableCell>
+                  <TableCell className='text-right'>
+                    <div className='flex justify-end gap-2'>
+                      <Button variant='outline' size='sm'>
+                        <Eye className='h-4 w-4' /> View
+                      </Button>
+                      <Button
+                        variant='outline'
+                        size='sm'
+                        // onClick={() => handleEditProduct(product)}
+                      >
+                        <Edit className='h-4 w-4' /> Edit
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              )
+            })}
+          </TableBody>
+        </Table>
       </div>
     </IndexLayout>
   )
