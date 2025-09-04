@@ -1,20 +1,13 @@
 'use client'
 
-import { FC, useState } from 'react'
-import { SumCard } from '../components/SumCard'
-import { IndexLayout } from '@/components/Layout/Index'
-import { Button } from '@/components/ui/button'
 import { Eye, Package } from 'lucide-react'
+import { useState } from 'react'
 
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+import type { FC } from 'react'
+
+import { IndexLayout } from '@/components/Layout/Index'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -25,8 +18,18 @@ import { DialogHeader } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
-import { formatPrice } from '@/lib/price'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import { formatDate } from '@/lib/date'
+import { formatPrice } from '@/lib/price'
+
+import { SumCard } from '../components/SumCard'
 
 interface Order {
   id: number
@@ -235,7 +238,7 @@ const OrderPage: FC = () => {
 
       <div>
         <div className='grid grid-cols-4 gap-5 text-[#4a2c00]'>
-          <SumCard label={'New Orders'} value={50} href={'/dashboard/orders'} />
+          <SumCard label='New Orders' value={50} href='/dashboard/orders' />
         </div>
       </div>
 

@@ -172,33 +172,34 @@ const Menu = () => {
   }
 
   const renderDesktopSubmenuDropdown = useMemo(
-    // eslint-disable-next-line react/display-name
-    () => (menuItem: MenuItem) => {
-      if (!menuItem.submenu) return null
+    () =>
+      // eslint-disable-next-line react/no-unstable-nested-components
+      function (menuItem: MenuItem) {
+        if (!menuItem.submenu) return null
 
-      const isCurrentSubmenuActive = activeDesktopSubmenu === menuItem.title
+        const isCurrentSubmenuActive = activeDesktopSubmenu === menuItem.title
 
-      return (
-        <div
-          className={getDesktopSubmenuClassName(isCurrentSubmenuActive)}
-          onMouseEnter={() => handleDesktopSubmenuMouseEnter(menuItem.title)}
-          onMouseLeave={handleDesktopSubmenuMouseLeave}
-        >
-          <div className='py-2'>
-            {menuItem.submenu.map((submenuItem) => (
-              <button
-                key={submenuItem.href}
-                onClick={() => handleSubmenuItemClick(submenuItem.href)}
-                className='hover:bg-primary/80 block w-full cursor-pointer px-4 py-3 text-left text-white transition-colors duration-150 hover:underline'
-                type='button'
-              >
-                {submenuItem.title}
-              </button>
-            ))}
+        return (
+          <div
+            className={getDesktopSubmenuClassName(isCurrentSubmenuActive)}
+            onMouseEnter={() => handleDesktopSubmenuMouseEnter(menuItem.title)}
+            onMouseLeave={handleDesktopSubmenuMouseLeave}
+          >
+            <div className='py-2'>
+              {menuItem.submenu.map((submenuItem) => (
+                <button
+                  key={submenuItem.href}
+                  onClick={() => handleSubmenuItemClick(submenuItem.href)}
+                  className='hover:bg-primary/80 block w-full cursor-pointer px-4 py-3 text-left text-white transition-colors duration-150 hover:underline'
+                  type='button'
+                >
+                  {submenuItem.title}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
-      )
-    },
+        )
+      },
     [
       activeDesktopSubmenu,
       handleDesktopSubmenuMouseEnter,

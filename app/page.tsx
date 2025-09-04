@@ -1,11 +1,12 @@
 'use client'
 
-import { NatureGoldBanner } from '@/components/NatureGoldBanner'
-import { IndexLayout } from '@/components/Layout/Index'
-import { HeaderImageSlider } from '@/components/ImageSlider'
 import { ArrowUpRight, CircleCheck } from 'lucide-react'
-import { Benefit } from '@/components/Benefit'
 import { SocialIcon } from 'react-social-icons'
+
+import { Benefit } from '@/components/Benefit'
+import { HeaderImageSlider } from '@/components/ImageSlider'
+import { IndexLayout } from '@/components/Layout/Index'
+import { NatureGoldBanner } from '@/components/NatureGoldBanner'
 
 interface HospitalBenefit {
   id: number
@@ -235,7 +236,7 @@ const ResearchReferenceItem = ({
   )
 }
 
-export default function Homepage() {
+const Homepage = () => {
   return (
     <IndexLayout>
       <NatureGoldBanner />
@@ -319,3 +320,5 @@ export default function Homepage() {
     </IndexLayout>
   )
 }
+
+export default Homepage

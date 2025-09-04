@@ -1,5 +1,6 @@
-import { createClient } from '@/utils/supabase/client'
 import { create } from 'zustand'
+
+import { createClient } from '@/utils/supabase/client'
 
 const supabase = createClient()
 

@@ -1,18 +1,15 @@
 'use client'
 
-import { FC, useState } from 'react'
-import { useForm, useFieldArray, Controller } from 'react-hook-form'
-import { SumCard } from '../components/SumCard'
-import { IndexLayout } from '@/components/Layout/Index'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { Switch } from '@/components/ui/switch'
-import { Label } from '@/components/ui/label'
-import { Card, CardContent } from '@/components/ui/card'
 import { Plus, Upload, X, Edit, Eye, Loader2 } from 'lucide-react'
-import { formatDate } from '@/lib/date'
-import { formatPrice } from '@/lib/price'
+import { useState } from 'react'
+import { useForm, useFieldArray, Controller } from 'react-hook-form'
+
+import type { FC } from 'react'
+
+import { IndexLayout } from '@/components/Layout/Index'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
 import {
   Dialog,
   DialogContent,
@@ -20,6 +17,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
@@ -27,6 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
 import {
   Table,
   TableBody,
@@ -35,7 +35,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Badge } from '@/components/ui/badge'
+import { Textarea } from '@/components/ui/textarea'
 // import {
 //   AlertDialog,
 //   AlertDialogAction,
@@ -53,6 +53,10 @@ import {
   useUpdateProduct,
   useDeleteProduct,
 } from '@/hooks/products'
+import { formatDate } from '@/lib/date'
+import { formatPrice } from '@/lib/price'
+
+import { SumCard } from '../components/SumCard'
 
 const PRODUCT_CATEGORIES = [
   { id: 1, name: 'Smartphones' },
@@ -1024,9 +1028,9 @@ const ProductPage: FC = () => {
       <div>
         <div className='grid grid-cols-4 gap-5 text-[#4a2c00]'>
           <SumCard
-            label={'Total Products'}
+            label='Total Products'
             value={products.length}
-            href={'/dashboard/products'}
+            href='/dashboard/products'
           />
         </div>
       </div>

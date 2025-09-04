@@ -2,7 +2,8 @@
 
 import { LucideArrowUpRight } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { FC } from 'react'
+
+import type { FC } from 'react'
 
 type SumCardProps = {
   label: string

@@ -1,15 +1,17 @@
 import './globals.css'
+import { IBM_Plex_Sans_Thai } from 'next/font/google'
+
 import type { Metadata } from 'next'
 import type { FC, PropsWithChildren } from 'react'
-import { IBM_Plex_Sans_Thai } from 'next/font/google'
 
 const IBMPlexSansThai = IBM_Plex_Sans_Thai({
   weight: ['400', '700'],
 })
 
-import Providers from '../contexts/QueryProviders'
-import AuthProvider from '@/contexts/AuthProvider'
 import { Toaster } from '@/components/ui/sonner'
+import AuthProvider from '@/contexts/AuthProvider'
+
+import Providers from '../contexts/QueryProviders'
 
 const metadata: Metadata = {
   title:

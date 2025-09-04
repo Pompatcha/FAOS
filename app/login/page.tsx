@@ -1,15 +1,16 @@
 'use client'
 
+import Image from 'next/image'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { SocialIcon } from 'react-social-icons'
+import { toast } from 'sonner'
+
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import Image from 'next/image'
-import { SocialIcon } from 'react-social-icons'
-import { useForm } from 'react-hook-form'
-import { useRouter } from 'next/navigation'
-import { useState } from 'react'
-import { toast } from 'sonner'
 
 interface LoginFormData {
   email: string
@@ -53,7 +54,7 @@ const LOGIN_PAGE_CONTENT = {
   socialAuthDividerText: 'Or continue with',
 }
 
-export default function LoginPage() {
+const LoginPage = () => {
   const router = useRouter()
   const [isLoginFormSubmitting, setIsLoginFormSubmitting] = useState(false)
 
@@ -267,3 +268,5 @@ export default function LoginPage() {
     </div>
   )
 }
+
+export default LoginPage

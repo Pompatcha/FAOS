@@ -1,13 +1,14 @@
 'use client'
 
-import { IndexLayout } from '@/components/Layout/Index'
+import { Minus, PlusIcon } from 'lucide-react'
 import { use, useState } from 'react'
+import React from 'react'
 import { useForm } from 'react-hook-form'
+import { toast } from 'sonner'
+
+import { IndexLayout } from '@/components/Layout/Index'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import React from 'react'
-import { Minus, PlusIcon } from 'lucide-react'
-import { toast } from 'sonner'
 
 interface ProductVariant {
   size: string

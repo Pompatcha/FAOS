@@ -1,3 +1,7 @@
+import { useState } from 'react'
+
+import type { FC } from 'react'
+
 import {
   Dialog,
   DialogTrigger,
@@ -5,7 +9,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog'
-import { FC, useState } from 'react'
+
 import { Button } from '../ui/button'
 import { DialogHeader } from '../ui/dialog'
 

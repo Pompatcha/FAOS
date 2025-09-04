@@ -1,8 +1,8 @@
 'use client'
 
+import { type EmblaCarouselType } from 'embla-carousel'
 import AutoPlay from 'embla-carousel-autoplay'
 import useEmblaCarousel from 'embla-carousel-react'
-import { type EmblaCarouselType } from 'embla-carousel'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import React, { useCallback, useEffect, useState } from 'react'
 

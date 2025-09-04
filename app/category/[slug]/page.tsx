@@ -1,6 +1,7 @@
-import { NatureGoldBanner } from '@/components/NatureGoldBanner'
-import { IndexLayout } from '@/components/Layout/Index'
 import { use } from 'react'
+
+import { IndexLayout } from '@/components/Layout/Index'
+import { NatureGoldBanner } from '@/components/NatureGoldBanner'
 import { ProductCard } from '@/components/ProductCard'
 
 const CategoryPage = ({ params }: { params: Promise<{ slug: string }> }) => {

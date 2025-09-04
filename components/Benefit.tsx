@@ -1,5 +1,5 @@
-import { cn } from '@/lib/utils'
 import { ChevronRight } from 'lucide-react'
+
 import type { FC } from 'react'
 
 interface BenefitItem {
