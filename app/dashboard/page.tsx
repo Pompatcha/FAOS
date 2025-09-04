@@ -16,7 +16,7 @@ const DashboardPage: FC = () => {
       </div>
 
       <div>
-        <div className='grid grid-cols-4 gap-5 text-[#4a2c00]'>
+        <div className='grid grid-cols-3 gap-5 text-[#4a2c00]'>
           <SumCard label={'Total Revenue'} value={50} />
           <SumCard label={'New Orders'} value={50} href={'/dashboard/orders'} />
           <SumCard

@@ -473,8 +473,7 @@ const OrderPage: FC = () => {
                       </span>
                     </div>
                   )}
-                  <Separator />
-                  <div className='flex justify-between text-lg font-semibold'>
+                  <div className='flex justify-between border-t pt-2.5 text-lg font-semibold'>
                     <span>Total:</span>
                     <span>
                       {formatPrice(selectedOrderDetails.total_amount)}
