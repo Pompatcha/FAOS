@@ -5,13 +5,13 @@ import { useRouter } from 'next/navigation'
 
 import type { FC } from 'react'
 
-type SumCardProps = {
+type HeaderCardProps = {
   label: string
   value: number
   href?: string
 }
 
-const SumCard: FC<SumCardProps> = ({ label, value, href }) => {
+const HeaderCard: FC<HeaderCardProps> = ({ label, value, href }) => {
   const router = useRouter()
 
   return (
@@ -35,4 +35,4 @@ const SumCard: FC<SumCardProps> = ({ label, value, href }) => {
   )
 }
 
-export { SumCard }
+export { HeaderCard }

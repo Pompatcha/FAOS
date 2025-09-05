@@ -2,7 +2,7 @@ import type { FC } from 'react'
 
 import { IndexLayout } from '@/components/Layout/Index'
 
-import { SumCard } from './components/SumCard'
+import { HeaderCard } from './components/HeaderCard'
 
 const DashboardPage: FC = () => {
   return (
@@ -19,9 +19,9 @@ const DashboardPage: FC = () => {
 
       <div>
         <div className='grid grid-cols-3 gap-5 text-[#4a2c00]'>
-          <SumCard label='Total Revenue' value={50} />
-          <SumCard label='New Orders' value={50} href='/dashboard/orders' />
-          <SumCard
+          <HeaderCard label='Total Revenue' value={50} />
+          <HeaderCard label='New Orders' value={50} href='/dashboard/orders' />
+          <HeaderCard
             label='Total Products'
             value={50}
             href='/dashboard/products'

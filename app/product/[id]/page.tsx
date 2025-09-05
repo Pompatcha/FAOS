@@ -42,13 +42,10 @@ const PRODUCT_MOCKUP_DATA: ProductDetails = {
   image: '/placeholder.svg',
   imageAlt: 'Premium T-Shirt product image',
   variants: [
-    { size: 'S', price: 590 },
-    { size: 'M', price: 590 },
-    { size: 'L', price: 650 },
-    { size: 'XL', price: 650 },
-    { size: 'XXL', price: 720 },
+    { size: '120 ML', price: 399 },
+    { size: '250 ML', price: 590 },
   ],
-  currency: '$',
+  currency: '฿',
 }
 
 const QUANTITY_LIMITS = {
@@ -143,7 +140,7 @@ const ProductPage = ({ params }: ProductPageProps) => {
             <img
               src={productDetails.image}
               alt={productDetails.imageAlt || productDetails.name}
-              className='h-full w-full rounded-xl object-cover'
+              className='h-full w-full rounded-xl object-cover shadow-2xl'
               loading='lazy'
             />
           </div>
@@ -164,7 +161,7 @@ const ProductPage = ({ params }: ProductPageProps) => {
               </div>
             </div>
 
-            <Card>
+            <Card className='shadow-2xl'>
               <CardContent className='p-5'>
                 <form
                   onSubmit={handleSubmit(handleProductFormSubmit)}
@@ -222,7 +219,7 @@ const ProductPage = ({ params }: ProductPageProps) => {
                           min: QUANTITY_LIMITS.min,
                           max: QUANTITY_LIMITS.max,
                         })}
-                        className='w-16 rounded-md border border-gray-300 py-1 text-center'
+                        className='w-16 rounded-md border border-gray-300 py-1 text-center [&::-webkit-inner-spin-button]:opacity-100 [&::-webkit-outer-spin-button]:opacity-100'
                         aria-label='Product quantity'
                       />
 

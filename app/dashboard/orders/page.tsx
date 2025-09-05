@@ -29,7 +29,7 @@ import {
 import { formatDate } from '@/lib/date'
 import { formatPrice } from '@/lib/price'
 
-import { SumCard } from '../components/SumCard'
+import { HeaderCard } from '../components/HeaderCard'
 
 interface Order {
   id: number
@@ -238,7 +238,7 @@ const OrderPage: FC = () => {
 
       <div>
         <div className='grid grid-cols-4 gap-5 text-[#4a2c00]'>
-          <SumCard label='New Orders' value={50} href='/dashboard/orders' />
+          <HeaderCard label='New Orders' value={50} href='/dashboard/orders' />
         </div>
       </div>
 

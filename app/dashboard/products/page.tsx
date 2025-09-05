@@ -1,10 +1,13 @@
 'use client'
-import { Plus, Upload, X, Edit, Eye } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import { Plus, Upload, X, Edit } from 'lucide-react'
 import { useState } from 'react'
 import { useForm, useFieldArray, Controller } from 'react-hook-form'
 
 import type { FC } from 'react'
 
+import { getCategories } from '@/actions/category'
+import { getProducts } from '@/actions/product'
 import { IndexLayout } from '@/components/Layout/Index'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -36,16 +39,7 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import { formatDate } from '@/lib/date'
 
-import { SumCard } from '../components/SumCard'
-import { useQuery } from '@tanstack/react-query'
-import { getProducts } from '@/actions/products'
-
-const PRODUCT_CATEGORIES = [
-  { id: 1, name: 'Smartphones' },
-  { id: 2, name: 'Tablets' },
-  { id: 3, name: 'Laptops' },
-  { id: 4, name: 'Accessories' },
-]
+import { HeaderCard } from '../components/HeaderCard'
 
 interface ProductFormData {
   name: string
@@ -55,7 +49,6 @@ interface ProductFormData {
   brand: string
   sku: string
   is_active: boolean
-  weight: string
   dimensions: {
     width: string
     height: string
@@ -75,12 +68,10 @@ interface ProductFormData {
     additional_price: string
     stock_quantity: string
     sku: string
-    is_available: boolean
   }>
   productImages: Array<{
     image_url: string
     alt_text: string
-    display_order: string
     is_primary: boolean
   }>
 }
@@ -91,7 +82,13 @@ const ProductPage: FC = () => {
   const [editingProduct, setEditingProduct] = useState(null)
 
   const { data: products } = useQuery({
-    queryFn: getProducts,
+    queryKey: ['products'],
+    queryFn: () => getProducts(),
+  })
+
+  const { data: categories } = useQuery({
+    queryKey: ['categories'],
+    queryFn: () => getCategories(),
   })
 
   const productForm = useForm<ProductFormData>({
@@ -102,8 +99,6 @@ const ProductPage: FC = () => {
       category_id: '',
       brand: '',
       sku: '',
-      is_active: true,
-      weight: '',
       dimensions: {
         width: '',
         height: '',
@@ -122,7 +117,7 @@ const ProductPage: FC = () => {
     },
   })
 
-  const { control, handleSubmit, reset, watch, setValue } = productForm
+  const { control, handleSubmit, reset, setValue } = productForm
 
   const {
     fields: productOptionFields,
@@ -142,8 +137,6 @@ const ProductPage: FC = () => {
     name: 'productImages',
   })
 
-  const isProductOnSale = watch('prices.is_on_sale')
-
   const handleAddProductOption = () => {
     addProductOptionField({
       option_name: '',
@@ -151,7 +144,6 @@ const ProductPage: FC = () => {
       additional_price: '0',
       stock_quantity: '0',
       sku: '',
-      is_available: true,
     })
   }
 
@@ -159,7 +151,6 @@ const ProductPage: FC = () => {
     addProductImageField({
       image_url: '',
       alt_text: '',
-      display_order: (productImageFields.length + 1).toString(),
       is_primary: productImageFields.length === 0,
     })
   }
@@ -168,6 +159,19 @@ const ProductPage: FC = () => {
     setIsCreateProductDialogOpen(false)
     setEditingProduct(null)
     reset()
+  }
+
+  const handlePrimaryImageChange = (
+    selectedIndex: number,
+    isSelectedPrimary: boolean,
+  ) => {
+    if (isSelectedPrimary) {
+      productImageFields.forEach((_, index) => {
+        if (index !== selectedIndex) {
+          setValue(`productImages.${index}.is_primary`, false)
+        }
+      })
+    }
   }
 
   return (
@@ -181,13 +185,25 @@ const ProductPage: FC = () => {
           </span>
         </div>
         <div className='flex gap-5'>
-          <Dialog open={isCreateProductDialogOpen} onOpenChange={closeDialog}>
+          <Dialog
+            onOpenChange={(value) => {
+              if (!value) {
+                closeDialog()
+              }
+            }}
+            open={isCreateProductDialogOpen}
+          >
             <DialogTrigger asChild>
-              <Button className='w-fit cursor-pointer rounded-xl bg-white p-5 text-[#4a2c00] hover:bg-white/50'>
+              <Button
+                onClick={() => {
+                  setIsCreateProductDialogOpen(true)
+                }}
+                className='w-fit cursor-pointer rounded-xl bg-white p-5 text-[#4a2c00] hover:bg-white/50'
+              >
                 <Plus /> Add Product
               </Button>
             </DialogTrigger>
-            <DialogContent className='max-h-[90vh] min-w-4xl overflow-y-auto'>
+            <DialogContent className='max-h-[90vh] min-w-2xl overflow-y-auto'>
               <DialogHeader>
                 <DialogTitle className='text-2xl'>
                   {editingProduct ? 'Edit Product' : 'Add New Product'}
@@ -272,11 +288,11 @@ const ProductPage: FC = () => {
                               value={field.value}
                               onValueChange={field.onChange}
                             >
-                              <SelectTrigger className='mt-1'>
+                              <SelectTrigger className='mt-1 w-full'>
                                 <SelectValue placeholder='Select category' />
                               </SelectTrigger>
                               <SelectContent>
-                                {PRODUCT_CATEGORIES.map((category) => (
+                                {categories?.map((category) => (
                                   <SelectItem
                                     key={category.id}
                                     value={category.id.toString()}
@@ -288,37 +304,6 @@ const ProductPage: FC = () => {
                             </Select>
                           )}
                         />
-                      </div>
-
-                      <div>
-                        <Label htmlFor='weight'>Weight (kg)</Label>
-                        <Controller
-                          name='weight'
-                          control={control}
-                          render={({ field }) => (
-                            <Input
-                              {...field}
-                              type='number'
-                              step='0.01'
-                              placeholder='0.00'
-                              className='mt-1'
-                            />
-                          )}
-                        />
-                      </div>
-
-                      <div className='flex items-center space-x-2'>
-                        <Controller
-                          name='is_active'
-                          control={control}
-                          render={({ field }) => (
-                            <Switch
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          )}
-                        />
-                        <Label>Active Product</Label>
                       </div>
                     </div>
 
@@ -360,175 +345,6 @@ const ProductPage: FC = () => {
 
                 <Card>
                   <CardContent className='p-6'>
-                    <h3 className='mb-4 text-lg font-semibold'>
-                      Dimensions (cm)
-                    </h3>
-                    <div className='grid grid-cols-3 gap-4'>
-                      <div>
-                        <Label>Width</Label>
-                        <Controller
-                          name='dimensions.width'
-                          control={control}
-                          render={({ field }) => (
-                            <Input
-                              {...field}
-                              type='number'
-                              step='0.1'
-                              placeholder='0.0'
-                              className='mt-1'
-                            />
-                          )}
-                        />
-                      </div>
-                      <div>
-                        <Label>Height</Label>
-                        <Controller
-                          name='dimensions.height'
-                          control={control}
-                          render={({ field }) => (
-                            <Input
-                              {...field}
-                              type='number'
-                              step='0.1'
-                              placeholder='0.0'
-                              className='mt-1'
-                            />
-                          )}
-                        />
-                      </div>
-                      <div>
-                        <Label>Depth</Label>
-                        <Controller
-                          name='dimensions.depth'
-                          control={control}
-                          render={({ field }) => (
-                            <Input
-                              {...field}
-                              type='number'
-                              step='0.1'
-                              placeholder='0.0'
-                              className='mt-1'
-                            />
-                          )}
-                        />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardContent className='p-6'>
-                    <h3 className='mb-4 text-lg font-semibold'>Pricing</h3>
-                    <div className='grid grid-cols-2 gap-4'>
-                      <div>
-                        <Label>Base Price (THB) *</Label>
-                        <Controller
-                          name='prices.base_price'
-                          control={control}
-                          rules={{ required: 'Base price is required' }}
-                          render={({ field, fieldState }) => (
-                            <div>
-                              <Input
-                                {...field}
-                                type='number'
-                                step='0.01'
-                                placeholder='0.00'
-                                className='mt-1'
-                              />
-                              {fieldState.error && (
-                                <p className='mt-1 text-sm text-red-500'>
-                                  {fieldState.error.message}
-                                </p>
-                              )}
-                            </div>
-                          )}
-                        />
-                      </div>
-                      <div>
-                        <Label>Cost Price (THB)</Label>
-                        <Controller
-                          name='prices.cost_price'
-                          control={control}
-                          render={({ field }) => (
-                            <Input
-                              {...field}
-                              type='number'
-                              step='0.01'
-                              placeholder='0.00'
-                              className='mt-1'
-                            />
-                          )}
-                        />
-                      </div>
-                    </div>
-
-                    <div className='mt-4 flex items-center space-x-2'>
-                      <Controller
-                        name='prices.is_on_sale'
-                        control={control}
-                        render={({ field }) => (
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        )}
-                      />
-                      <Label>On Sale</Label>
-                    </div>
-
-                    {isProductOnSale && (
-                      <div className='mt-4 grid grid-cols-3 gap-4'>
-                        <div>
-                          <Label>Sale Price (THB)</Label>
-                          <Controller
-                            name='prices.sale_price'
-                            control={control}
-                            render={({ field }) => (
-                              <Input
-                                {...field}
-                                type='number'
-                                step='0.01'
-                                placeholder='0.00'
-                                className='mt-1'
-                              />
-                            )}
-                          />
-                        </div>
-                        <div>
-                          <Label>Sale Start Date</Label>
-                          <Controller
-                            name='prices.sale_start_date'
-                            control={control}
-                            render={({ field }) => (
-                              <Input
-                                {...field}
-                                type='datetime-local'
-                                className='mt-1'
-                              />
-                            )}
-                          />
-                        </div>
-                        <div>
-                          <Label>Sale End Date</Label>
-                          <Controller
-                            name='prices.sale_end_date'
-                            control={control}
-                            render={({ field }) => (
-                              <Input
-                                {...field}
-                                type='datetime-local'
-                                className='mt-1'
-                              />
-                            )}
-                          />
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardContent className='p-6'>
                     <div className='mb-4 flex items-center justify-between'>
                       <h3 className='text-lg font-semibold'>Product Options</h3>
                       <Button
@@ -537,7 +353,7 @@ const ProductPage: FC = () => {
                         variant='outline'
                         size='sm'
                       >
-                        <Plus className='mr-2 h-4 w-4' />
+                        <Plus className='size-4' />
                         Add Option
                       </Button>
                     </div>
@@ -637,19 +453,6 @@ const ProductPage: FC = () => {
                                   )}
                                 />
                               </div>
-                              <div className='mt-6 flex items-center space-x-2'>
-                                <Controller
-                                  name={`productOptions.${productOptionIndex}.is_available`}
-                                  control={control}
-                                  render={({ field }) => (
-                                    <Switch
-                                      checked={field.value}
-                                      onCheckedChange={field.onChange}
-                                    />
-                                  )}
-                                />
-                                <Label>Available</Label>
-                              </div>
                             </div>
                           </Card>
                         ),
@@ -668,7 +471,7 @@ const ProductPage: FC = () => {
                         variant='outline'
                         size='sm'
                       >
-                        <Upload className='mr-2 h-4 w-4' />
+                        <Upload className='size-4' />
                         Add Image
                       </Button>
                     </div>
@@ -723,21 +526,6 @@ const ProductPage: FC = () => {
                                   )}
                                 />
                               </div>
-                              <div>
-                                <Label>Display Order</Label>
-                                <Controller
-                                  name={`productImages.${productImageIndex}.display_order`}
-                                  control={control}
-                                  render={({ field }) => (
-                                    <Input
-                                      {...field}
-                                      type='number'
-                                      placeholder='1'
-                                      className='mt-1'
-                                    />
-                                  )}
-                                />
-                              </div>
                               <div className='mt-6 flex items-center space-x-2'>
                                 <Controller
                                   name={`productImages.${productImageIndex}.is_primary`}
@@ -746,10 +534,10 @@ const ProductPage: FC = () => {
                                     <Switch
                                       checked={field.value}
                                       onCheckedChange={(isSelectedPrimary) => {
-                                        // handlePrimaryImageChange(
-                                        //   productImageIndex,
-                                        //   isSelectedPrimary,
-                                        // )
+                                        handlePrimaryImageChange(
+                                          productImageIndex,
+                                          isSelectedPrimary,
+                                        )
                                         field.onChange(isSelectedPrimary)
                                       }}
                                     />
@@ -784,7 +572,7 @@ const ProductPage: FC = () => {
 
       <div>
         <div className='grid grid-cols-4 gap-5 text-[#4a2c00]'>
-          <SumCard label='Total Products' value={0} />
+          <HeaderCard label='Total Products' value={0} />
         </div>
       </div>
 
@@ -803,7 +591,7 @@ const ProductPage: FC = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {products.map((product) => {
+            {products?.map((product) => {
               // const { base_price, sale_price, is_on_sale } =
               //   getProductPrice(product)
               // const totalStock = calculateTotalStock(product)
@@ -850,13 +638,13 @@ const ProductPage: FC = () => {
                   <TableCell>{formatDate(product.created_at)}</TableCell>
                   <TableCell className='text-right'>
                     <div className='flex justify-end gap-2'>
-                      <Button variant='outline' size='sm'>
-                        <Eye className='h-4 w-4' /> View
-                      </Button>
                       <Button
                         variant='outline'
                         size='sm'
-                        // onClick={() => handleEditProduct(product)}
+                        onClick={() => {
+                          setIsCreateProductDialogOpen(true)
+                          // setEditingProduct(true)
+                        }}
                       >
                         <Edit className='h-4 w-4' /> Edit
                       </Button>

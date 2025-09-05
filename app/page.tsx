@@ -1,6 +1,6 @@
 'use client'
 
-import { ArrowUpRight, CircleCheck } from 'lucide-react'
+import { ArrowUpRight, Check } from 'lucide-react'
 import { SocialIcon } from 'react-social-icons'
 
 import { Benefit } from '@/components/Benefit'
@@ -36,18 +36,18 @@ interface ResearchReference {
 const HOSPITAL_BENEFITS: HospitalBenefit[] = [
   {
     id: 1,
-    title: 'Hospital-grade Safety:',
+    title: 'Hospital-grade Safety',
     description: 'Complies with hygiene and food handling standards.',
   },
   {
     id: 2,
-    title: 'Luxury Branding:',
+    title: 'Luxury Branding',
     description:
       "Enhances the hospital's premium image and patient experience.",
   },
   {
     id: 3,
-    title: 'Sustainably Sourced:',
+    title: 'Sustainably Sourced',
     description:
       "Environmentally conscious practices that reflect healthcare's commitment to the planet.",
   },
@@ -151,9 +151,12 @@ const SectionHeader = ({ title }: { title: string }) => (
 
 const HospitalBenefitItem = ({ benefit }: { benefit: HospitalBenefit }) => (
   <div className='flex gap-2.5'>
-    <CircleCheck size={30} className='flex-shrink-0 text-green-800' />
+    <div className='flex size-8 flex-shrink-0 items-center justify-center rounded-full border'>
+      <Check className='text-primary' />
+    </div>
     <span className='w-full text-xl'>
-      <strong>{benefit.title}</strong> {benefit.description}
+      <span className='text-primary font-bold'>{benefit.title}</span>{' '}
+      {benefit.description}
     </span>
   </div>
 )
@@ -246,17 +249,15 @@ const Homepage = () => {
         <SectionHeader title={COMPANY_DESCRIPTION} />
 
         <div className='flex w-full flex-col items-center gap-5 rounded-b-lg bg-white p-5 sm:flex-row'>
-          <div className='size-28 flex-shrink-0 overflow-hidden'>
+          <div className='flex shrink-0 flex-col gap-2.5 text-center'>
             <img
               src={FOUNDER_INFO.imageUrl}
               alt={FOUNDER_INFO.imageAlt}
-              className='h-full w-full rounded-full border-4 object-cover'
-              loading='lazy'
+              className='size-52 rounded-xl object-cover'
             />
+            <span>({FOUNDER_INFO.name})</span>
           </div>
-          <div className='w-full text-xl'>
-            {FOUNDER_INFO.description} ({FOUNDER_INFO.name})
-          </div>
+          <div className='w-full text-xl'>{FOUNDER_INFO.description}</div>
         </div>
       </section>
 

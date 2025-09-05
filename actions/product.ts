@@ -1,15 +1,13 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
-
 import type { Tables } from '@/types/supabase'
 
 import { createClient } from '@/utils/supabase/client'
 
 const getProducts = async () => {
-  try {
-    const supabase = createClient()
+  const supabase = createClient()
 
+  try {
     const { data, error } = await supabase
       .from('products')
       .select(
@@ -25,16 +23,16 @@ const getProducts = async () => {
 
     if (error) throw error
 
-    return { success: true, data: data || [] }
-  } catch {
-    return { success: false, error: 'เกิดข้อผิดพลาดในการดึงข้อมูลสินค้า' }
+    return data || []
+  } catch (error) {
+    return error
   }
 }
 
 const getProduct = async (id: string) => {
-  try {
-    const supabase = createClient()
+  const supabase = createClient()
 
+  try {
     const { data, error } = await supabase
       .from('products')
       .select(
@@ -51,9 +49,9 @@ const getProduct = async (id: string) => {
 
     if (error) throw error
 
-    return { success: true, data }
-  } catch {
-    return { success: false, error: 'ไม่พบสินค้า' }
+    return data || []
+  } catch (error) {
+    return error
   }
 }
 
@@ -69,9 +67,9 @@ const createProduct = async (
     'id' | 'product_id' | 'created_at'
   >[],
 ) => {
-  try {
-    const supabase = createClient()
+  const supabase = createClient()
 
+  try {
     const { data: product, error: productError } = await supabase
       .from('products')
       .insert([
@@ -112,10 +110,9 @@ const createProduct = async (
       await supabase.from('product_options').insert(options)
     }
 
-    revalidatePath('/products')
-    return { success: true, data: product, message: 'สร้างสินค้าสำเร็จ' }
-  } catch {
-    return { success: false, error: 'เกิดข้อผิดพลาดในการสร้างสินค้า' }
+    return product
+  } catch (error) {
+    return error
   }
 }
 
@@ -135,9 +132,9 @@ const updateProduct = async (
     'id' | 'product_id' | 'created_at'
   >[],
 ) => {
-  try {
-    const supabase = createClient()
+  const supabase = createClient()
 
+  try {
     await supabase
       .from('products')
       .update({
@@ -179,31 +176,25 @@ const updateProduct = async (
         await supabase.from('product_options').insert(options)
       }
     }
-
-    revalidatePath('/products')
-    return { success: true, message: 'อัพเดทสินค้าสำเร็จ' }
-  } catch {
-    return { success: false, error: 'เกิดข้อผิดพลาดในการอัพเดทสินค้า' }
+  } catch (error) {
+    return error
   }
 }
 
 const deleteProduct = async (id: string) => {
+  const supabase = createClient()
+
   try {
-    const supabase = createClient()
-
     await supabase.from('products').delete().eq('id', id)
-
-    revalidatePath('/products')
-    return { success: true, message: 'ลบสินค้าสำเร็จ' }
-  } catch {
-    return { success: false, error: 'เกิดข้อผิดพลาดในการลบสินค้า' }
+  } catch (error) {
+    return error
   }
 }
 
 const getProductsByCategory = async (categoryId: number) => {
-  try {
-    const supabase = createClient()
+  const supabase = createClient()
 
+  try {
     const { data, error } = await supabase
       .from('products')
       .select(
@@ -221,9 +212,9 @@ const getProductsByCategory = async (categoryId: number) => {
 
     if (error) throw error
 
-    return { success: true, data: data || [] }
-  } catch {
-    return { success: false, error: 'เกิดข้อผิดพลาดในการดึงข้อมูลสินค้า' }
+    return data || []
+  } catch (error) {
+    return error
   }
 }
 
