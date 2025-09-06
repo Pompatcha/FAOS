@@ -262,7 +262,7 @@ const Homepage = () => {
       </section>
 
       <section className='flex flex-col'>
-        <SectionHeader title='Why FAOS is Needed for Private Hospitals' />
+        <SectionHeader title='Why FAOS is Needed for Private Hospitals?' />
 
         <div className='flex w-full flex-col gap-2.5 rounded-b-lg bg-white p-5'>
           {HOSPITAL_BENEFITS.map((hospitalBenefit) => (
