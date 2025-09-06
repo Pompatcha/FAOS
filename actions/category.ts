@@ -8,9 +8,11 @@ const getCategories = async () => {
   try {
     const { data, error } = await supabase.from('categories').select('id, name')
 
-    if (error) throw error
+    if (error) {
+      throw error
+    }
 
-    return data || []
+    return data ? data : []
   } catch (error) {
     return error
   }

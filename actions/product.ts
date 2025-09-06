@@ -12,18 +12,23 @@ const getProducts = async () => {
       .from('products')
       .select(
         `
-        *,
+        id,
+        created_at,
+        updated_at,
+        name,
+        sku,
         category:categories(id, name),
-        prices:product_prices(*),
-        images:product_images(*),
-        options:product_options(*)
+        images:product_images(id, image_url)
       `,
       )
+      .eq('product_images.is_primary', true)
       .order('created_at', { ascending: false })
 
-    if (error) throw error
+    if (error) {
+      throw error
+    }
 
-    return data || []
+    return data ? data : []
   } catch (error) {
     return error
   }
@@ -37,19 +42,26 @@ const getProduct = async (id: string) => {
       .from('products')
       .select(
         `
-        *,
+        id,
+        created_at,
+        updated_at,
+        name,
+        description,
+        short_description,
+        sku,
         category:categories(id, name),
-        prices:product_prices(*),
-        images:product_images(*),
-        options:product_options(*)
+        images:product_images(id, image_url),
+        options:product_options(id, option_name, option_value, option_price, option_stock)
       `,
       )
       .eq('id', id)
       .single()
 
-    if (error) throw error
+    if (error) {
+      throw error
+    }
 
-    return data || []
+    return data ? data : []
   } catch (error) {
     return error
   }
@@ -57,7 +69,6 @@ const getProduct = async (id: string) => {
 
 const createProduct = async (
   productData: Omit<Tables<'products'>, 'id' | 'created_at' | 'updated_at'>,
-  priceData: Omit<Tables<'product_prices'>, 'id' | 'product_id' | 'created_at'>,
   imageData?: Omit<
     Tables<'product_images'>,
     'id' | 'product_id' | 'created_at'
@@ -83,18 +94,10 @@ const createProduct = async (
 
     if (productError) throw productError
 
-    await supabase.from('product_prices').insert([
-      {
-        product_id: product.id,
-        ...priceData,
-      },
-    ])
-
     if (imageData && imageData.length > 0) {
       const images = imageData.map((img, index) => ({
         product_id: product.id,
         ...img,
-        display_order: img.display_order ?? index,
         is_primary: img.is_primary ?? index === 0,
       }))
 
@@ -110,7 +113,7 @@ const createProduct = async (
       await supabase.from('product_options').insert(options)
     }
 
-    return product
+    return null
   } catch (error) {
     return error
   }
@@ -119,10 +122,6 @@ const createProduct = async (
 const updateProduct = async (
   id: string,
   productData: Omit<Tables<'products'>, 'id' | 'created_at' | 'updated_at'>,
-  priceData?: Omit<
-    Tables<'product_prices'>,
-    'id' | 'product_id' | 'created_at'
-  >,
   imageData?: Omit<
     Tables<'product_images'>,
     'id' | 'product_id' | 'created_at'
@@ -143,12 +142,6 @@ const updateProduct = async (
       })
       .eq('id', id)
 
-    if (priceData) {
-      await supabase
-        .from('product_prices')
-        .upsert({ product_id: parseInt(id), ...priceData })
-    }
-
     if (imageData !== undefined) {
       await supabase.from('product_images').delete().eq('product_id', id)
 
@@ -156,7 +149,6 @@ const updateProduct = async (
         const images = imageData.map((img, index) => ({
           product_id: parseInt(id),
           ...img,
-          display_order: img.display_order ?? index,
           is_primary: img.is_primary ?? index === 0,
         }))
 
@@ -176,6 +168,8 @@ const updateProduct = async (
         await supabase.from('product_options').insert(options)
       }
     }
+
+    return null
   } catch (error) {
     return error
   }
@@ -183,12 +177,7 @@ const updateProduct = async (
 
 const deleteProduct = async (id: string) => {
   const supabase = createClient()
-
-  try {
-    await supabase.from('products').delete().eq('id', id)
-  } catch (error) {
-    return error
-  }
+  await supabase.from('products').delete().eq('id', id)
 }
 
 const getProductsByCategory = async (categoryId: number) => {
@@ -200,19 +189,18 @@ const getProductsByCategory = async (categoryId: number) => {
       .select(
         `
         *,
-        category:categories(id, name),
-        prices:product_prices(*),
-        images:product_images(*),
-        options:product_options(*)
+        category:categories(*),
+        images:product_images(*).eq(is_primary, true).single()
       `,
       )
       .eq('category_id', categoryId)
-      .eq('is_active', true)
       .order('created_at', { ascending: false })
 
-    if (error) throw error
+    if (error) {
+      throw error
+    }
 
-    return data || []
+    return data ? data : []
   } catch (error) {
     return error
   }

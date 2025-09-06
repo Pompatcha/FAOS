@@ -4,6 +4,7 @@ import { Plus, Upload, X, Edit } from 'lucide-react'
 import { useState } from 'react'
 import { useForm, useFieldArray, Controller } from 'react-hook-form'
 
+import type { Tables } from '@/types/supabase'
 import type { FC } from 'react'
 
 import { getCategories } from '@/actions/category'
@@ -41,45 +42,23 @@ import { formatDate } from '@/lib/date'
 
 import { HeaderCard } from '../components/HeaderCard'
 
-interface ProductFormData {
-  name: string
-  description: string
-  short_description: string
-  category_id: string
-  brand: string
-  sku: string
-  is_active: boolean
-  dimensions: {
-    width: string
-    height: string
-    depth: string
-  }
-  prices: {
-    base_price: string
-    sale_price: string
-    cost_price: string
-    is_on_sale: boolean
-    sale_start_date: string
-    sale_end_date: string
-  }
-  productOptions: Array<{
-    option_name: string
-    option_value: string
-    additional_price: string
-    stock_quantity: string
-    sku: string
-  }>
-  productImages: Array<{
-    image_url: string
-    alt_text: string
-    is_primary: boolean
-  }>
+type ProductInput = Omit<Tables<'products'>, 'id' | 'created_at' | 'updated_at'>
+type ProductOptionInput = Omit<
+  Tables<'product_options'>,
+  'id' | 'product_id' | 'created_at'
+>
+type ProductImageInput = Omit<
+  Tables<'product_images'>,
+  'id' | 'product_id' | 'created_at'
+>
+
+type ProductFormInput = ProductInput & {
+  productOptions: ProductOptionInput[] | null
+  productImages: ProductImageInput[] | null
 }
 
 const ProductPage: FC = () => {
-  const [isCreateProductDialogOpen, setIsCreateProductDialogOpen] =
-    useState(false)
-  const [editingProduct, setEditingProduct] = useState(null)
+  const [isProductDialogOpen, setIsProductDialogOpen] = useState(false)
 
   const { data: products } = useQuery({
     queryKey: ['products'],
@@ -91,27 +70,13 @@ const ProductPage: FC = () => {
     queryFn: () => getCategories(),
   })
 
-  const productForm = useForm<ProductFormData>({
+  const productForm = useForm<ProductFormInput>({
     defaultValues: {
       name: '',
       description: '',
       short_description: '',
-      category_id: '',
-      brand: '',
+      category_id: null,
       sku: '',
-      dimensions: {
-        width: '',
-        height: '',
-        depth: '',
-      },
-      prices: {
-        base_price: '',
-        sale_price: '',
-        cost_price: '',
-        is_on_sale: false,
-        sale_start_date: '',
-        sale_end_date: '',
-      },
       productOptions: [],
       productImages: [],
     },
@@ -141,8 +106,8 @@ const ProductPage: FC = () => {
     addProductOptionField({
       option_name: '',
       option_value: '',
-      additional_price: '0',
-      stock_quantity: '0',
+      option_price: 0,
+      option_stock: 0,
       sku: '',
     })
   }
@@ -155,9 +120,8 @@ const ProductPage: FC = () => {
     })
   }
 
-  const closeDialog = () => {
-    setIsCreateProductDialogOpen(false)
-    setEditingProduct(null)
+  const closeProductDialog = () => {
+    setIsProductDialogOpen(false)
     reset()
   }
 
@@ -188,15 +152,15 @@ const ProductPage: FC = () => {
           <Dialog
             onOpenChange={(value) => {
               if (!value) {
-                closeDialog()
+                closeProductDialog()
               }
             }}
-            open={isCreateProductDialogOpen}
+            open={isProductDialogOpen}
           >
             <DialogTrigger asChild>
               <Button
                 onClick={() => {
-                  setIsCreateProductDialogOpen(true)
+                  setIsProductDialogOpen(true)
                 }}
                 className='w-fit cursor-pointer rounded-xl bg-white p-5 text-[#4a2c00] hover:bg-white/50'
               >
@@ -205,9 +169,7 @@ const ProductPage: FC = () => {
             </DialogTrigger>
             <DialogContent className='max-h-[90vh] min-w-2xl overflow-y-auto'>
               <DialogHeader>
-                <DialogTitle className='text-2xl'>
-                  {editingProduct ? 'Edit Product' : 'Add New Product'}
-                </DialogTitle>
+                <DialogTitle className='text-2xl'>Add New Product</DialogTitle>
               </DialogHeader>
 
               <div className='space-y-6'>
@@ -236,21 +198,6 @@ const ProductPage: FC = () => {
                                 </p>
                               )}
                             </div>
-                          )}
-                        />
-                      </div>
-
-                      <div>
-                        <Label htmlFor='brand'>Brand</Label>
-                        <Controller
-                          name='brand'
-                          control={control}
-                          render={({ field }) => (
-                            <Input
-                              {...field}
-                              placeholder='Enter brand name'
-                              className='mt-1'
-                            />
                           )}
                         />
                       </div>
@@ -554,14 +501,18 @@ const ProductPage: FC = () => {
                 </Card>
 
                 <div className='flex justify-end gap-4'>
-                  <Button type='button' variant='outline' onClick={closeDialog}>
+                  <Button
+                    type='button'
+                    variant='outline'
+                    onClick={closeProductDialog}
+                  >
                     Cancel
                   </Button>
                   <Button
                     type='button'
                     className='bg-[#4a2c00] hover:bg-[#4a2c00]/80'
                   >
-                    {editingProduct ? 'Update Product' : 'Create Product'}
+                    Create Product
                   </Button>
                 </div>
               </div>
@@ -581,72 +532,34 @@ const ProductPage: FC = () => {
           <TableHeader>
             <TableRow>
               <TableHead>Product Name</TableHead>
-              <TableHead>Brand</TableHead>
               <TableHead>SKU</TableHead>
-              <TableHead>Price</TableHead>
-              <TableHead>Stock</TableHead>
-              <TableHead>Status</TableHead>
               <TableHead>Created</TableHead>
+              <TableHead>Updated</TableHead>
               <TableHead className='text-right'>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {products?.map((product) => {
-              // const { base_price, sale_price, is_on_sale } =
-              //   getProductPrice(product)
-              // const totalStock = calculateTotalStock(product)
-
               return (
                 <TableRow key={product.id}>
                   <TableCell className='font-medium'>{product.name}</TableCell>
-                  <TableCell>{product.brand || '-'}</TableCell>
                   <TableCell>
                     <code className='rounded bg-gray-100 px-2 py-1 text-sm'>
                       {product.sku || '-'}
                     </code>
                   </TableCell>
-                  <TableCell>
-                    {/* <div className='flex flex-col'>
-                        {is_on_sale && sale_price ? (
-                          <>
-                            <span className='text-sm text-gray-500 line-through'>
-                              {formatPrice(base_price)}
-                            </span>
-                            <span className='font-semibold text-red-600'>
-                              {formatPrice(sale_price)}
-                            </span>
-                          </>
-                        ) : (
-                          <span>{formatPrice(base_price)}</span>
-                        )}
-                      </div> */}
-                  </TableCell>
-                  <TableCell>
-                    {/* <Badge variant={getStockBadgeVariant(totalStock)}>
-                        {totalStock}
-                      </Badge> */}
-                  </TableCell>
-                  <TableCell>
-                    {/* <Badge
-                        variant={getProductStatusBadgeVariant(
-                          product.is_active,
-                        )}
-                      >
-                        {getProductStatusDisplayText(product.is_active)}
-                      </Badge> */}
-                  </TableCell>
                   <TableCell>{formatDate(product.created_at)}</TableCell>
+                  <TableCell>{formatDate(product.updated_at)}</TableCell>
                   <TableCell className='text-right'>
                     <div className='flex justify-end gap-2'>
                       <Button
                         variant='outline'
                         size='sm'
                         onClick={() => {
-                          setIsCreateProductDialogOpen(true)
-                          // setEditingProduct(true)
+                          setIsProductDialogOpen(true)
                         }}
                       >
-                        <Edit className='h-4 w-4' /> Edit
+                        <Edit className='size-4' /> Edit
                       </Button>
                     </div>
                   </TableCell>
