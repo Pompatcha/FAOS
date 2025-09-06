@@ -232,7 +232,6 @@ export type Database = {
           option_stock: number | null
           option_value: string
           product_id: number
-          sku: string | null
         }
         Insert: {
           created_at?: string
@@ -242,7 +241,6 @@ export type Database = {
           option_stock?: number | null
           option_value: string
           product_id: number
-          sku?: string | null
         }
         Update: {
           created_at?: string
@@ -252,7 +250,6 @@ export type Database = {
           option_stock?: number | null
           option_value?: string
           product_id?: number
-          sku?: string | null
         }
         Relationships: [
           {
@@ -271,8 +268,9 @@ export type Database = {
           description: string | null
           id: number
           name: string
+          preorder_day: number | null
+          preorder_enabled: boolean | null
           short_description: string | null
-          sku: string | null
           updated_at: string | null
         }
         Insert: {
@@ -281,8 +279,9 @@ export type Database = {
           description?: string | null
           id?: number
           name: string
+          preorder_day?: number | null
+          preorder_enabled?: boolean | null
           short_description?: string | null
-          sku?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -291,8 +290,9 @@ export type Database = {
           description?: string | null
           id?: number
           name?: string
+          preorder_day?: number | null
+          preorder_enabled?: boolean | null
           short_description?: string | null
-          sku?: string | null
           updated_at?: string | null
         }
         Relationships: [

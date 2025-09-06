@@ -1,5 +1,5 @@
 'use client'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { Plus, Upload, X, Edit } from 'lucide-react'
 import { useState } from 'react'
 import { useForm, useFieldArray, Controller } from 'react-hook-form'
@@ -8,7 +8,7 @@ import type { Tables } from '@/types/supabase'
 import type { FC } from 'react'
 
 import { getCategories } from '@/actions/category'
-import { getProducts } from '@/actions/product'
+import { createProduct, getProducts } from '@/actions/product'
 import { IndexLayout } from '@/components/Layout/Index'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -41,6 +41,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { formatDate } from '@/lib/date'
 
 import { HeaderCard } from '../components/HeaderCard'
+import { toast } from 'sonner'
 
 type ProductInput = Omit<Tables<'products'>, 'id' | 'created_at' | 'updated_at'>
 type ProductOptionInput = Omit<
@@ -76,13 +77,14 @@ const ProductPage: FC = () => {
       description: '',
       short_description: '',
       category_id: null,
-      sku: '',
+      preorder_enabled: false,
+      preorder_day: 30,
       productOptions: [],
       productImages: [],
     },
   })
 
-  const { control, handleSubmit, reset, setValue } = productForm
+  const { control, handleSubmit, reset, setValue, watch } = productForm
 
   const {
     fields: productOptionFields,
@@ -108,7 +110,6 @@ const ProductPage: FC = () => {
       option_value: '',
       option_price: 0,
       option_stock: 0,
-      sku: '',
     })
   }
 
@@ -136,6 +137,33 @@ const ProductPage: FC = () => {
         }
       })
     }
+  }
+
+  const createProductMutation = useMutation({
+    mutationFn: async ({ productData, productImages, productOptions }) => {
+      return await createProduct({
+        productData,
+        productImages,
+        productOptions,
+      })
+    },
+    onSuccess: (data) => {
+      toast.success(data?.message)
+      closeProductDialog()
+    },
+    onError: (error) => {
+      toast.error(error?.message)
+    },
+  })
+
+  const submit = async (data) => {
+    const { productOptions, productImages, ...restData } = data
+
+    createProductMutation.mutate({
+      productData: restData,
+      productImages,
+      productOptions,
+    })
   }
 
   return (
@@ -172,7 +200,7 @@ const ProductPage: FC = () => {
                 <DialogTitle className='text-2xl'>Add New Product</DialogTitle>
               </DialogHeader>
 
-              <div className='space-y-6'>
+              <form className='space-y-6' onSubmit={handleSubmit(submit)}>
                 <Card>
                   <CardContent className='p-6'>
                     <h3 className='mb-4 text-lg font-semibold'>
@@ -180,7 +208,48 @@ const ProductPage: FC = () => {
                     </h3>
                     <div className='grid grid-cols-2 gap-4'>
                       <div>
-                        <Label htmlFor='name'>Product Name *</Label>
+                        <Label htmlFor='preorder_enabled'>
+                          Enable Pre-Order
+                        </Label>
+                        <Controller
+                          name='preorder_enabled'
+                          control={control}
+                          render={({ field }) => (
+                            <Switch
+                              className='mt-2.5'
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          )}
+                        />
+                      </div>
+
+                      {watch('preorder_enabled') && (
+                        <div>
+                          <Label htmlFor='preorder_day'>Pre-Order day</Label>
+                          <Controller
+                            name='preorder_day'
+                            control={control}
+                            render={({ field, fieldState }) => (
+                              <div>
+                                <Input
+                                  {...field}
+                                  type='number'
+                                  placeholder='Enter Pre-order days'
+                                  className='mt-1'
+                                />
+                                {fieldState.error && (
+                                  <p className='mt-1 text-sm text-red-500'>
+                                    {fieldState.error.message}
+                                  </p>
+                                )}
+                              </div>
+                            )}
+                          />
+                        </div>
+                      )}
+                      <div>
+                        <Label htmlFor='name'>Product Name</Label>
                         <Controller
                           name='name'
                           control={control}
@@ -203,52 +272,38 @@ const ProductPage: FC = () => {
                       </div>
 
                       <div>
-                        <Label htmlFor='sku'>SKU *</Label>
+                        <Label htmlFor='category'>Category</Label>
                         <Controller
-                          name='sku'
+                          name='category_id'
                           control={control}
-                          rules={{ required: 'SKU is required' }}
+                          rules={{ required: 'Category is required' }}
                           render={({ field, fieldState }) => (
                             <div>
-                              <Input
-                                {...field}
-                                placeholder='Enter SKU'
-                                className='mt-1'
-                              />
+                              <Select
+                                value={field.value}
+                                onValueChange={field.onChange}
+                              >
+                                <SelectTrigger className='mt-1 w-full'>
+                                  <SelectValue placeholder='Select category' />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {categories?.map((category) => (
+                                    <SelectItem
+                                      key={category.id}
+                                      value={category.id.toString()}
+                                    >
+                                      {category.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+
                               {fieldState.error && (
                                 <p className='mt-1 text-sm text-red-500'>
                                   {fieldState.error.message}
                                 </p>
                               )}
                             </div>
-                          )}
-                        />
-                      </div>
-
-                      <div>
-                        <Label htmlFor='category'>Category</Label>
-                        <Controller
-                          name='category_id'
-                          control={control}
-                          render={({ field }) => (
-                            <Select
-                              value={field.value}
-                              onValueChange={field.onChange}
-                            >
-                              <SelectTrigger className='mt-1 w-full'>
-                                <SelectValue placeholder='Select category' />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {categories?.map((category) => (
-                                  <SelectItem
-                                    key={category.id}
-                                    value={category.id.toString()}
-                                  >
-                                    {category.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
                           )}
                         />
                       </div>
@@ -356,9 +411,9 @@ const ProductPage: FC = () => {
                                 />
                               </div>
                               <div>
-                                <Label>Additional Price (THB)</Label>
+                                <Label>Price (THB)</Label>
                                 <Controller
-                                  name={`productOptions.${productOptionIndex}.additional_price`}
+                                  name={`productOptions.${productOptionIndex}.option_price`}
                                   control={control}
                                   render={({ field }) => (
                                     <Input
@@ -374,27 +429,13 @@ const ProductPage: FC = () => {
                               <div>
                                 <Label>Stock Quantity</Label>
                                 <Controller
-                                  name={`productOptions.${productOptionIndex}.stock_quantity`}
+                                  name={`productOptions.${productOptionIndex}.option_stock`}
                                   control={control}
                                   render={({ field }) => (
                                     <Input
                                       {...field}
                                       type='number'
                                       placeholder='0'
-                                      className='mt-1'
-                                    />
-                                  )}
-                                />
-                              </div>
-                              <div>
-                                <Label>Option SKU</Label>
-                                <Controller
-                                  name={`productOptions.${productOptionIndex}.sku`}
-                                  control={control}
-                                  render={({ field }) => (
-                                    <Input
-                                      {...field}
-                                      placeholder='Optional SKU'
                                       className='mt-1'
                                     />
                                   )}
@@ -501,21 +542,17 @@ const ProductPage: FC = () => {
                 </Card>
 
                 <div className='flex justify-end gap-4'>
-                  <Button
-                    type='button'
-                    variant='outline'
-                    onClick={closeProductDialog}
-                  >
+                  <Button variant='outline' onClick={closeProductDialog}>
                     Cancel
                   </Button>
                   <Button
-                    type='button'
+                    type='submit'
                     className='bg-[#4a2c00] hover:bg-[#4a2c00]/80'
                   >
                     Create Product
                   </Button>
                 </div>
-              </div>
+              </form>
             </DialogContent>
           </Dialog>
         </div>
@@ -532,22 +569,16 @@ const ProductPage: FC = () => {
           <TableHeader>
             <TableRow>
               <TableHead>Product Name</TableHead>
-              <TableHead>SKU</TableHead>
               <TableHead>Created</TableHead>
               <TableHead>Updated</TableHead>
               <TableHead className='text-right'>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {products?.map((product) => {
+            {products?.data?.map((product) => {
               return (
                 <TableRow key={product.id}>
                   <TableCell className='font-medium'>{product.name}</TableCell>
-                  <TableCell>
-                    <code className='rounded bg-gray-100 px-2 py-1 text-sm'>
-                      {product.sku || '-'}
-                    </code>
-                  </TableCell>
                   <TableCell>{formatDate(product.created_at)}</TableCell>
                   <TableCell>{formatDate(product.updated_at)}</TableCell>
                   <TableCell className='text-right'>

@@ -8,7 +8,7 @@ const getProducts = async () => {
   const supabase = createClient()
 
   try {
-    const { data, error } = await supabase
+    const { data: products, error: fetchProductError } = await supabase
       .from('products')
       .select(
         `
@@ -16,7 +16,6 @@ const getProducts = async () => {
         created_at,
         updated_at,
         name,
-        sku,
         category:categories(id, name),
         images:product_images(id, image_url)
       `,
@@ -24,13 +23,18 @@ const getProducts = async () => {
       .eq('product_images.is_primary', true)
       .order('created_at', { ascending: false })
 
-    if (error) {
-      throw error
+    if (fetchProductError) {
+      throw fetchProductError
     }
 
-    return data ? data : []
+    return {
+      data: products,
+    }
   } catch (error) {
-    return error
+    return {
+      data: [],
+      message: error?.message,
+    }
   }
 }
 
@@ -67,21 +71,25 @@ const getProduct = async (id: string) => {
   }
 }
 
-const createProduct = async (
-  productData: Omit<Tables<'products'>, 'id' | 'created_at' | 'updated_at'>,
-  imageData?: Omit<
+const createProduct = async ({
+  productData,
+  productImages,
+  productOptions,
+}: {
+  productData: Omit<Tables<'products'>, 'id' | 'created_at' | 'updated_at'>
+  productImages?: Omit<
     Tables<'product_images'>,
     'id' | 'product_id' | 'created_at'
-  >[],
-  optionData?: Omit<
+  >[]
+  productOptions?: Omit<
     Tables<'product_options'>,
     'id' | 'product_id' | 'created_at'
-  >[],
-) => {
+  >[]
+}) => {
   const supabase = createClient()
 
   try {
-    const { data: product, error: productError } = await supabase
+    const { data: product, error: insertProductError } = await supabase
       .from('products')
       .insert([
         {
@@ -89,33 +97,49 @@ const createProduct = async (
           updated_at: new Date().toISOString(),
         },
       ])
-      .select()
+      .select('id')
       .single()
 
-    if (productError) throw productError
+    if (insertProductError) {
+      throw insertProductError
+    }
 
-    if (imageData && imageData.length > 0) {
-      const images = imageData.map((img, index) => ({
+    if (productImages && productImages.length > 0) {
+      const images = productImages.map((img, index) => ({
         product_id: product.id,
         ...img,
         is_primary: img.is_primary ?? index === 0,
       }))
 
-      await supabase.from('product_images').insert(images)
+      const { error: insertImageError } = await supabase
+        .from('product_images')
+        .insert(images)
+
+      if (insertImageError) {
+        throw insertImageError
+      }
     }
 
-    if (optionData && optionData.length > 0) {
-      const options = optionData.map((option) => ({
+    if (productOptions && productOptions.length > 0) {
+      const options = productOptions.map((option) => ({
         product_id: product.id,
         ...option,
       }))
 
-      await supabase.from('product_options').insert(options)
+      const { error: insertOptionError } = await supabase
+        .from('product_options')
+        .insert(options)
+
+      if (insertOptionError) {
+        throw insertOptionError
+      }
     }
 
-    return null
+    return {
+      message: 'Product created successfully',
+    }
   } catch (error) {
-    return error
+    throw error
   }
 }
 
