@@ -50,7 +50,11 @@ import { HeaderCard } from '../components/HeaderCard'
 const ProductPage: FC = () => {
   const [isProductDialogOpen, setIsProductDialogOpen] = useState(false)
 
-  const { data: products, refetch: productRefetch } = useQuery({
+  const {
+    data: products,
+    refetch: productRefetch,
+    isLoading: productLoading,
+  } = useQuery({
     queryKey: ['products'],
     queryFn: () => getProducts(),
   })
@@ -180,7 +184,11 @@ const ProductPage: FC = () => {
 
   return (
     <IndexLayout>
-      <Loading isLoading={deleteProductPending || createProductPending} />
+      <Loading
+        isLoading={
+          deleteProductPending || createProductPending || productLoading
+        }
+      />
 
       <div className='flex justify-between'>
         <div className='flex flex-col gap-2.5 text-white'>
@@ -713,6 +721,7 @@ const ProductPage: FC = () => {
               <TableHead>No.</TableHead>
               <TableHead>Product Image</TableHead>
               <TableHead>Product Name</TableHead>
+              <TableHead>Category</TableHead>
               <TableHead>Created</TableHead>
               <TableHead>Updated</TableHead>
               <TableHead className='text-right'>Actions</TableHead>
@@ -732,6 +741,9 @@ const ProductPage: FC = () => {
                   </TableCell>
                   <TableCell className='font-medium'>
                     {truncateText(product?.name)}
+                  </TableCell>
+                  <TableCell className='font-medium'>
+                    {product?.category?.name || '-'}
                   </TableCell>
                   <TableCell>{formatDate(product.created_at)}</TableCell>
                   <TableCell>{formatDate(product.updated_at)}</TableCell>
