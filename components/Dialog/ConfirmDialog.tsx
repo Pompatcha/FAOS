@@ -32,7 +32,7 @@ interface ConfirmDialogProps {
 const ConfirmDialog: FC<ConfirmDialogProps> = ({
   triggerText = 'Open',
   title = 'Are you absolutely sure?',
-  description = 'This action cannot be undone. This will permanently delete your account and remove your data from our servers.',
+  description = 'This action is irreversible. This action will permanently delete your data and your data will be removed from our servers.',
   confirmText = 'Confirm',
   cancelText = 'Cancel',
   onConfirm,

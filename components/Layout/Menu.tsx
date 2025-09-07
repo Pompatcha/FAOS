@@ -147,7 +147,7 @@ const Menu = () => {
 
   const getDesktopSubmenuClassName = (isSubmenuActive: boolean) => {
     const baseClasses =
-      'bg-primary absolute top-full left-0 z-50 min-w-[200px] origin-top rounded-xl border-2 shadow-xl transition-all duration-200'
+      'bg-primary absolute top-full left-0 z-50 min-w-[200px] origin-top rounded-xl border-2 border-[#f3d27a] shadow-xl transition-all duration-200'
     const activeClasses = 'visible scale-y-100 opacity-100'
     const inactiveClasses = 'invisible scale-y-0 opacity-0'
 

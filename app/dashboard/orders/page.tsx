@@ -1,6 +1,4 @@
 'use client'
-
-import { Eye, Package } from 'lucide-react'
 import { useState } from 'react'
 
 import type { FC } from 'react'
@@ -290,19 +288,15 @@ const OrderPage: FC = () => {
                   <div className='flex justify-center gap-2'>
                     <Button
                       variant='outline'
-                      size='sm'
                       onClick={() => openOrderDetailDialog(order.order_number)}
                     >
-                      <Eye className='mr-1 h-4 w-4' />
                       View
                     </Button>
                     {shouldShowShipButton(order) && (
                       <Button
                         variant='default'
-                        size='sm'
                         onClick={() => openShipOrderDialog(order.order_number)}
                       >
-                        <Package className='mr-1 h-4 w-4' />
                         Ship Order
                       </Button>
                     )}

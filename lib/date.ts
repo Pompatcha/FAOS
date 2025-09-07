@@ -1,5 +1,5 @@
 const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString('th-TH')
+  return new Date(dateString).toLocaleString()
 }
 
 export { formatDate }

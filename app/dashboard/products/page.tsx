@@ -1,15 +1,19 @@
 'use client'
+
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { Plus, Upload, X, Edit } from 'lucide-react'
+import { Plus, Upload, X } from 'lucide-react'
 import { useState } from 'react'
 import { useForm, useFieldArray, Controller } from 'react-hook-form'
+import { toast } from 'sonner'
 
-import type { Tables } from '@/types/supabase'
+import type { ProductFormInput } from '@/actions/product'
 import type { FC } from 'react'
 
 import { getCategories } from '@/actions/category'
-import { createProduct, getProducts } from '@/actions/product'
+import { createProduct, deleteProduct, getProducts } from '@/actions/product'
+import { ConfirmDialog } from '@/components/Dialog/ConfirmDialog'
 import { IndexLayout } from '@/components/Layout/Index'
+import { Loading } from '@/components/Layout/Loading'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import {
@@ -39,29 +43,14 @@ import {
 } from '@/components/ui/table'
 import { Textarea } from '@/components/ui/textarea'
 import { formatDate } from '@/lib/date'
+import { truncateText } from '@/lib/text'
 
 import { HeaderCard } from '../components/HeaderCard'
-import { toast } from 'sonner'
-
-type ProductInput = Omit<Tables<'products'>, 'id' | 'created_at' | 'updated_at'>
-type ProductOptionInput = Omit<
-  Tables<'product_options'>,
-  'id' | 'product_id' | 'created_at'
->
-type ProductImageInput = Omit<
-  Tables<'product_images'>,
-  'id' | 'product_id' | 'created_at'
->
-
-type ProductFormInput = ProductInput & {
-  productOptions: ProductOptionInput[] | null
-  productImages: ProductImageInput[] | null
-}
 
 const ProductPage: FC = () => {
   const [isProductDialogOpen, setIsProductDialogOpen] = useState(false)
 
-  const { data: products } = useQuery({
+  const { data: products, refetch: productRefetch } = useQuery({
     queryKey: ['products'],
     queryFn: () => getProducts(),
   })
@@ -73,12 +62,14 @@ const ProductPage: FC = () => {
 
   const productForm = useForm<ProductFormInput>({
     defaultValues: {
-      name: '',
-      description: '',
-      short_description: '',
-      category_id: null,
-      preorder_enabled: false,
-      preorder_day: 30,
+      productData: {
+        name: '',
+        description: '',
+        short_description: '',
+        category_id: null,
+        preorder_enabled: false,
+        preorder_day: 30,
+      },
       productOptions: [],
       productImages: [],
     },
@@ -139,28 +130,49 @@ const ProductPage: FC = () => {
     }
   }
 
-  const createProductMutation = useMutation({
-    mutationFn: async ({ productData, productImages, productOptions }) => {
-      return await createProduct({
+  const { mutate: createProductMutate, isPending: createProductPending } =
+    useMutation({
+      mutationFn: async ({
         productData,
         productImages,
         productOptions,
-      })
-    },
-    onSuccess: (data) => {
-      toast.success(data?.message)
-      closeProductDialog()
-    },
-    onError: (error) => {
-      toast.error(error?.message)
-    },
-  })
+      }: ProductFormInput) => {
+        return await createProduct({
+          productData,
+          productImages,
+          productOptions,
+        })
+      },
+      onSuccess: (data) => {
+        toast.success(data?.message)
+        productRefetch()
+        closeProductDialog()
+      },
+      onError: (error) => {
+        toast.error(error?.message)
+      },
+    })
 
-  const submit = async (data) => {
-    const { productOptions, productImages, ...restData } = data
+  const { mutate: deleteProductMutate, isPending: deleteProductPending } =
+    useMutation({
+      mutationFn: async (productId: string) => {
+        return await deleteProduct(productId)
+      },
+      onSuccess: (data) => {
+        toast.success(data?.message)
+        productRefetch()
+        closeProductDialog()
+      },
+      onError: (error) => {
+        toast.error(error?.message)
+      },
+    })
 
-    createProductMutation.mutate({
-      productData: restData,
+  const submit = async (data: ProductFormInput) => {
+    const { productData, productOptions, productImages } = data
+
+    await createProductMutate({
+      productData,
       productImages,
       productOptions,
     })
@@ -168,6 +180,8 @@ const ProductPage: FC = () => {
 
   return (
     <IndexLayout>
+      <Loading isLoading={deleteProductPending || createProductPending} />
+
       <div className='flex justify-between'>
         <div className='flex flex-col gap-2.5 text-white'>
           <span className='text-4xl'>Products</span>
@@ -212,28 +226,36 @@ const ProductPage: FC = () => {
                           Enable Pre-Order
                         </Label>
                         <Controller
-                          name='preorder_enabled'
+                          name='productData.preorder_enabled'
                           control={control}
                           render={({ field }) => (
                             <Switch
                               className='mt-2.5'
-                              checked={field.value}
+                              checked={!!field.value}
                               onCheckedChange={field.onChange}
                             />
                           )}
                         />
                       </div>
 
-                      {watch('preorder_enabled') && (
+                      {watch('productData.preorder_enabled') && (
                         <div>
                           <Label htmlFor='preorder_day'>Pre-Order day</Label>
                           <Controller
-                            name='preorder_day'
+                            name='productData.preorder_day'
                             control={control}
+                            rules={{
+                              required: 'Pre-order days is required',
+                              min: {
+                                value: 1,
+                                message: 'Must be at least 1 day',
+                              },
+                            }}
                             render={({ field, fieldState }) => (
                               <div>
                                 <Input
                                   {...field}
+                                  value={field.value || ''}
                                   type='number'
                                   placeholder='Enter Pre-order days'
                                   className='mt-1'
@@ -248,10 +270,11 @@ const ProductPage: FC = () => {
                           />
                         </div>
                       )}
+
                       <div>
                         <Label htmlFor='name'>Product Name</Label>
                         <Controller
-                          name='name'
+                          name='productData.name'
                           control={control}
                           rules={{ required: 'Product name is required' }}
                           render={({ field, fieldState }) => (
@@ -274,20 +297,20 @@ const ProductPage: FC = () => {
                       <div>
                         <Label htmlFor='category'>Category</Label>
                         <Controller
-                          name='category_id'
+                          name='productData.category_id'
                           control={control}
                           rules={{ required: 'Category is required' }}
                           render={({ field, fieldState }) => (
                             <div>
                               <Select
-                                value={field.value}
+                                value={field.value?.toString() || ''}
                                 onValueChange={field.onChange}
                               >
                                 <SelectTrigger className='mt-1 w-full'>
                                   <SelectValue placeholder='Select category' />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {categories?.map((category) => (
+                                  {categories?.data?.map((category) => (
                                     <SelectItem
                                       key={category.id}
                                       value={category.id.toString()}
@@ -314,11 +337,12 @@ const ProductPage: FC = () => {
                         Short Description
                       </Label>
                       <Controller
-                        name='short_description'
+                        name='productData.short_description'
                         control={control}
                         render={({ field }) => (
                           <Textarea
                             {...field}
+                            value={field.value || ''}
                             placeholder='Brief product description'
                             className='mt-1'
                             rows={2}
@@ -330,11 +354,12 @@ const ProductPage: FC = () => {
                     <div className='mt-4'>
                       <Label htmlFor='description'>Full Description</Label>
                       <Controller
-                        name='description'
+                        name='productData.description'
                         control={control}
                         render={({ field }) => (
                           <Textarea
                             {...field}
+                            value={field.value || ''}
                             placeholder='Detailed product description'
                             className='mt-1'
                             rows={4}
@@ -387,57 +412,134 @@ const ProductPage: FC = () => {
                                 <Controller
                                   name={`productOptions.${productOptionIndex}.option_name`}
                                   control={control}
-                                  render={({ field }) => (
-                                    <Input
-                                      {...field}
-                                      placeholder='e.g., Color, Size'
-                                      className='mt-1'
-                                    />
+                                  rules={{
+                                    required: 'Option name is required',
+                                    minLength: {
+                                      value: 2,
+                                      message:
+                                        'Option name must be at least 2 characters',
+                                    },
+                                  }}
+                                  render={({ field, fieldState }) => (
+                                    <div>
+                                      <Input
+                                        {...field}
+                                        placeholder='e.g., Color, Size'
+                                        className='mt-1'
+                                      />
+                                      {fieldState.error && (
+                                        <p className='mt-1 text-sm text-red-500'>
+                                          {fieldState.error.message}
+                                        </p>
+                                      )}
+                                    </div>
                                   )}
                                 />
                               </div>
+
                               <div>
                                 <Label>Option Value</Label>
                                 <Controller
                                   name={`productOptions.${productOptionIndex}.option_value`}
                                   control={control}
-                                  render={({ field }) => (
-                                    <Input
-                                      {...field}
-                                      placeholder='e.g., Red, Large'
-                                      className='mt-1'
-                                    />
+                                  rules={{
+                                    required: 'Option value is required',
+                                    minLength: {
+                                      value: 1,
+                                      message:
+                                        'Option value must be at least 1 character',
+                                    },
+                                  }}
+                                  render={({ field, fieldState }) => (
+                                    <div>
+                                      <Input
+                                        {...field}
+                                        placeholder='e.g., Red, Large'
+                                        className='mt-1'
+                                      />
+                                      {fieldState.error && (
+                                        <p className='mt-1 text-sm text-red-500'>
+                                          {fieldState.error.message}
+                                        </p>
+                                      )}
+                                    </div>
                                   )}
                                 />
                               </div>
+
                               <div>
                                 <Label>Price (THB)</Label>
                                 <Controller
                                   name={`productOptions.${productOptionIndex}.option_price`}
                                   control={control}
-                                  render={({ field }) => (
-                                    <Input
-                                      {...field}
-                                      type='number'
-                                      step='0.01'
-                                      placeholder='0.00'
-                                      className='mt-1'
-                                    />
+                                  rules={{
+                                    required: 'Price is required',
+                                    min: {
+                                      value: 0.01,
+                                      message:
+                                        'Price must be at least 0.01 THB',
+                                    },
+                                  }}
+                                  render={({ field, fieldState }) => (
+                                    <div>
+                                      <Input
+                                        {...field}
+                                        type='number'
+                                        step='0.01'
+                                        value={field.value || ''}
+                                        onChange={(e) =>
+                                          field.onChange(Number(e.target.value))
+                                        }
+                                        placeholder='0.00'
+                                        className='mt-1'
+                                      />
+                                      {fieldState.error && (
+                                        <p className='mt-1 text-sm text-red-500'>
+                                          {fieldState.error.message}
+                                        </p>
+                                      )}
+                                    </div>
                                   )}
                                 />
                               </div>
+
                               <div>
                                 <Label>Stock Quantity</Label>
                                 <Controller
                                   name={`productOptions.${productOptionIndex}.option_stock`}
                                   control={control}
-                                  render={({ field }) => (
-                                    <Input
-                                      {...field}
-                                      type='number'
-                                      placeholder='0'
-                                      className='mt-1'
-                                    />
+                                  rules={{
+                                    required: 'Stock quantity is required',
+                                    min: {
+                                      value: 1,
+                                      message:
+                                        'Stock quantity cannot be negative',
+                                    },
+                                    validate: (value) => {
+                                      if (!Number.isInteger(Number(value))) {
+                                        return 'Stock quantity must be a whole number'
+                                      }
+                                      return true
+                                    },
+                                  }}
+                                  render={({ field, fieldState }) => (
+                                    <div>
+                                      <Input
+                                        {...field}
+                                        type='number'
+                                        value={field.value || ''}
+                                        onChange={(e) =>
+                                          field.onChange(Number(e.target.value))
+                                        }
+                                        placeholder='0'
+                                        className='mt-1'
+                                      />
+                                      {fieldState.error && (
+                                        <p className='mt-1 text-sm text-red-500'>
+                                          {fieldState.error.message}
+                                        </p>
+                                      )}
+                                    </div>
                                   )}
                                 />
                               </div>
@@ -491,36 +593,75 @@ const ProductPage: FC = () => {
                                 <Controller
                                   name={`productImages.${productImageIndex}.image_url`}
                                   control={control}
-                                  render={({ field }) => (
-                                    <Input
-                                      {...field}
-                                      placeholder='https://example.com/image.jpg'
-                                      className='mt-1'
-                                    />
+                                  rules={{
+                                    required: 'Image URL is required',
+                                    pattern: {
+                                      value:
+                                        /^https?:\/\/.+\.(jpg|jpeg|png|gif|webp)$/i,
+                                      message:
+                                        'Please enter a valid image URL (jpg, jpeg, png, gif, webp)',
+                                    },
+                                  }}
+                                  render={({ field, fieldState }) => (
+                                    <div>
+                                      <Input
+                                        {...field}
+                                        placeholder='https://example.com/image.jpg'
+                                        className='mt-1'
+                                      />
+                                      {fieldState.error && (
+                                        <p className='mt-1 text-sm text-red-500'>
+                                          {fieldState.error.message}
+                                        </p>
+                                      )}
+                                    </div>
                                   )}
                                 />
                               </div>
+
                               <div>
                                 <Label>Alt Text</Label>
                                 <Controller
                                   name={`productImages.${productImageIndex}.alt_text`}
                                   control={control}
-                                  render={({ field }) => (
-                                    <Input
-                                      {...field}
-                                      placeholder='Image description'
-                                      className='mt-1'
-                                    />
+                                  rules={{
+                                    required: 'Alt text is required',
+                                    minLength: {
+                                      value: 3,
+                                      message:
+                                        'Alt text must be at least 3 characters',
+                                    },
+                                    maxLength: {
+                                      value: 100,
+                                      message:
+                                        'Alt text must not exceed 100 characters',
+                                    },
+                                  }}
+                                  render={({ field, fieldState }) => (
+                                    <div>
+                                      <Input
+                                        {...field}
+                                        value={field.value || ''}
+                                        placeholder='Image description'
+                                        className='mt-1'
+                                      />
+                                      {fieldState.error && (
+                                        <p className='mt-1 text-sm text-red-500'>
+                                          {fieldState.error.message}
+                                        </p>
+                                      )}
+                                    </div>
                                   )}
                                 />
                               </div>
+
                               <div className='mt-6 flex items-center space-x-2'>
                                 <Controller
                                   name={`productImages.${productImageIndex}.is_primary`}
                                   control={control}
                                   render={({ field }) => (
                                     <Switch
-                                      checked={field.value}
+                                      checked={!!field.value}
                                       onCheckedChange={(isSelectedPrimary) => {
                                         handlePrimaryImageChange(
                                           productImageIndex,
@@ -547,6 +688,7 @@ const ProductPage: FC = () => {
                   </Button>
                   <Button
                     type='submit'
+                    disabled={createProductPending}
                     className='bg-[#4a2c00] hover:bg-[#4a2c00]/80'
                   >
                     Create Product
@@ -568,6 +710,8 @@ const ProductPage: FC = () => {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead>No.</TableHead>
+              <TableHead>Product Image</TableHead>
               <TableHead>Product Name</TableHead>
               <TableHead>Created</TableHead>
               <TableHead>Updated</TableHead>
@@ -575,28 +719,52 @@ const ProductPage: FC = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {products?.data?.map((product) => {
+            {products?.data?.map((product, idx) => {
               return (
                 <TableRow key={product.id}>
-                  <TableCell className='font-medium'>{product.name}</TableCell>
+                  <TableCell className='font-medium'>{idx + 1}</TableCell>
+                  <TableCell className='font-medium'>
+                    <img
+                      className='size-10 rounded-full'
+                      alt='product?.name'
+                      src={product?.images[0]?.image_url || '/placeholder.svg'}
+                    />
+                  </TableCell>
+                  <TableCell className='font-medium'>
+                    {truncateText(product?.name)}
+                  </TableCell>
                   <TableCell>{formatDate(product.created_at)}</TableCell>
                   <TableCell>{formatDate(product.updated_at)}</TableCell>
                   <TableCell className='text-right'>
                     <div className='flex justify-end gap-2'>
                       <Button
                         variant='outline'
-                        size='sm'
                         onClick={() => {
                           setIsProductDialogOpen(true)
                         }}
                       >
-                        <Edit className='size-4' /> Edit
+                        Edit
                       </Button>
+                      <ConfirmDialog
+                        variant='outline'
+                        triggerText='Delete'
+                        onConfirm={async () => {
+                          await deleteProductMutate(product?.id)
+                        }}
+                      />
                     </div>
                   </TableCell>
                 </TableRow>
               )
             })}
+
+            {products?.data?.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={6} className='text-center'>
+                  There are no products yet.
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </div>

@@ -4,6 +4,22 @@ import type { Tables } from '@/types/supabase'
 
 import { createClient } from '@/utils/supabase/client'
 
+type ProductInput = Omit<Tables<'products'>, 'id' | 'created_at' | 'updated_at'>
+type ProductOptionInput = Omit<
+  Tables<'product_options'>,
+  'id' | 'product_id' | 'created_at'
+>
+type ProductImageInput = Omit<
+  Tables<'product_images'>,
+  'id' | 'product_id' | 'created_at'
+>
+
+export type ProductFormInput = {
+  productData: ProductInput
+  productOptions: ProductOptionInput[] | null
+  productImages: ProductImageInput[] | null
+}
+
 const getProducts = async () => {
   const supabase = createClient()
 
@@ -33,7 +49,7 @@ const getProducts = async () => {
   } catch (error) {
     return {
       data: [],
-      message: error?.message,
+      message: error instanceof Error ? error.message : 'An error occurred',
     }
   }
 }
@@ -75,17 +91,7 @@ const createProduct = async ({
   productData,
   productImages,
   productOptions,
-}: {
-  productData: Omit<Tables<'products'>, 'id' | 'created_at' | 'updated_at'>
-  productImages?: Omit<
-    Tables<'product_images'>,
-    'id' | 'product_id' | 'created_at'
-  >[]
-  productOptions?: Omit<
-    Tables<'product_options'>,
-    'id' | 'product_id' | 'created_at'
-  >[]
-}) => {
+}: ProductFormInput) => {
   const supabase = createClient()
 
   try {
@@ -139,69 +145,123 @@ const createProduct = async ({
       message: 'Product created successfully',
     }
   } catch (error) {
-    throw error
+    return {
+      message: error instanceof Error ? error.message : 'An error occurred',
+    }
   }
 }
 
-const updateProduct = async (
-  id: string,
-  productData: Omit<Tables<'products'>, 'id' | 'created_at' | 'updated_at'>,
-  imageData?: Omit<
-    Tables<'product_images'>,
-    'id' | 'product_id' | 'created_at'
-  >[],
-  optionData?: Omit<
-    Tables<'product_options'>,
-    'id' | 'product_id' | 'created_at'
-  >[],
-) => {
+const updateProduct = async ({
+  productId,
+  productData,
+  productImages,
+  productOptions,
+}: {
+  productId: string
+  productData: ProductInput
+  productImages?: ProductImageInput[] | null
+  productOptions?: ProductOptionInput[] | null
+}) => {
   const supabase = createClient()
 
   try {
-    await supabase
+    const { error: updateProductError } = await supabase
       .from('products')
       .update({
         ...productData,
         updated_at: new Date().toISOString(),
       })
-      .eq('id', id)
+      .eq('id', productId)
 
-    if (imageData !== undefined) {
-      await supabase.from('product_images').delete().eq('product_id', id)
+    if (updateProductError) {
+      throw updateProductError
+    }
 
-      if (imageData.length > 0) {
-        const images = imageData.map((img, index) => ({
-          product_id: parseInt(id),
+    if (productImages !== undefined) {
+      const { error: deleteImageError } = await supabase
+        .from('product_images')
+        .delete()
+        .eq('product_id', productId)
+
+      if (deleteImageError) {
+        throw deleteImageError
+      }
+
+      if (productImages && productImages.length > 0) {
+        const images = productImages.map((img, index) => ({
+          product_id: parseInt(productId),
           ...img,
           is_primary: img.is_primary ?? index === 0,
         }))
 
-        await supabase.from('product_images').insert(images)
+        const { error: insertImageError } = await supabase
+          .from('product_images')
+          .insert(images)
+
+        if (insertImageError) {
+          throw insertImageError
+        }
       }
     }
 
-    if (optionData !== undefined) {
-      await supabase.from('product_options').delete().eq('product_id', id)
+    if (productOptions !== undefined) {
+      const { error: deleteOptionError } = await supabase
+        .from('product_options')
+        .delete()
+        .eq('product_id', productId)
 
-      if (optionData.length > 0) {
-        const options = optionData.map((option) => ({
-          product_id: parseInt(id),
+      if (deleteOptionError) {
+        throw deleteOptionError
+      }
+
+      if (productOptions && productOptions.length > 0) {
+        const options = productOptions.map((option) => ({
+          product_id: parseInt(productId),
           ...option,
         }))
 
-        await supabase.from('product_options').insert(options)
+        const { error: insertOptionError } = await supabase
+          .from('product_options')
+          .insert(options)
+
+        if (insertOptionError) {
+          throw insertOptionError
+        }
       }
     }
 
-    return null
+    return {
+      message: 'Product updated successfully',
+    }
   } catch (error) {
-    return error
+    return {
+      message: error instanceof Error ? error.message : 'An error occurred',
+    }
   }
 }
 
-const deleteProduct = async (id: string) => {
+const deleteProduct = async (productId: string) => {
   const supabase = createClient()
-  await supabase.from('products').delete().eq('id', id)
+
+  try {
+    const { error: deleteProductError } = await supabase
+      .from('products')
+      .delete()
+      .eq('id', productId)
+
+    if (deleteProductError) {
+      throw deleteProductError
+    }
+
+    return {
+      message: 'Product deleted successfully',
+    }
+  } catch (error) {
+    return {
+      data: [],
+      message: error instanceof Error ? error.message : 'An error occurred',
+    }
+  }
 }
 
 const getProductsByCategory = async (categoryId: number) => {

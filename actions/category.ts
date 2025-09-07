@@ -6,15 +6,22 @@ const getCategories = async () => {
   const supabase = createClient()
 
   try {
-    const { data, error } = await supabase.from('categories').select('id, name')
+    const { data: categories, error: fetchCategoryError } = await supabase
+      .from('categories')
+      .select('id, name')
 
-    if (error) {
-      throw error
+    if (fetchCategoryError) {
+      throw fetchCategoryError
     }
 
-    return data ? data : []
+    return {
+      data: categories,
+    }
   } catch (error) {
-    return error
+    return {
+      data: [],
+      message: error instanceof Error ? error.message : 'An error occurred',
+    }
   }
 }
 
