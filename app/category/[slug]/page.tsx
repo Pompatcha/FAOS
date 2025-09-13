@@ -4,7 +4,6 @@ import { useQuery } from '@tanstack/react-query'
 import { Package } from 'lucide-react'
 import { use } from 'react'
 
-import { getCategoryByName } from '@/actions/category'
 import { getProductsByCategory } from '@/actions/product'
 import { IndexLayout } from '@/components/Layout/Index'
 import { Loading } from '@/components/Layout/Loading'
@@ -14,27 +13,17 @@ import { ProductCard } from '@/components/ProductCard'
 const CategoryPage = ({ params }: { params: Promise<{ slug: string }> }) => {
   const { slug } = use(params)
 
-  const { data: category, isLoading: categoryLoading } = useQuery({
-    queryKey: ['category', slug],
-    queryFn: () => getCategoryByName(slug),
-    enabled: !!slug,
-  })
-
-  const categoryData = category?.data
-  const categoryId =
-    categoryData && !Array.isArray(categoryData) ? categoryData.id : null
-
   const { data: products, isLoading: productsLoading } = useQuery({
-    queryKey: ['category/products', categoryId],
-    queryFn: () => getProductsByCategory(categoryId),
-    enabled: !!category,
+    queryKey: ['category/products', slug],
+    queryFn: () => getProductsByCategory(slug),
+    enabled: !!slug,
   })
 
   const hasProducts = products && Array.isArray(products) && products.length > 0
 
   return (
     <IndexLayout>
-      <Loading isLoading={categoryLoading || productsLoading} />
+      <Loading isLoading={productsLoading} />
 
       <NatureGoldBanner />
 

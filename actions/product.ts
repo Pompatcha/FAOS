@@ -289,7 +289,7 @@ const deleteProduct = async (productId: string) => {
   }
 }
 
-const getProductsByCategory = async (categoryId: number) => {
+const getProductsByCategory = async (categoryId: string) => {
   const supabase = createClient()
 
   try {

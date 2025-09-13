@@ -16,7 +16,10 @@ export interface Product {
     id: number
     name: string
   }
-  images: string[]
+  images: {
+    id?: number
+    image_url?: string
+  }[]
   name: string
   preorder_day: number
   preorder_enabled: boolean
@@ -47,7 +50,7 @@ const ProductCard: FC<ProductCardProps> = ({ product }) => {
     >
       <PlusCircle
         size={35}
-        className='text-primary absolute top-2.5 left-2.5'
+        className='text-primary absolute top-2.5 left-2.5 z-20 rounded-full bg-white'
       />
 
       <div
@@ -66,7 +69,7 @@ const ProductCard: FC<ProductCardProps> = ({ product }) => {
             {product.images.slice(0, 2).map((img, index) => (
               <img
                 key={`${img}-${index}`}
-                src={img || '/placeholder.svg'}
+                src={img?.image_url || '/placeholder.svg'}
                 alt={`รูปของ ${product?.name} ${index + 1}`}
                 className='h-full w-full flex-[0_0_100%] object-cover select-none'
                 draggable={false}

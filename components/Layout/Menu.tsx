@@ -1,8 +1,11 @@
 'use client'
+import { useQuery } from '@tanstack/react-query'
 import { ChevronDown, Menu as MenuIcon, X } from 'lucide-react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import React, { useState, useEffect } from 'react'
+
+import { getCategories } from '@/actions/category'
 
 import GoogleTranslate from '../GoogleTranslate'
 
@@ -17,35 +20,49 @@ interface MenuItem {
   submenu?: SubMenuItem[]
 }
 
-const NAVIGATION_MENU_ITEMS: MenuItem[] = [
-  { title: 'Home', href: '/' },
-  { title: 'Honey', href: '/category/honey' },
-  { title: 'Olive oil', href: '/category/olive-oil' },
-  { title: 'Organic skin care', href: '/category/organic-skin-care' },
-  { title: 'Our Shop', href: '/ourshop' },
-  { title: 'About me', href: '/about' },
-  {
-    title: 'Login/Register',
-    href: '/login',
-  },
-  {
-    title: 'Control Panel',
-    href: '/',
-    submenu: [
-      { title: 'Dashboard', href: '/dashboard' },
-      { title: 'Products', href: '/dashboard/products' },
-      { title: 'Orders', href: '/dashboard/orders' },
-    ],
-  },
-]
-
 const Menu = () => {
+  const { data: categories } = useQuery({
+    queryKey: ['categories'],
+    queryFn: () => getCategories(),
+  })
+
   const router = useRouter()
   const [activeSubmenu, setActiveSubmenu] = useState<string | null>(null)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [expandedMobileSubmenu, setExpandedMobileSubmenu] = useState<
     string | null
   >(null)
+
+  const getNavigationMenuItems = (): MenuItem[] => {
+    const baseItems: MenuItem[] = [{ title: 'Home', href: '/' }]
+
+    if (categories?.data) {
+      const categoryItems = categories.data.map((category) => ({
+        title: category.name,
+        href: `/category/${category.id}`,
+      }))
+      baseItems.push(...categoryItems)
+    }
+
+    baseItems.push(
+      { title: 'Our Shop', href: '/ourshop' },
+      { title: 'About me', href: '/about' },
+      { title: 'Login/Register', href: '/login' },
+      {
+        title: 'Control Panel',
+        href: '/',
+        submenu: [
+          { title: 'Dashboard', href: '/dashboard' },
+          { title: 'Products', href: '/dashboard/products' },
+          { title: 'Orders', href: '/dashboard/orders' },
+        ],
+      },
+    )
+
+    return baseItems
+  }
+
+  const NAVIGATION_MENU_ITEMS = getNavigationMenuItems()
 
   useEffect(() => {
     const handleResize = () => {
