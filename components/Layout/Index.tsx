@@ -4,7 +4,7 @@ import type { FC, PropsWithChildren } from 'react'
 
 import { Footer } from './Footer'
 import { Menu } from './Menu'
-import { Alert, AlertDescription, AlertTitle } from '../ui/alert'
+import { Alert, AlertDescription } from '../ui/alert'
 
 const IndexLayout: FC<PropsWithChildren> = ({ children }) => {
   return (
@@ -12,9 +12,8 @@ const IndexLayout: FC<PropsWithChildren> = ({ children }) => {
       <Menu />
 
       <div className='flex flex-col gap-5 px-2.5 sm:px-10 sm:py-2.5'>
-        <Alert variant='destructive'>
+        <Alert variant='destructive' className='gap-0'>
           <Info />
-          <AlertTitle className='text-lg'>Notification</AlertTitle>
           <AlertDescription className='text-lg'>
             The website is currently under development and new features may be
             added continuously. Please stay tuned to Facebook and other social

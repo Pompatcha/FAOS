@@ -4,7 +4,7 @@ import { ArrowUpRight, Check } from 'lucide-react'
 import { SocialIcon } from 'react-social-icons'
 
 import { Benefit } from '@/components/Benefit'
-import { HeaderImageSlider } from '@/components/ImageSlider'
+import { ImageSlider } from '@/components/ImageSlider'
 import { IndexLayout } from '@/components/Layout/Index'
 import { NatureGoldBanner } from '@/components/NatureGoldBanner'
 
@@ -130,7 +130,14 @@ const Homepage = () => {
   return (
     <IndexLayout>
       <NatureGoldBanner />
-      <HeaderImageSlider />
+      <ImageSlider
+        images={[
+          'https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/Celebrating-Beekeeping-Around-the-World-Apimondia.jpg',
+          'https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/Screenshot-2568-06-25-at-06-21-30.png',
+          'https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/104926993.avif',
+          'https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/360_F_1405149352_K4qhIYVahGLumUCry09QJaDyquDaXVrh.jpg',
+        ]}
+      />
 
       {/* Company Description Section */}
       <section className='flex flex-col'>

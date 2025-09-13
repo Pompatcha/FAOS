@@ -1,46 +1,22 @@
 'use client'
 
-import { Minus, PlusIcon } from 'lucide-react'
-import { use, useState } from 'react'
-import React from 'react'
+import { Info, Minus, PlusIcon } from 'lucide-react'
+import { use, useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 
+import { ImageSlider } from '@/components/ImageSlider'
 import { IndexLayout } from '@/components/Layout/Index'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 
-interface ProductVariant {
-  size: string
-  price: number
-}
-
-interface ProductDetails {
-  id: string
-  name: string
-  description: string
-  image: string
-  imageAlt?: string
-  variants: ProductVariant[]
-  currency?: string
-}
-
-interface ProductPageProps {
-  params: Promise<{ slug: string }>
-}
-
-interface ProductFormData {
-  selectedSize: string
-  selectedQuantity: number
-}
-
-const PRODUCT_MOCKUP_DATA: ProductDetails = {
+const mockProduct = {
   id: '1',
   name: 'Premium T-Shirt',
   description:
     'High-quality t-shirt with soft fabric, comfortable to wear, suitable for all occasions',
   image: '/placeholder.svg',
-  imageAlt: 'Premium T-Shirt product image',
   variants: [
     { size: '120 ML', price: 399 },
     { size: '250 ML', price: 590 },
@@ -48,150 +24,125 @@ const PRODUCT_MOCKUP_DATA: ProductDetails = {
   currency: '฿',
 }
 
-const QUANTITY_LIMITS = {
-  min: 1,
-  max: 99,
-} as const
+interface ProductFormData {
+  selectedSize: string
+  selectedQuantity: number
+}
 
-const ProductPage = ({ params }: ProductPageProps) => {
-  const { slug: productSlug } = use(params)
-
-  const productDetails = PRODUCT_MOCKUP_DATA
-  const defaultVariant = productDetails.variants[0]
-
-  const [currentSelectedPrice, setCurrentSelectedPrice] = useState(
-    defaultVariant.price,
+const ProductPage = ({ params }: { params: Promise<{ slug: string }> }) => {
+  const { slug } = use(params)
+  const [selectedPrice, setSelectedPrice] = useState(
+    mockProduct.variants[0].price,
   )
 
-  const productForm = useForm<ProductFormData>({
+  const { register, watch, handleSubmit, setValue } = useForm<ProductFormData>({
     defaultValues: {
-      selectedSize: defaultVariant.size,
-      selectedQuantity: QUANTITY_LIMITS.min,
+      selectedSize: mockProduct.variants[0].size,
+      selectedQuantity: 1,
     },
   })
 
-  const { register, watch, handleSubmit, setValue } = productForm
+  const selectedSize = watch('selectedSize')
+  const selectedQuantity = watch('selectedQuantity')
 
-  const currentSelectedSize = watch('selectedSize')
-  const currentSelectedQuantity = watch('selectedQuantity')
-
-  React.useEffect(() => {
-    const matchingVariant = productDetails.variants.find(
-      (variant) => variant.size === currentSelectedSize,
-    )
-    if (matchingVariant) {
-      setCurrentSelectedPrice(matchingVariant.price)
+  useEffect(() => {
+    const variant = mockProduct.variants.find((v) => v.size === selectedSize)
+    if (variant) {
+      setSelectedPrice(variant.price)
     }
-  }, [currentSelectedSize, productDetails.variants])
+  }, [selectedSize])
 
-  const handleProductFormSubmit = (formData: ProductFormData) => {
-    const totalPrice = currentSelectedPrice * formData.selectedQuantity
-
-    console.log('Product form submitted:', formData)
-    console.log('Total price:', totalPrice)
+  const onSubmit = (data: ProductFormData) => {
+    const totalPrice = selectedPrice * data.selectedQuantity
 
     toast.success(
-      `Item added to cart!\nSize: ${formData.selectedSize}\nQuantity: ${formData.selectedQuantity}\nTotal Price: ${productDetails.currency}${totalPrice.toLocaleString()}`,
+      `Item added to cart!\nSize: ${data.selectedSize}\nQuantity: ${data.selectedQuantity}\nTotal Price: ${mockProduct.currency}${totalPrice.toLocaleString()}`,
     )
   }
 
-  const handleQuantityDecrease = () => {
-    if (currentSelectedQuantity > QUANTITY_LIMITS.min) {
-      setValue('selectedQuantity', currentSelectedQuantity - 1)
+  const decreaseQuantity = () => {
+    if (selectedQuantity > 1) {
+      setValue('selectedQuantity', selectedQuantity - 1)
     }
   }
 
-  const handleQuantityIncrease = () => {
-    if (currentSelectedQuantity < QUANTITY_LIMITS.max) {
-      setValue('selectedQuantity', currentSelectedQuantity + 1)
+  const increaseQuantity = () => {
+    if (selectedQuantity < 99) {
+      setValue('selectedQuantity', selectedQuantity + 1)
     }
   }
 
-  const calculateTotalPrice = () => {
-    return currentSelectedPrice * currentSelectedQuantity
-  }
-
-  const formatPrice = (price: number) => {
-    return `${productDetails.currency}${price.toLocaleString()}`
-  }
-
-  const getSizeOptionClassName = (variantSize: string) => {
-    const baseClasses =
-      'relative flex cursor-pointer items-center justify-center rounded-lg border-2 p-3 transition-all'
-    const selectedClasses =
-      'border-primary bg-primary/10 text-primary font-medium'
-    const unselectedClasses = 'border-gray-300 hover:border-gray-400'
-
-    return `${baseClasses} ${
-      currentSelectedSize === variantSize ? selectedClasses : unselectedClasses
-    }`
-  }
-
-  const isDecreaseButtonDisabled =
-    currentSelectedQuantity <= QUANTITY_LIMITS.min
-  const isIncreaseButtonDisabled =
-    currentSelectedQuantity >= QUANTITY_LIMITS.max
+  const totalPrice = selectedPrice * selectedQuantity
+  const formatPrice = (price: number) =>
+    `${mockProduct.currency}${price.toLocaleString()}`
 
   return (
     <IndexLayout>
       <div className='container mx-auto'>
         <div className='grid grid-cols-1 gap-5 lg:grid-cols-2'>
           <div className='aspect-square'>
-            <img
-              src={productDetails.image}
-              alt={productDetails.imageAlt || productDetails.name}
-              className='h-full w-full rounded-xl object-cover shadow-2xl'
-              loading='lazy'
+            <ImageSlider
+              images={[
+                'https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/Celebrating-Beekeeping-Around-the-World-Apimondia.jpg',
+                'https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/Screenshot-2568-06-25-at-06-21-30.png',
+                'https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/104926993.avif',
+                'https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/360_F_1405149352_K4qhIYVahGLumUCry09QJaDyquDaXVrh.jpg',
+              ]}
             />
           </div>
 
           <div className='h-fit rounded-xl border-4 border-[#f3d27a] bg-gradient-to-r from-[#f9e6b3] to-[#f3d27a]'>
             <div className='flex flex-col gap-2.5 p-5'>
               <div className='text-[#4a2c00]'>
-                <h1 className='mb-2 text-3xl font-bold'>
-                  {productDetails.name}
-                </h1>
-                <p className='text-lg'>{productDetails.description}</p>
+                <h1 className='mb-2 text-3xl font-bold'>{mockProduct.name}</h1>
+                <p className='text-lg'>{mockProduct.description}</p>
               </div>
 
               <div className='flex items-center gap-2 text-red-800'>
                 <span className='text-3xl font-bold'>
-                  {formatPrice(currentSelectedPrice)}
+                  {formatPrice(selectedPrice)}
                 </span>
               </div>
             </div>
 
+            <Alert variant='destructive'>
+              <Info />
+              <AlertDescription>
+                Pre-Order Item - Ships 30 days
+              </AlertDescription>
+              <AlertDescription>
+                This item is available for pre-order. Your order will be
+                processed and shipped once the product becomes available.
+              </AlertDescription>
+            </Alert>
+
             <Card className='shadow-2xl'>
               <CardContent className='p-5'>
-                <form
-                  onSubmit={handleSubmit(handleProductFormSubmit)}
-                  className='space-y-6'
-                >
+                <form onSubmit={handleSubmit(onSubmit)} className='space-y-6'>
                   <div>
                     <label className='mb-3 block text-sm font-medium text-gray-700'>
                       Select Size
                     </label>
                     <div className='grid grid-cols-5 gap-2'>
-                      {productDetails.variants.map((productVariant) => (
+                      {mockProduct.variants.map((variant) => (
                         <label
-                          key={productVariant.size}
-                          className={getSizeOptionClassName(
-                            productVariant.size,
-                          )}
+                          key={variant.size}
+                          className={`relative flex cursor-pointer items-center justify-center rounded-lg border-2 p-3 transition-all ${
+                            selectedSize === variant.size
+                              ? 'border-primary bg-primary/10 text-primary font-medium'
+                              : 'border-gray-300 hover:border-gray-400'
+                          }`}
                         >
                           <input
                             type='radio'
-                            value={productVariant.size}
+                            value={variant.size}
                             {...register('selectedSize')}
                             className='sr-only'
                           />
-                          <span className='text-sm'>{productVariant.size}</span>
+                          <span className='text-sm'>{variant.size}</span>
                         </label>
                       ))}
                     </div>
-                    <p className='mt-1 text-xs text-gray-500'>
-                      Price will change based on selected size
-                    </p>
                   </div>
 
                   <div>
@@ -203,9 +154,8 @@ const ProductPage = ({ params }: ProductPageProps) => {
                         type='button'
                         variant='outline'
                         size='sm'
-                        className='cursor-pointer'
-                        onClick={handleQuantityDecrease}
-                        disabled={isDecreaseButtonDisabled}
+                        onClick={decreaseQuantity}
+                        disabled={selectedQuantity <= 1}
                         aria-label='Decrease quantity'
                       >
                         <Minus />
@@ -213,12 +163,9 @@ const ProductPage = ({ params }: ProductPageProps) => {
 
                       <input
                         type='number'
-                        min={QUANTITY_LIMITS.min}
-                        max={QUANTITY_LIMITS.max}
-                        {...register('selectedQuantity', {
-                          min: QUANTITY_LIMITS.min,
-                          max: QUANTITY_LIMITS.max,
-                        })}
+                        min={1}
+                        max={99}
+                        {...register('selectedQuantity', { min: 1, max: 99 })}
                         className='w-16 rounded-md border border-gray-300 py-1 text-center [&::-webkit-inner-spin-button]:opacity-100 [&::-webkit-outer-spin-button]:opacity-100'
                         aria-label='Product quantity'
                       />
@@ -226,10 +173,9 @@ const ProductPage = ({ params }: ProductPageProps) => {
                       <Button
                         type='button'
                         variant='outline'
-                        className='cursor-pointer'
                         size='sm'
-                        onClick={handleQuantityIncrease}
-                        disabled={isIncreaseButtonDisabled}
+                        onClick={increaseQuantity}
+                        disabled={selectedQuantity >= 99}
                         aria-label='Increase quantity'
                       >
                         <PlusIcon />
@@ -241,7 +187,7 @@ const ProductPage = ({ params }: ProductPageProps) => {
                     <div className='flex items-center justify-between pt-2 text-lg font-bold text-gray-900'>
                       <span>Total Price:</span>
                       <span className='text-primary'>
-                        {formatPrice(calculateTotalPrice())}
+                        {formatPrice(totalPrice)}
                       </span>
                     </div>
                   </div>

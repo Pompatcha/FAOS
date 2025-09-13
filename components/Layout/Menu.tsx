@@ -25,7 +25,11 @@ const NAVIGATION_MENU_ITEMS: MenuItem[] = [
   { title: 'Our Shop', href: '/ourshop' },
   { title: 'About me', href: '/about' },
   {
-    title: 'Admin Control',
+    title: 'Login/Register',
+    href: '/login',
+  },
+  {
+    title: 'Control Panel',
     href: '/',
     submenu: [
       { title: 'Dashboard', href: '/dashboard' },

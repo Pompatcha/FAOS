@@ -1,26 +1,6 @@
 import { ChevronRight } from 'lucide-react'
 
-import type { FC } from 'react'
-
-interface BenefitItem {
-  id: number
-  title: string
-  image: string
-  href: string
-}
-
-interface BenefitSectionProps {
-  title: string
-  items: BenefitItem[]
-  hasHoverEffect?: boolean
-}
-
-interface BenefitSectionConfig {
-  title: string
-  items: BenefitItem[]
-}
-
-const BENEFIT_ITEMS_BY_CATEGORY = {
+const benefitData = {
   oliveOil: [
     {
       id: 1,
@@ -109,80 +89,57 @@ const BENEFIT_ITEMS_BY_CATEGORY = {
   ],
 }
 
-interface BenefitCardProps {
-  benefitItem: BenefitItem
+const sections = [
+  { title: 'The Benefit of Olive Oil', items: benefitData.oliveOil },
+  { title: 'The Benefit of Honey & Healthy Menu', items: benefitData.honey },
+  { title: 'The Benefit of Wine & Thai Food pairing', items: benefitData.wine },
+]
+
+const openLink = (href: string) => {
+  window.open(href, '_blank', 'noopener,noreferrer')
 }
 
-const BenefitCard: FC<BenefitCardProps> = ({ benefitItem }) => {
-  const handleReadMoreClick = () => {
-    window.open(benefitItem.href, '_blank', 'noopener,noreferrer')
-  }
-
-  return (
-    <div
-      onClick={handleReadMoreClick}
-      className='cursor-pointer overflow-hidden rounded-xl bg-white shadow-lg transition-all duration-200'
-    >
-      <img
-        src={benefitItem.image}
-        alt={benefitItem.title}
-        className='h-72 w-full object-cover'
-        loading='lazy'
-      />
-      <div className='mt-2.5 px-5 pb-5'>
-        <h3 className='text-lg leading-tight font-semibold text-gray-800'>
-          {benefitItem.title}
-        </h3>
-        <button
-          className='group text-primary mt-2.5 inline-flex cursor-pointer items-center font-medium transition-colors duration-200'
-          aria-label={`Read more about ${benefitItem.title}`}
-        >
-          Read more
-          <ChevronRight className='transition-transform duration-200 group-hover:translate-x-1' />
-        </button>
-      </div>
-    </div>
-  )
-}
-
-const BenefitSection: FC<BenefitSectionProps> = ({ title, items }) => (
-  <section className='flex w-full flex-col gap-5'>
-    <div className='bg-secondary flex w-full flex-col rounded-lg p-2.5 text-center shadow'>
-      <h2 className='text-2xl font-bold text-red-800'>{title}</h2>
-    </div>
-
-    <div className='grid grid-cols-1 gap-5 sm:grid-cols-3'>
-      {items.map((benefitItem) => (
-        <BenefitCard key={benefitItem.id} benefitItem={benefitItem} />
-      ))}
-    </div>
-  </section>
-)
-
-const Benefit: FC = () => {
-  const benefitSectionConfigs: BenefitSectionConfig[] = [
-    {
-      title: 'The Benefit of Olive Oil',
-      items: BENEFIT_ITEMS_BY_CATEGORY.oliveOil,
-    },
-    {
-      title: 'The Benefit of Honey & Healthy Menu',
-      items: BENEFIT_ITEMS_BY_CATEGORY.honey,
-    },
-    {
-      title: 'The Benefit of Wine & Thai Food pairing',
-      items: BENEFIT_ITEMS_BY_CATEGORY.wine,
-    },
-  ]
-
+const Benefit = () => {
   return (
     <div className='flex w-full flex-col gap-2.5'>
-      {benefitSectionConfigs.map((sectionConfig, sectionIndex) => (
-        <BenefitSection
+      {sections.map((section, sectionIndex) => (
+        <section
           key={`benefit-section-${sectionIndex}`}
-          title={sectionConfig.title}
-          items={sectionConfig.items}
-        />
+          className='flex w-full flex-col gap-5'
+        >
+          <div className='bg-secondary flex w-full flex-col rounded-lg p-2.5 text-center shadow'>
+            <h2 className='text-2xl font-bold text-red-800'>{section.title}</h2>
+          </div>
+
+          <div className='grid grid-cols-1 gap-5 sm:grid-cols-3'>
+            {section.items.map((item) => (
+              <div
+                key={item.id}
+                onClick={() => openLink(item.href)}
+                className='cursor-pointer overflow-hidden rounded-xl bg-white shadow-lg transition-all duration-200'
+              >
+                <img
+                  src={item.image}
+                  alt={item.title}
+                  className='h-72 w-full object-cover'
+                  loading='lazy'
+                />
+                <div className='mt-2.5 px-5 pb-5'>
+                  <h3 className='text-lg leading-tight font-semibold text-gray-800'>
+                    {item.title}
+                  </h3>
+                  <button
+                    className='group text-primary mt-2.5 inline-flex cursor-pointer items-center font-medium transition-colors duration-200'
+                    aria-label={`Read more about ${item.title}`}
+                  >
+                    Read more
+                    <ChevronRight className='transition-transform duration-200 group-hover:translate-x-1' />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
       ))}
     </div>
   )

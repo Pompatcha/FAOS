@@ -1,11 +1,14 @@
 'use client'
 
+import { Info } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 import type { FC } from 'react'
 
 import { numberFormatter, priceFormatter } from '@/lib/number'
 import { cn } from '@/lib/utils'
+
+import { Alert, AlertDescription } from './ui/alert'
 
 export interface Product {
   id: number
@@ -70,6 +73,19 @@ const ProductCard: FC<ProductCardProps> = ({ product }) => {
           <img className='h-full w-full object-cover' src='/placeholder.svg' />
         )}
       </div>
+
+      {product?.preorder_enabled && (
+        <Alert variant='destructive'>
+          <Info />
+          <AlertDescription>
+            Pre-Order Item - Ships {product?.preorder_day} days
+          </AlertDescription>
+          <AlertDescription>
+            This item is available for pre-order. Your order will be processed
+            and shipped once the product becomes available.
+          </AlertDescription>
+        </Alert>
+      )}
 
       <div className='flex flex-col gap-2.5 p-2.5'>
         <h3 className='line-clamp-2 text-lg leading-tight font-semibold text-gray-800'>
