@@ -3,7 +3,7 @@ import { useEffect } from 'react'
 
 import type { ReactNode } from 'react'
 
-import useAuthStore from '@/store/authStore'
+import useAuthStore from '@/store/auth'
 
 export default function AuthProvider({ children }: { children: ReactNode }) {
   const initialize = useAuthStore((state) => state.initialize)

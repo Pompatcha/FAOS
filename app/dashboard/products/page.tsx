@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Plus, Upload, X } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm, useFieldArray, Controller } from 'react-hook-form'
 import { toast } from 'sonner'
 
@@ -10,8 +10,15 @@ import type { ProductFormInput } from '@/actions/product'
 import type { FC } from 'react'
 
 import { getCategories } from '@/actions/category'
-import { createProduct, deleteProduct, getProducts } from '@/actions/product'
+import {
+  createProduct,
+  deleteProduct,
+  getProduct,
+  getProducts,
+  updateProduct,
+} from '@/actions/product'
 import { ConfirmDialog } from '@/components/Dialog/ConfirmDialog'
+import { HeaderCard } from '@/components/HeaderCard'
 import { IndexLayout } from '@/components/Layout/Index'
 import { Loading } from '@/components/Layout/Loading'
 import { Button } from '@/components/ui/button'
@@ -45,38 +52,22 @@ import { Textarea } from '@/components/ui/textarea'
 import { formatDate } from '@/lib/date'
 import { truncateText } from '@/lib/text'
 
-import { HeaderCard } from '../components/HeaderCard'
+const initForm = {
+  productData: {
+    name: '',
+    description: '',
+    short_description: '',
+    category_id: null,
+    preorder_enabled: false,
+    preorder_day: 30,
+  },
+  productOptions: [],
+  productImages: [],
+}
 
 const ProductPage: FC = () => {
-  const [isProductDialogOpen, setIsProductDialogOpen] = useState(false)
-
-  const {
-    data: products,
-    refetch: productRefetch,
-    isLoading: productLoading,
-  } = useQuery({
-    queryKey: ['products'],
-    queryFn: () => getProducts(),
-  })
-
-  const { data: categories } = useQuery({
-    queryKey: ['categories'],
-    queryFn: () => getCategories(),
-  })
-
   const productForm = useForm<ProductFormInput>({
-    defaultValues: {
-      productData: {
-        name: '',
-        description: '',
-        short_description: '',
-        category_id: null,
-        preorder_enabled: false,
-        preorder_day: 30,
-      },
-      productOptions: [],
-      productImages: [],
-    },
+    defaultValues: initForm,
   })
 
   const { control, handleSubmit, reset, setValue, watch } = productForm
@@ -108,6 +99,47 @@ const ProductPage: FC = () => {
     })
   }
 
+  const [isEditMode, setIsEditMode] = useState(false)
+  const [isProductDialogOpen, setIsProductDialogOpen] = useState(false)
+  const [selectedProductId, setSelectedProductId] = useState<string>('')
+
+  const {
+    data: products,
+    refetch: productRefetch,
+    isLoading: productsLoading,
+  } = useQuery({
+    queryKey: ['products'],
+    queryFn: () => getProducts(),
+  })
+
+  const { data: product, isLoading: productLoading } = useQuery({
+    queryKey: ['product', selectedProductId],
+    queryFn: () => getProduct(selectedProductId),
+    enabled: !!selectedProductId,
+  })
+
+  const { data: categories } = useQuery({
+    queryKey: ['categories'],
+    queryFn: () => getCategories(),
+  })
+
+  useEffect(() => {
+    if (product) {
+      reset({
+        productData: {
+          name: product.name,
+          description: product.description,
+          short_description: product.short_description,
+          category_id: product.category ? product.category.id : null,
+          preorder_enabled: product.preorder_enabled ?? false,
+          preorder_day: product.preorder_day,
+        },
+        productOptions: product.options ?? [],
+        productImages: product.images ?? [],
+      })
+    }
+  }, [product, reset, selectedProductId])
+
   const handleAddProductImage = () => {
     addProductImageField({
       image_url: '',
@@ -117,8 +149,9 @@ const ProductPage: FC = () => {
   }
 
   const closeProductDialog = () => {
+    setIsEditMode(false)
     setIsProductDialogOpen(false)
-    reset()
+    reset(initForm)
   }
 
   const handlePrimaryImageChange = (
@@ -157,6 +190,30 @@ const ProductPage: FC = () => {
       },
     })
 
+  const { mutate: updateProductMutate, isPending: updateProductPending } =
+    useMutation({
+      mutationFn: async ({
+        productData,
+        productImages,
+        productOptions,
+      }: ProductFormInput) => {
+        return await updateProduct({
+          productId: selectedProductId,
+          productData,
+          productImages,
+          productOptions,
+        })
+      },
+      onSuccess: (data) => {
+        toast.success(data?.message)
+        productRefetch()
+        closeProductDialog()
+      },
+      onError: (error) => {
+        toast.error(error?.message)
+      },
+    })
+
   const { mutate: deleteProductMutate, isPending: deleteProductPending } =
     useMutation({
       mutationFn: async (productId: string) => {
@@ -175,18 +232,30 @@ const ProductPage: FC = () => {
   const submit = async (data: ProductFormInput) => {
     const { productData, productOptions, productImages } = data
 
-    await createProductMutate({
-      productData,
-      productImages,
-      productOptions,
-    })
+    if (isEditMode) {
+      await updateProductMutate({
+        productData,
+        productImages,
+        productOptions,
+      })
+    } else {
+      await createProductMutate({
+        productData,
+        productImages,
+        productOptions,
+      })
+    }
   }
 
   return (
     <IndexLayout>
       <Loading
         isLoading={
-          deleteProductPending || createProductPending || productLoading
+          deleteProductPending ||
+          createProductPending ||
+          productLoading ||
+          productsLoading ||
+          updateProductPending
         }
       />
 
@@ -602,12 +671,10 @@ const ProductPage: FC = () => {
                                   name={`productImages.${productImageIndex}.image_url`}
                                   control={control}
                                   rules={{
-                                    required: 'Image URL is required',
+                                    required: 'URL is required',
                                     pattern: {
-                                      value:
-                                        /^https?:\/\/.+\.(jpg|jpeg|png|gif|webp)$/i,
-                                      message:
-                                        'Please enter a valid image URL (jpg, jpeg, png, gif, webp)',
+                                      value: /^https?:\/\/.+$/i,
+                                      message: 'Please enter a valid URL',
                                     },
                                   }}
                                   render={({ field, fieldState }) => (
@@ -691,7 +758,11 @@ const ProductPage: FC = () => {
                 </Card>
 
                 <div className='flex justify-end gap-4'>
-                  <Button variant='outline' onClick={closeProductDialog}>
+                  <Button
+                    variant='outline'
+                    type='button'
+                    onClick={closeProductDialog}
+                  >
                     Cancel
                   </Button>
                   <Button
@@ -699,7 +770,7 @@ const ProductPage: FC = () => {
                     disabled={createProductPending}
                     className='bg-[#4a2c00] hover:bg-[#4a2c00]/80'
                   >
-                    Create Product
+                    {isEditMode ? 'Update Product' : 'Create Product'}
                   </Button>
                 </div>
               </form>
@@ -722,6 +793,7 @@ const ProductPage: FC = () => {
               <TableHead>Product Image</TableHead>
               <TableHead>Product Name</TableHead>
               <TableHead>Category</TableHead>
+              <TableHead>Pre-Order</TableHead>
               <TableHead>Created</TableHead>
               <TableHead>Updated</TableHead>
               <TableHead className='text-right'>Actions</TableHead>
@@ -743,7 +815,12 @@ const ProductPage: FC = () => {
                     {truncateText(product?.name)}
                   </TableCell>
                   <TableCell className='font-medium'>
-                    {product?.category?.name || '-'}
+                    {product?.category[0]?.name || '-'}
+                  </TableCell>
+                  <TableCell className='font-medium'>
+                    {product?.preorder_enabled
+                      ? `${product?.preorder_day} days`
+                      : '-'}
                   </TableCell>
                   <TableCell>{formatDate(product.created_at)}</TableCell>
                   <TableCell>{formatDate(product.updated_at)}</TableCell>
@@ -752,7 +829,9 @@ const ProductPage: FC = () => {
                       <Button
                         variant='outline'
                         onClick={() => {
+                          setIsEditMode(true)
                           setIsProductDialogOpen(true)
+                          setSelectedProductId(product?.id)
                         }}
                       >
                         Edit

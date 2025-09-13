@@ -1,7 +1,7 @@
 import { IndexLayout } from '@/components/Layout/Index'
 
 const AboutPage = () => {
-  return <IndexLayout></IndexLayout>
+  return <IndexLayout />
 }
 
 export default AboutPage

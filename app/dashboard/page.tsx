@@ -1,8 +1,7 @@
 import type { FC } from 'react'
 
+import { HeaderCard } from '@/components/HeaderCard'
 import { IndexLayout } from '@/components/Layout/Index'
-
-import { HeaderCard } from './components/HeaderCard'
 
 const DashboardPage: FC = () => {
   return (

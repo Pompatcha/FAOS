@@ -32,6 +32,8 @@ const getProducts = async () => {
         created_at,
         updated_at,
         name,
+        preorder_enabled,
+        preorder_day,
         category:categories(id, name),
         images:product_images(id, image_url)
       `,
@@ -62,16 +64,10 @@ const getProduct = async (id: string) => {
       .from('products')
       .select(
         `
-        id,
-        created_at,
-        updated_at,
-        name,
-        description,
-        short_description,
-        sku,
-        category:categories(id, name),
-        images:product_images(id, image_url),
-        options:product_options(id, option_name, option_value, option_price, option_stock)
+        *,
+        category:categories(*),
+        images:product_images(*),
+        options:product_options(*)
       `,
       )
       .eq('id', id)

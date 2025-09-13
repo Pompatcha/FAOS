@@ -3,6 +3,7 @@ import { useState } from 'react'
 
 import type { FC } from 'react'
 
+import { HeaderCard } from '@/components/HeaderCard'
 import { IndexLayout } from '@/components/Layout/Index'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -26,8 +27,6 @@ import {
 } from '@/components/ui/table'
 import { formatDate } from '@/lib/date'
 import { formatPrice } from '@/lib/price'
-
-import { HeaderCard } from '../components/HeaderCard'
 
 interface Order {
   id: number
