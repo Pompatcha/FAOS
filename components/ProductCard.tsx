@@ -1,6 +1,6 @@
 'use client'
 
-import { Info } from 'lucide-react'
+import { Info, PlusCircle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 import type { FC } from 'react'
@@ -42,9 +42,14 @@ const ProductCard: FC<ProductCardProps> = ({ product }) => {
 
   return (
     <div
-      className='flex cursor-pointer flex-col gap-2.5 rounded-xl bg-white'
+      className='relative flex cursor-pointer flex-col gap-2.5 rounded-xl bg-white'
       onClick={handleProductCardClick}
     >
+      <PlusCircle
+        size={35}
+        className='text-primary absolute top-2.5 left-2.5'
+      />
+
       <div
         className={cn(
           'h-72 w-full overflow-hidden rounded-t-xl',
@@ -98,7 +103,7 @@ const ProductCard: FC<ProductCardProps> = ({ product }) => {
               ? product.min_price === product.max_price
                 ? priceFormatter.format(product.min_price)
                 : `${priceFormatter.format(product.min_price)} - ${priceFormatter.format(product.max_price)}`
-              : 'Price N/A'}
+              : 'n/a'}
           </span>
 
           <span className='text-sm text-gray-600'>
@@ -107,7 +112,7 @@ const ProductCard: FC<ProductCardProps> = ({ product }) => {
               ? product.min_stock === product.max_stock
                 ? `Available ${numberFormatter.format(product.min_stock)} Stock`
                 : `Available ${numberFormatter.format(product.min_stock)} - ${numberFormatter.format(product.max_stock)} Stock`
-              : 'Stock N/A'}
+              : 'n/a'}
           </span>
         </div>
       </div>

@@ -7,7 +7,6 @@ import { useForm, useFieldArray, Controller } from 'react-hook-form'
 import { toast } from 'sonner'
 
 import type { ProductFormInput } from '@/actions/product'
-import type { FC } from 'react'
 
 import { getCategories } from '@/actions/category'
 import {
@@ -53,7 +52,7 @@ import { formatDate } from '@/lib/date'
 import { numberFormatter, priceFormatter } from '@/lib/number'
 import { truncateText } from '@/lib/text'
 
-const initForm = {
+const defaultForm: ProductFormInput = {
   productData: {
     name: '',
     description: '',
@@ -66,62 +65,98 @@ const initForm = {
   productImages: [],
 }
 
-const ProductPage: FC = () => {
-  const productForm = useForm<ProductFormInput>({
-    defaultValues: initForm,
-  })
+const ProductPage = () => {
+  const [isEditMode, setIsEditMode] = useState(false)
+  const [showDialog, setShowDialog] = useState(false)
+  const [selectedId, setSelectedId] = useState('')
 
-  const { control, handleSubmit, reset, setValue, watch } = productForm
+  const form = useForm<ProductFormInput>({ defaultValues: defaultForm })
+  const { control, handleSubmit, reset, setValue, watch } = form
 
   const {
-    fields: productOptionFields,
-    append: addProductOptionField,
-    remove: removeProductOptionField,
+    fields: options,
+    append: addOption,
+    remove: removeOption,
   } = useFieldArray({
     control,
     name: 'productOptions',
   })
 
   const {
-    fields: productImageFields,
-    append: addProductImageField,
-    remove: removeProductImageField,
+    fields: images,
+    append: addImage,
+    remove: removeImage,
   } = useFieldArray({
     control,
     name: 'productImages',
   })
 
-  const handleAddProductOption = () => {
-    addProductOptionField({
-      option_name: '',
-      option_value: '',
-      option_price: 0,
-      option_stock: 0,
-    })
-  }
-
-  const [isEditMode, setIsEditMode] = useState(false)
-  const [isProductDialogOpen, setIsProductDialogOpen] = useState(false)
-  const [selectedProductId, setSelectedProductId] = useState<string>('')
-
   const {
     data: products,
-    refetch: productRefetch,
+    refetch: refetchProducts,
     isLoading: productsLoading,
   } = useQuery({
     queryKey: ['products'],
-    queryFn: () => getProducts(),
+    queryFn: getProducts,
   })
 
   const { data: product, isLoading: productLoading } = useQuery({
-    queryKey: ['product', selectedProductId],
-    queryFn: () => getProduct(selectedProductId),
-    enabled: !!selectedProductId,
+    queryKey: ['product', selectedId],
+    queryFn: () => getProduct(selectedId),
+    enabled: !!selectedId,
   })
 
   const { data: categories } = useQuery({
     queryKey: ['categories'],
-    queryFn: () => getCategories(),
+    queryFn: getCategories,
+  })
+
+  const { mutate: createMutate, isPending: createPending } = useMutation({
+    mutationFn: createProduct,
+    onSuccess: (data) => {
+      toast.success(data?.message)
+      refetchProducts()
+      closeDialog()
+    },
+    onError: (error: unknown) =>
+      toast.error(
+        error instanceof Error
+          ? error?.message
+          : 'Server error. Please contact the developer.',
+      ),
+  })
+
+  const { mutate: updateMutate, isPending: updatePending } = useMutation({
+    mutationFn: (data: ProductFormInput) => {
+      if (!selectedId) throw new Error('No product ID selected')
+      return updateProduct({ productId: selectedId, ...data })
+    },
+    onSuccess: (data) => {
+      toast.success(data?.message)
+      refetchProducts()
+      closeDialog()
+    },
+    onError: (error: unknown) =>
+      toast.error(
+        error instanceof Error
+          ? error?.message
+          : 'Server error. Please contact the developer.',
+      ),
+  })
+
+  const { mutate: deleteMutate, isPending: deletePending } = useMutation({
+    mutationFn: deleteProduct,
+    onSuccess: (data) => {
+      toast.success(data?.message)
+      refetchProducts()
+      closeDialog()
+    },
+    onError: (error: unknown) =>
+      toast.error(
+        error instanceof Error
+          ? error?.message
+          : 'Server error. Please contact the developer.',
+      ),
   })
 
   useEffect(() => {
@@ -131,7 +166,7 @@ const ProductPage: FC = () => {
           name: product.name,
           description: product.description,
           short_description: product.short_description,
-          category_id: product.category ? product.category.id : null,
+          category_id: product.category?.id || null,
           preorder_enabled: product.preorder_enabled ?? false,
           preorder_day: product.preorder_day,
         },
@@ -139,28 +174,35 @@ const ProductPage: FC = () => {
         productImages: product.images ?? [],
       })
     }
-  }, [product, reset, selectedProductId])
+  }, [product, reset])
 
-  const handleAddProductImage = () => {
-    addProductImageField({
-      image_url: '',
-      alt_text: '',
-      is_primary: productImageFields.length === 0,
+  const closeDialog = () => {
+    setIsEditMode(false)
+    setShowDialog(false)
+    setSelectedId('')
+    reset(defaultForm)
+  }
+
+  const handleAddOption = () => {
+    addOption({
+      option_name: '',
+      option_value: '',
+      option_price: 0,
+      option_stock: 0,
     })
   }
 
-  const closeProductDialog = () => {
-    setIsEditMode(false)
-    setIsProductDialogOpen(false)
-    reset(initForm)
+  const handleAddImage = () => {
+    addImage({
+      image_url: '',
+      alt_text: '',
+      is_primary: images.length === 0,
+    })
   }
 
-  const handlePrimaryImageChange = (
-    selectedIndex: number,
-    isSelectedPrimary: boolean,
-  ) => {
-    if (isSelectedPrimary) {
-      productImageFields.forEach((_, index) => {
+  const handlePrimaryChange = (selectedIndex: number, isPrimary: boolean) => {
+    if (isPrimary) {
+      images.forEach((_, index) => {
         if (index !== selectedIndex) {
           setValue(`productImages.${index}.is_primary`, false)
         }
@@ -168,97 +210,30 @@ const ProductPage: FC = () => {
     }
   }
 
-  const { mutate: createProductMutate, isPending: createProductPending } =
-    useMutation({
-      mutationFn: async ({
-        productData,
-        productImages,
-        productOptions,
-      }: ProductFormInput) => {
-        return await createProduct({
-          productData,
-          productImages,
-          productOptions,
-        })
-      },
-      onSuccess: (data) => {
-        toast.success(data?.message)
-        productRefetch()
-        closeProductDialog()
-      },
-      onError: (error) => {
-        toast.error(error?.message)
-      },
-    })
+  const handleEdit = (productId: string) => {
+    setIsEditMode(true)
+    setShowDialog(true)
+    setSelectedId(productId)
+  }
 
-  const { mutate: updateProductMutate, isPending: updateProductPending } =
-    useMutation({
-      mutationFn: async ({
-        productData,
-        productImages,
-        productOptions,
-      }: ProductFormInput) => {
-        return await updateProduct({
-          productId: selectedProductId,
-          productData,
-          productImages,
-          productOptions,
-        })
-      },
-      onSuccess: (data) => {
-        toast.success(data?.message)
-        productRefetch()
-        closeProductDialog()
-      },
-      onError: (error) => {
-        toast.error(error?.message)
-      },
-    })
-
-  const { mutate: deleteProductMutate, isPending: deleteProductPending } =
-    useMutation({
-      mutationFn: async (productId: string) => {
-        return await deleteProduct(productId)
-      },
-      onSuccess: (data) => {
-        toast.success(data?.message)
-        productRefetch()
-        closeProductDialog()
-      },
-      onError: (error) => {
-        toast.error(error?.message)
-      },
-    })
-
-  const submit = async (data: ProductFormInput) => {
-    const { productData, productOptions, productImages } = data
-
+  const onSubmit = (data: ProductFormInput) => {
     if (isEditMode) {
-      await updateProductMutate({
-        productData,
-        productImages,
-        productOptions,
-      })
+      updateMutate(data)
     } else {
-      await createProductMutate({
-        productData,
-        productImages,
-        productOptions,
-      })
+      createMutate(data)
     }
   }
 
+  const isLoading =
+    deletePending ||
+    createPending ||
+    productLoading ||
+    productsLoading ||
+    updatePending
+
   return (
     <IndexLayout>
-      <Loading
-        isLoading={
-          deleteProductPending ||
-          createProductPending ||
-          productLoading ||
-          productsLoading ||
-          updateProductPending
-        }
-      />
+      <Loading isLoading={isLoading} />
 
       <div className='flex justify-between'>
         <div className='flex flex-col gap-2.5 text-white'>
@@ -270,18 +245,12 @@ const ProductPage: FC = () => {
         </div>
         <div className='flex gap-5'>
           <Dialog
-            onOpenChange={(value) => {
-              if (!value) {
-                closeProductDialog()
-              }
-            }}
-            open={isProductDialogOpen}
+            open={showDialog}
+            onOpenChange={(value) => !value && closeDialog()}
           >
             <DialogTrigger asChild>
               <Button
-                onClick={() => {
-                  setIsProductDialogOpen(true)
-                }}
+                onClick={() => setShowDialog(true)}
                 className='w-fit cursor-pointer rounded-xl bg-white p-5 text-[#4a2c00] hover:bg-white/50'
               >
                 <Plus /> Add Product
@@ -289,10 +258,13 @@ const ProductPage: FC = () => {
             </DialogTrigger>
             <DialogContent className='max-h-[90vh] min-w-2xl overflow-y-auto'>
               <DialogHeader>
-                <DialogTitle className='text-2xl'>Add New Product</DialogTitle>
+                <DialogTitle className='text-2xl'>
+                  {isEditMode ? 'Edit Product' : 'Add New Product'}
+                </DialogTitle>
               </DialogHeader>
 
-              <form className='space-y-6' onSubmit={handleSubmit(submit)}>
+              <form className='space-y-6' onSubmit={handleSubmit(onSubmit)}>
+                {/* Basic Information */}
                 <Card>
                   <CardContent className='p-6'>
                     <h3 className='mb-4 text-lg font-semibold'>
@@ -300,9 +272,7 @@ const ProductPage: FC = () => {
                     </h3>
                     <div className='grid grid-cols-2 gap-4'>
                       <div>
-                        <Label htmlFor='preorder_enabled'>
-                          Enable Pre-Order
-                        </Label>
+                        <Label>Enable Pre-Order</Label>
                         <Controller
                           name='productData.preorder_enabled'
                           control={control}
@@ -318,7 +288,7 @@ const ProductPage: FC = () => {
 
                       {watch('productData.preorder_enabled') && (
                         <div>
-                          <Label htmlFor='preorder_day'>Pre-Order day</Label>
+                          <Label>Pre-Order Days</Label>
                           <Controller
                             name='productData.preorder_day'
                             control={control}
@@ -350,7 +320,7 @@ const ProductPage: FC = () => {
                       )}
 
                       <div>
-                        <Label htmlFor='name'>Product Name</Label>
+                        <Label>Product Name</Label>
                         <Controller
                           name='productData.name'
                           control={control}
@@ -373,7 +343,7 @@ const ProductPage: FC = () => {
                       </div>
 
                       <div>
-                        <Label htmlFor='category'>Category</Label>
+                        <Label>Category</Label>
                         <Controller
                           name='productData.category_id'
                           control={control}
@@ -398,7 +368,6 @@ const ProductPage: FC = () => {
                                   ))}
                                 </SelectContent>
                               </Select>
-
                               {fieldState.error && (
                                 <p className='mt-1 text-sm text-red-500'>
                                   {fieldState.error.message}
@@ -411,9 +380,7 @@ const ProductPage: FC = () => {
                     </div>
 
                     <div className='mt-4'>
-                      <Label htmlFor='short_description'>
-                        Short Description
-                      </Label>
+                      <Label>Short Description</Label>
                       <Controller
                         name='productData.short_description'
                         control={control}
@@ -430,7 +397,7 @@ const ProductPage: FC = () => {
                     </div>
 
                     <div className='mt-4'>
-                      <Label htmlFor='description'>Full Description</Label>
+                      <Label>Full Description</Label>
                       <Controller
                         name='productData.description'
                         control={control}
@@ -448,13 +415,14 @@ const ProductPage: FC = () => {
                   </CardContent>
                 </Card>
 
+                {/* Product Options */}
                 <Card>
                   <CardContent className='p-6'>
                     <div className='mb-4 flex items-center justify-between'>
                       <h3 className='text-lg font-semibold'>Product Options</h3>
                       <Button
                         type='button'
-                        onClick={handleAddProductOption}
+                        onClick={handleAddOption}
                         variant='outline'
                         size='sm'
                       >
@@ -464,178 +432,166 @@ const ProductPage: FC = () => {
                     </div>
 
                     <div className='space-y-4'>
-                      {productOptionFields.map(
-                        (productOptionField, productOptionIndex) => (
-                          <Card key={productOptionField.id} className='p-4'>
-                            <div className='mb-4 flex items-start justify-between'>
-                              <h4 className='font-medium'>
-                                Option {productOptionIndex + 1}
-                              </h4>
-                              <Button
-                                type='button'
-                                onClick={() =>
-                                  removeProductOptionField(productOptionIndex)
-                                }
-                                variant='ghost'
-                                size='sm'
-                                className='text-red-500 hover:text-red-700'
-                              >
-                                <X className='h-4 w-4' />
-                              </Button>
+                      {options.map((option, index) => (
+                        <Card key={option.id} className='p-4'>
+                          <div className='mb-4 flex items-start justify-between'>
+                            <h4 className='font-medium'>Option {index + 1}</h4>
+                            <Button
+                              type='button'
+                              onClick={() => removeOption(index)}
+                              variant='ghost'
+                              size='sm'
+                              className='text-red-500 hover:text-red-700'
+                            >
+                              <X className='h-4 w-4' />
+                            </Button>
+                          </div>
+
+                          <div className='grid grid-cols-2 gap-4'>
+                            <div>
+                              <Label>Option Name</Label>
+                              <Controller
+                                name={`productOptions.${index}.option_name`}
+                                control={control}
+                                rules={{
+                                  required: 'Option name is required',
+                                  minLength: {
+                                    value: 2,
+                                    message: 'Must be at least 2 characters',
+                                  },
+                                }}
+                                render={({ field, fieldState }) => (
+                                  <div>
+                                    <Input
+                                      {...field}
+                                      placeholder='e.g., Color, Size'
+                                      className='mt-1'
+                                    />
+                                    {fieldState.error && (
+                                      <p className='mt-1 text-sm text-red-500'>
+                                        {fieldState.error.message}
+                                      </p>
+                                    )}
+                                  </div>
+                                )}
+                              />
                             </div>
 
-                            <div className='grid grid-cols-2 gap-4'>
-                              <div>
-                                <Label>Option Name</Label>
-                                <Controller
-                                  name={`productOptions.${productOptionIndex}.option_name`}
-                                  control={control}
-                                  rules={{
-                                    required: 'Option name is required',
-                                    minLength: {
-                                      value: 2,
-                                      message:
-                                        'Option name must be at least 2 characters',
-                                    },
-                                  }}
-                                  render={({ field, fieldState }) => (
-                                    <div>
-                                      <Input
-                                        {...field}
-                                        placeholder='e.g., Color, Size'
-                                        className='mt-1'
-                                      />
-                                      {fieldState.error && (
-                                        <p className='mt-1 text-sm text-red-500'>
-                                          {fieldState.error.message}
-                                        </p>
-                                      )}
-                                    </div>
-                                  )}
-                                />
-                              </div>
+                            <div>
+                              <Label>Option Value</Label>
+                              <Controller
+                                name={`productOptions.${index}.option_value`}
+                                control={control}
+                                rules={{
+                                  required: 'Option value is required',
+                                  minLength: {
+                                    value: 1,
+                                    message: 'Must be at least 1 character',
+                                  },
+                                }}
+                                render={({ field, fieldState }) => (
+                                  <div>
+                                    <Input
+                                      {...field}
+                                      placeholder='e.g., Red, Large'
+                                      className='mt-1'
+                                    />
+                                    {fieldState.error && (
+                                      <p className='mt-1 text-sm text-red-500'>
+                                        {fieldState.error.message}
+                                      </p>
+                                    )}
+                                  </div>
+                                )}
+                              />
+                            </div>
 
-                              <div>
-                                <Label>Option Value</Label>
-                                <Controller
-                                  name={`productOptions.${productOptionIndex}.option_value`}
-                                  control={control}
-                                  rules={{
-                                    required: 'Option value is required',
-                                    minLength: {
-                                      value: 1,
-                                      message:
-                                        'Option value must be at least 1 character',
-                                    },
-                                  }}
-                                  render={({ field, fieldState }) => (
-                                    <div>
-                                      <Input
-                                        {...field}
-                                        placeholder='e.g., Red, Large'
-                                        className='mt-1'
-                                      />
-                                      {fieldState.error && (
-                                        <p className='mt-1 text-sm text-red-500'>
-                                          {fieldState.error.message}
-                                        </p>
-                                      )}
-                                    </div>
-                                  )}
-                                />
-                              </div>
-
-                              <div>
-                                <Label>Price (THB)</Label>
-                                <Controller
-                                  name={`productOptions.${productOptionIndex}.option_price`}
-                                  control={control}
-                                  rules={{
-                                    required: 'Price is required',
-                                    min: {
-                                      value: 0.01,
-                                      message:
-                                        'Price must be at least 0.01 THB',
-                                    },
-                                  }}
-                                  render={({ field, fieldState }) => (
-                                    <div>
-                                      <Input
-                                        {...field}
-                                        type='number'
-                                        step='0.01'
-                                        value={field.value || ''}
-                                        onChange={(e) =>
-                                          field.onChange(Number(e.target.value))
-                                        }
-                                        placeholder='0.00'
-                                        className='mt-1'
-                                      />
-                                      {fieldState.error && (
-                                        <p className='mt-1 text-sm text-red-500'>
-                                          {fieldState.error.message}
-                                        </p>
-                                      )}
-                                    </div>
-                                  )}
-                                />
-                              </div>
-
-                              <div>
-                                <Label>Stock Quantity</Label>
-                                <Controller
-                                  name={`productOptions.${productOptionIndex}.option_stock`}
-                                  control={control}
-                                  rules={{
-                                    required: 'Stock quantity is required',
-                                    min: {
-                                      value: 1,
-                                      message:
-                                        'Stock quantity cannot be negative',
-                                    },
-                                    validate: (value) => {
-                                      if (!Number.isInteger(Number(value))) {
-                                        return 'Stock quantity must be a whole number'
+                            <div>
+                              <Label>Price (THB)</Label>
+                              <Controller
+                                name={`productOptions.${index}.option_price`}
+                                control={control}
+                                rules={{
+                                  required: 'Price is required',
+                                  min: {
+                                    value: 0.01,
+                                    message: 'Must be at least 0.01 THB',
+                                  },
+                                }}
+                                render={({ field, fieldState }) => (
+                                  <div>
+                                    <Input
+                                      {...field}
+                                      type='number'
+                                      step='0.01'
+                                      value={field.value || ''}
+                                      onChange={(e) =>
+                                        field.onChange(Number(e.target.value))
                                       }
-                                      return true
-                                    },
-                                  }}
-                                  render={({ field, fieldState }) => (
-                                    <div>
-                                      <Input
-                                        {...field}
-                                        type='number'
-                                        value={field.value || ''}
-                                        onChange={(e) =>
-                                          field.onChange(Number(e.target.value))
-                                        }
-                                        placeholder='0'
-                                        className='mt-1'
-                                      />
-                                      {fieldState.error && (
-                                        <p className='mt-1 text-sm text-red-500'>
-                                          {fieldState.error.message}
-                                        </p>
-                                      )}
-                                    </div>
-                                  )}
-                                />
-                              </div>
+                                      placeholder='0.00'
+                                      className='mt-1'
+                                    />
+                                    {fieldState.error && (
+                                      <p className='mt-1 text-sm text-red-500'>
+                                        {fieldState.error.message}
+                                      </p>
+                                    )}
+                                  </div>
+                                )}
+                              />
                             </div>
-                          </Card>
-                        ),
-                      )}
+
+                            <div>
+                              <Label>Stock Quantity</Label>
+                              <Controller
+                                name={`productOptions.${index}.option_stock`}
+                                control={control}
+                                rules={{
+                                  required: 'Stock quantity is required',
+                                  min: {
+                                    value: 0,
+                                    message: 'Cannot be negative',
+                                  },
+                                  validate: (value) =>
+                                    Number.isInteger(Number(value)) ||
+                                    'Must be a whole number',
+                                }}
+                                render={({ field, fieldState }) => (
+                                  <div>
+                                    <Input
+                                      {...field}
+                                      type='number'
+                                      value={field.value || ''}
+                                      onChange={(e) =>
+                                        field.onChange(Number(e.target.value))
+                                      }
+                                      placeholder='0'
+                                      className='mt-1'
+                                    />
+                                    {fieldState.error && (
+                                      <p className='mt-1 text-sm text-red-500'>
+                                        {fieldState.error.message}
+                                      </p>
+                                    )}
+                                  </div>
+                                )}
+                              />
+                            </div>
+                          </div>
+                        </Card>
+                      ))}
                     </div>
                   </CardContent>
                 </Card>
 
+                {/* Product Images */}
                 <Card>
                   <CardContent className='p-6'>
                     <div className='mb-4 flex items-center justify-between'>
                       <h3 className='text-lg font-semibold'>Product Images</h3>
                       <Button
                         type='button'
-                        onClick={handleAddProductImage}
+                        onClick={handleAddImage}
                         variant='outline'
                         size='sm'
                       >
@@ -645,130 +601,115 @@ const ProductPage: FC = () => {
                     </div>
 
                     <div className='space-y-4'>
-                      {productImageFields.map(
-                        (productImageField, productImageIndex) => (
-                          <Card key={productImageField.id} className='p-4'>
-                            <div className='mb-4 flex items-start justify-between'>
-                              <h4 className='font-medium'>
-                                Image {productImageIndex + 1}
-                              </h4>
-                              <Button
-                                type='button'
-                                onClick={() =>
-                                  removeProductImageField(productImageIndex)
-                                }
-                                variant='ghost'
-                                size='sm'
-                                className='text-red-500 hover:text-red-700'
-                              >
-                                <X className='h-4 w-4' />
-                              </Button>
-                            </div>
+                      {images.map((image, index) => (
+                        <Card key={image.id} className='p-4'>
+                          <div className='mb-4 flex items-start justify-between'>
+                            <h4 className='font-medium'>Image {index + 1}</h4>
+                            <Button
+                              type='button'
+                              onClick={() => removeImage(index)}
+                              variant='ghost'
+                              size='sm'
+                              className='text-red-500 hover:text-red-700'
+                            >
+                              <X className='h-4 w-4' />
+                            </Button>
+                          </div>
 
-                            <div className='grid grid-cols-2 gap-4'>
-                              <div className='col-span-2'>
-                                <Label>Image URL</Label>
-                                <Controller
-                                  name={`productImages.${productImageIndex}.image_url`}
-                                  control={control}
-                                  rules={{
-                                    required: 'URL is required',
-                                    pattern: {
-                                      value: /^https?:\/\/.+$/i,
-                                      message: 'Please enter a valid URL',
-                                    },
-                                  }}
-                                  render={({ field, fieldState }) => (
-                                    <div>
-                                      <Input
-                                        {...field}
-                                        placeholder='https://example.com/image.jpg'
-                                        className='mt-1'
-                                      />
-                                      {fieldState.error && (
-                                        <p className='mt-1 text-sm text-red-500'>
-                                          {fieldState.error.message}
-                                        </p>
-                                      )}
-                                    </div>
-                                  )}
-                                />
-                              </div>
-
-                              <div>
-                                <Label>Alt Text</Label>
-                                <Controller
-                                  name={`productImages.${productImageIndex}.alt_text`}
-                                  control={control}
-                                  rules={{
-                                    required: 'Alt text is required',
-                                    minLength: {
-                                      value: 3,
-                                      message:
-                                        'Alt text must be at least 3 characters',
-                                    },
-                                    maxLength: {
-                                      value: 100,
-                                      message:
-                                        'Alt text must not exceed 100 characters',
-                                    },
-                                  }}
-                                  render={({ field, fieldState }) => (
-                                    <div>
-                                      <Input
-                                        {...field}
-                                        value={field.value || ''}
-                                        placeholder='Image description'
-                                        className='mt-1'
-                                      />
-                                      {fieldState.error && (
-                                        <p className='mt-1 text-sm text-red-500'>
-                                          {fieldState.error.message}
-                                        </p>
-                                      )}
-                                    </div>
-                                  )}
-                                />
-                              </div>
-
-                              <div className='mt-6 flex items-center space-x-2'>
-                                <Controller
-                                  name={`productImages.${productImageIndex}.is_primary`}
-                                  control={control}
-                                  render={({ field }) => (
-                                    <Switch
-                                      checked={!!field.value}
-                                      onCheckedChange={(isSelectedPrimary) => {
-                                        handlePrimaryImageChange(
-                                          productImageIndex,
-                                          isSelectedPrimary,
-                                        )
-                                        field.onChange(isSelectedPrimary)
-                                      }}
+                          <div className='grid grid-cols-2 gap-4'>
+                            <div className='col-span-2'>
+                              <Label>Image URL</Label>
+                              <Controller
+                                name={`productImages.${index}.image_url`}
+                                control={control}
+                                rules={{
+                                  required: 'URL is required',
+                                  pattern: {
+                                    value: /^https?:\/\/.+$/i,
+                                    message: 'Please enter a valid URL',
+                                  },
+                                }}
+                                render={({ field, fieldState }) => (
+                                  <div>
+                                    <Input
+                                      {...field}
+                                      placeholder='https://example.com/image.jpg'
+                                      className='mt-1'
                                     />
-                                  )}
-                                />
-                                <Label>Primary Image</Label>
-                              </div>
+                                    {fieldState.error && (
+                                      <p className='mt-1 text-sm text-red-500'>
+                                        {fieldState.error.message}
+                                      </p>
+                                    )}
+                                  </div>
+                                )}
+                              />
                             </div>
-                          </Card>
-                        ),
-                      )}
+
+                            <div>
+                              <Label>Alt Text</Label>
+                              <Controller
+                                name={`productImages.${index}.alt_text`}
+                                control={control}
+                                rules={{
+                                  required: 'Alt text is required',
+                                  minLength: {
+                                    value: 3,
+                                    message: 'Must be at least 3 characters',
+                                  },
+                                  maxLength: {
+                                    value: 100,
+                                    message: 'Must not exceed 100 characters',
+                                  },
+                                }}
+                                render={({ field, fieldState }) => (
+                                  <div>
+                                    <Input
+                                      {...field}
+                                      value={field.value || ''}
+                                      placeholder='Image description'
+                                      className='mt-1'
+                                    />
+                                    {fieldState.error && (
+                                      <p className='mt-1 text-sm text-red-500'>
+                                        {fieldState.error.message}
+                                      </p>
+                                    )}
+                                  </div>
+                                )}
+                              />
+                            </div>
+
+                            <div className='mt-6 flex items-center space-x-2'>
+                              <Controller
+                                name={`productImages.${index}.is_primary`}
+                                control={control}
+                                render={({ field }) => (
+                                  <Switch
+                                    checked={!!field.value}
+                                    onCheckedChange={(isPrimary) => {
+                                      handlePrimaryChange(index, isPrimary)
+                                      field.onChange(isPrimary)
+                                    }}
+                                  />
+                                )}
+                              />
+                              <Label>Primary Image</Label>
+                            </div>
+                          </div>
+                        </Card>
+                      ))}
                     </div>
                   </CardContent>
                 </Card>
 
                 <div className='flex justify-end gap-4'>
-                  <Button
-                    variant='outline'
-                    type='button'
-                    onClick={closeProductDialog}
-                  >
+                  <Button variant='outline' type='button' onClick={closeDialog}>
                     Cancel
                   </Button>
                   <Button
                     type='submit'
-                    disabled={createProductPending}
+                    disabled={createPending || updatePending}
                     className='bg-[#4a2c00] hover:bg-[#4a2c00]/80'
                   >
                     {isEditMode ? 'Update Product' : 'Create Product'}
@@ -798,10 +739,10 @@ const ProductPage: FC = () => {
           <TableHeader>
             <TableRow>
               <TableHead>No.</TableHead>
-              <TableHead>Product Image</TableHead>
-              <TableHead>Product Name</TableHead>
-              <TableHead>Product Price</TableHead>
-              <TableHead>Product Stock</TableHead>
+              <TableHead>Image</TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead>Price</TableHead>
+              <TableHead>Stock</TableHead>
               <TableHead>Pre-Order</TableHead>
               <TableHead>Created</TableHead>
               <TableHead>Updated</TableHead>
@@ -810,72 +751,62 @@ const ProductPage: FC = () => {
           </TableHeader>
           <TableBody>
             {Array.isArray(products) &&
-              products?.map((product, idx) => {
-                return (
-                  <TableRow key={product.id}>
-                    <TableCell className='font-medium'>{idx + 1}</TableCell>
-                    <TableCell className='font-medium'>
-                      <img
-                        className='size-10 rounded-full'
-                        alt='product?.name'
-                        src={
-                          product?.images[0]?.image_url || '/placeholder.svg'
-                        }
+              products?.map((product, idx) => (
+                <TableRow key={product.id}>
+                  <TableCell className='font-medium'>{idx + 1}</TableCell>
+                  <TableCell className='font-medium'>
+                    <img
+                      className='size-10 rounded-full'
+                      alt={product?.name}
+                      src={product?.images[0]?.image_url || '/placeholder.svg'}
+                    />
+                  </TableCell>
+                  <TableCell className='font-medium'>
+                    {truncateText(product?.name)}
+                  </TableCell>
+                  <TableCell className='font-medium'>
+                    {product?.min_price && product?.max_price
+                      ? product.min_price === product.max_price
+                        ? priceFormatter.format(product.min_price)
+                        : `${priceFormatter.format(product.min_price)} - ${priceFormatter.format(product.max_price)}`
+                      : 'n/a'}
+                  </TableCell>
+                  <TableCell className='font-medium'>
+                    {product?.min_stock !== undefined &&
+                    product?.max_stock !== undefined
+                      ? product.min_stock === product.max_stock
+                        ? `${numberFormatter.format(product.min_stock || 0)} Stock`
+                        : `${numberFormatter.format(product.min_stock || 0)} - ${numberFormatter.format(product.max_stock || 0)} Stock`
+                      : 'n/a'}
+                  </TableCell>
+                  <TableCell className='font-medium'>
+                    {product?.preorder_enabled
+                      ? `${product?.preorder_day} days`
+                      : '-'}
+                  </TableCell>
+                  <TableCell>{formatDate(product.created_at)}</TableCell>
+                  <TableCell>{formatDate(product.updated_at)}</TableCell>
+                  <TableCell className='text-right'>
+                    <div className='flex justify-end gap-2'>
+                      <Button
+                        variant='outline'
+                        onClick={() => handleEdit(product?.id)}
+                      >
+                        Edit
+                      </Button>
+                      <ConfirmDialog
+                        variant='outline'
+                        triggerText='Delete'
+                        onConfirm={() => deleteMutate(product?.id)}
                       />
-                    </TableCell>
-                    <TableCell className='font-medium'>
-                      {truncateText(product?.name)}
-                    </TableCell>
-                    <TableCell className='font-medium'>
-                      {product?.min_price && product?.max_price
-                        ? product.min_price === product.max_price
-                          ? priceFormatter.format(product.min_price)
-                          : `${priceFormatter.format(product.min_price)} - ${priceFormatter.format(product.max_price)}`
-                        : 'Price N/A'}
-                    </TableCell>
-                    <TableCell className='font-medium'>
-                      {product?.min_stock !== undefined &&
-                      product?.max_stock !== undefined
-                        ? product.min_stock === product.max_stock
-                          ? `${numberFormatter.format(product.min_stock || 0)} Stock`
-                          : ` ${numberFormatter.format(product.min_stock || 0)} - ${numberFormatter.format(product.max_stock || 0)} Stock`
-                        : 'Stock N/A'}
-                    </TableCell>
-                    <TableCell className='font-medium'>
-                      {product?.preorder_enabled
-                        ? `${product?.preorder_day} days`
-                        : '-'}
-                    </TableCell>
-                    <TableCell>{formatDate(product.created_at)}</TableCell>
-                    <TableCell>{formatDate(product.updated_at)}</TableCell>
-                    <TableCell className='text-right'>
-                      <div className='flex justify-end gap-2'>
-                        <Button
-                          variant='outline'
-                          onClick={() => {
-                            setIsEditMode(true)
-                            setIsProductDialogOpen(true)
-                            setSelectedProductId(product?.id)
-                          }}
-                        >
-                          Edit
-                        </Button>
-                        <ConfirmDialog
-                          variant='outline'
-                          triggerText='Delete'
-                          onConfirm={async () => {
-                            await deleteProductMutate(product?.id)
-                          }}
-                        />
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                )
-              })}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
 
             {Array.isArray(products) && products?.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className='text-center'>
+                <TableCell colSpan={9} className='text-center'>
                   There are no products yet.
                 </TableCell>
               </TableRow>
