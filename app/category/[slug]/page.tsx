@@ -1,6 +1,7 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
+import { Package } from 'lucide-react'
 import { use } from 'react'
 
 import { getCategoryByName } from '@/actions/category'
@@ -29,19 +30,32 @@ const CategoryPage = ({ params }: { params: Promise<{ slug: string }> }) => {
     enabled: !!category,
   })
 
+  const hasProducts = products && Array.isArray(products) && products.length > 0
+
   return (
     <IndexLayout>
       <Loading isLoading={categoryLoading || productsLoading} />
 
       <NatureGoldBanner />
 
-      <div className='grid gap-5 sm:grid-cols-2 lg:grid-cols-3'>
-        {!!products &&
-          Array.isArray(products) &&
-          products?.map((product) => {
+      {hasProducts ? (
+        <div className='grid gap-5 sm:grid-cols-2 lg:grid-cols-3'>
+          {products.map((product) => {
             return <ProductCard key={product?.id} product={product} />
           })}
-      </div>
+        </div>
+      ) : (
+        <div className='flex flex-col items-center justify-center rounded-xl bg-white py-12 text-center shadow-lg'>
+          <Package className='text-muted-foreground mb-4 h-16 w-16' />
+          <h3 className='text-foreground mb-2 text-lg font-semibold'>
+            No products in this category
+          </h3>
+          <p className='text-muted-foreground max-w-sm'>
+            We couldn&apos;t find any products in this category. Please check
+            back later or browse other categories.
+          </p>
+        </div>
+      )}
     </IndexLayout>
   )
 }
