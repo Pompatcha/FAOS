@@ -44,7 +44,7 @@ const ProductCard: FC<ProductCardProps> = ({ product }) => {
     >
       <div
         className={cn(
-          'h-[200px] w-full overflow-hidden rounded-t-xl',
+          'h-72 w-full overflow-hidden rounded-t-xl',
           hasMultipleImages && 'group',
         )}
       >
@@ -72,12 +72,12 @@ const ProductCard: FC<ProductCardProps> = ({ product }) => {
       </div>
 
       <div className='flex flex-col gap-2.5 p-2.5'>
-        <h3 className='line-clamp-2 font-medium text-gray-900'>
+        <h3 className='line-clamp-2 text-lg leading-tight font-semibold text-gray-800'>
           {product?.name}
         </h3>
 
         <div className='flex items-end justify-between'>
-          <span className='text-2xl font-bold text-red-800'>
+          <span className='text-xl font-bold text-red-800'>
             {product?.min_price && product?.max_price
               ? product.min_price === product.max_price
                 ? priceFormatter.format(product.min_price)

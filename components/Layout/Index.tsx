@@ -14,11 +14,16 @@ const IndexLayout: FC<PropsWithChildren> = ({ children }) => {
       <div className='flex flex-col gap-5 px-2.5 sm:px-10 sm:py-2.5'>
         <Alert variant='destructive'>
           <Info />
-          <AlertTitle>Notification</AlertTitle>
-          <AlertDescription>
+          <AlertTitle className='text-lg'>Notification</AlertTitle>
+          <AlertDescription className='text-lg'>
             The website is currently under development and new features may be
             added continuously. Please stay tuned to Facebook and other social
             media for updates.
+          </AlertDescription>
+          <AlertDescription className='text-lg'>
+            Dear customer, we are acceptable an order via Line offcial and
+            What&apos;s app (add) me +6689 693 1668 ;Payment Online development
+            is on proces. acceptable by credit card.
           </AlertDescription>
         </Alert>
 

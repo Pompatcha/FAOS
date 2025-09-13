@@ -126,7 +126,7 @@ const BenefitCard: FC<BenefitCardProps> = ({ benefitItem }) => {
       <img
         src={benefitItem.image}
         alt={benefitItem.title}
-        className='h-[250px] w-full object-cover'
+        className='h-72 w-full object-cover'
         loading='lazy'
       />
       <div className='mt-2.5 px-5 pb-5'>
@@ -151,7 +151,7 @@ const BenefitSection: FC<BenefitSectionProps> = ({ title, items }) => (
       <h2 className='text-2xl font-bold text-red-800'>{title}</h2>
     </div>
 
-    <div className='grid grid-cols-1 gap-5 sm:grid-cols-2'>
+    <div className='grid grid-cols-1 gap-5 sm:grid-cols-3'>
       {items.map((benefitItem) => (
         <BenefitCard key={benefitItem.id} benefitItem={benefitItem} />
       ))}
