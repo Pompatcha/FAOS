@@ -45,9 +45,38 @@ const getProducts = async () => {
       throw fetchProductError
     }
 
-    return {
-      data: products,
-    }
+    if (!products || products.length === 0) return []
+
+    const productIds = products.map((p) => p.id)
+
+    const { data: priceStats, error: priceError } = await supabase
+      .from('product_options')
+      .select('product_id, option_price, option_stock')
+      .in('product_id', productIds)
+
+    if (priceError) throw priceError
+
+    const productsWithStats = products.map((product) => {
+      const options =
+        priceStats?.filter((stat) => stat.product_id === product.id) || []
+
+      const prices = options
+        .map((opt) => Number(opt.option_price))
+        .filter((p) => !isNaN(p))
+      const stocks = options
+        .map((opt) => Number(opt.option_stock))
+        .filter((s) => !isNaN(s))
+
+      return {
+        ...product,
+        min_price: prices.length > 0 ? Math.min(...prices) : null,
+        max_price: prices.length > 0 ? Math.max(...prices) : null,
+        min_stock: stocks.length > 0 ? Math.min(...stocks) : null,
+        max_stock: stocks.length > 0 ? Math.max(...stocks) : null,
+      }
+    })
+
+    return productsWithStats
   } catch (error) {
     return {
       data: [],
@@ -264,23 +293,54 @@ const getProductsByCategory = async (categoryId: number) => {
   const supabase = createClient()
 
   try {
-    const { data, error } = await supabase
+    const { data: products, error: productsError } = await supabase
       .from('products')
       .select(
         `
-        *,
-        category:categories(*),
-        images:product_images(*).eq(is_primary, true).single()
+        id,
+        name,
+        preorder_enabled,
+        preorder_day,
+        category:categories(id, name),
+        images:product_images(id, image_url)
       `,
       )
       .eq('category_id', categoryId)
       .order('created_at', { ascending: false })
 
-    if (error) {
-      throw error
-    }
+    if (productsError) throw productsError
+    if (!products || products.length === 0) return []
 
-    return data ? data : []
+    const productIds = products.map((p) => p.id)
+
+    const { data: priceStats, error: priceError } = await supabase
+      .from('product_options')
+      .select('product_id, option_price, option_stock')
+      .in('product_id', productIds)
+
+    if (priceError) throw priceError
+
+    const productsWithStats = products.map((product) => {
+      const options =
+        priceStats?.filter((stat) => stat.product_id === product.id) || []
+
+      const prices = options
+        .map((opt) => Number(opt.option_price))
+        .filter((p) => !isNaN(p))
+      const stocks = options
+        .map((opt) => Number(opt.option_stock))
+        .filter((s) => !isNaN(s))
+
+      return {
+        ...product,
+        min_price: prices.length > 0 ? Math.min(...prices) : null,
+        max_price: prices.length > 0 ? Math.max(...prices) : null,
+        min_stock: stocks.length > 0 ? Math.min(...stocks) : null,
+        max_stock: stocks.length > 0 ? Math.max(...stocks) : null,
+      }
+    })
+
+    return productsWithStats
   } catch (error) {
     return error
   }

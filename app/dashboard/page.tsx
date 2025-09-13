@@ -18,11 +18,11 @@ const DashboardPage: FC = () => {
 
       <div>
         <div className='grid grid-cols-3 gap-5 text-[#4a2c00]'>
-          <HeaderCard label='Total Revenue' value={50} />
-          <HeaderCard label='New Orders' value={50} href='/dashboard/orders' />
+          <HeaderCard label='Total Revenue' value={0} />
+          <HeaderCard label='New Orders' value={0} href='/dashboard/orders' />
           <HeaderCard
             label='Total Products'
-            value={50}
+            value={0}
             href='/dashboard/products'
           />
         </div>

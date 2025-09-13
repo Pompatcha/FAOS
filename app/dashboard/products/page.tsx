@@ -50,6 +50,7 @@ import {
 } from '@/components/ui/table'
 import { Textarea } from '@/components/ui/textarea'
 import { formatDate } from '@/lib/date'
+import { numberFormatter, priceFormatter } from '@/lib/number'
 import { truncateText } from '@/lib/text'
 
 const initForm = {
@@ -781,7 +782,14 @@ const ProductPage: FC = () => {
 
       <div>
         <div className='grid grid-cols-4 gap-5 text-[#4a2c00]'>
-          <HeaderCard label='Total Products' value={0} />
+          <HeaderCard
+            label='Total Products'
+            value={
+              Array.isArray(products)
+                ? products.length
+                : products?.data?.length || 0
+            }
+          />
         </div>
       </div>
 
@@ -792,7 +800,8 @@ const ProductPage: FC = () => {
               <TableHead>No.</TableHead>
               <TableHead>Product Image</TableHead>
               <TableHead>Product Name</TableHead>
-              <TableHead>Category</TableHead>
+              <TableHead>Product Price</TableHead>
+              <TableHead>Product Stock</TableHead>
               <TableHead>Pre-Order</TableHead>
               <TableHead>Created</TableHead>
               <TableHead>Updated</TableHead>
@@ -800,56 +809,71 @@ const ProductPage: FC = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {products?.data?.map((product, idx) => {
-              return (
-                <TableRow key={product.id}>
-                  <TableCell className='font-medium'>{idx + 1}</TableCell>
-                  <TableCell className='font-medium'>
-                    <img
-                      className='size-10 rounded-full'
-                      alt='product?.name'
-                      src={product?.images[0]?.image_url || '/placeholder.svg'}
-                    />
-                  </TableCell>
-                  <TableCell className='font-medium'>
-                    {truncateText(product?.name)}
-                  </TableCell>
-                  <TableCell className='font-medium'>
-                    {product?.category[0]?.name || '-'}
-                  </TableCell>
-                  <TableCell className='font-medium'>
-                    {product?.preorder_enabled
-                      ? `${product?.preorder_day} days`
-                      : '-'}
-                  </TableCell>
-                  <TableCell>{formatDate(product.created_at)}</TableCell>
-                  <TableCell>{formatDate(product.updated_at)}</TableCell>
-                  <TableCell className='text-right'>
-                    <div className='flex justify-end gap-2'>
-                      <Button
-                        variant='outline'
-                        onClick={() => {
-                          setIsEditMode(true)
-                          setIsProductDialogOpen(true)
-                          setSelectedProductId(product?.id)
-                        }}
-                      >
-                        Edit
-                      </Button>
-                      <ConfirmDialog
-                        variant='outline'
-                        triggerText='Delete'
-                        onConfirm={async () => {
-                          await deleteProductMutate(product?.id)
-                        }}
+            {Array.isArray(products) &&
+              products?.map((product, idx) => {
+                return (
+                  <TableRow key={product.id}>
+                    <TableCell className='font-medium'>{idx + 1}</TableCell>
+                    <TableCell className='font-medium'>
+                      <img
+                        className='size-10 rounded-full'
+                        alt='product?.name'
+                        src={
+                          product?.images[0]?.image_url || '/placeholder.svg'
+                        }
                       />
-                    </div>
-                  </TableCell>
-                </TableRow>
-              )
-            })}
+                    </TableCell>
+                    <TableCell className='font-medium'>
+                      {truncateText(product?.name)}
+                    </TableCell>
+                    <TableCell className='font-medium'>
+                      {product?.min_price && product?.max_price
+                        ? product.min_price === product.max_price
+                          ? priceFormatter.format(product.min_price)
+                          : `${priceFormatter.format(product.min_price)} - ${priceFormatter.format(product.max_price)}`
+                        : 'Price N/A'}
+                    </TableCell>
+                    <TableCell className='font-medium'>
+                      {product?.min_stock !== undefined &&
+                      product?.max_stock !== undefined
+                        ? product.min_stock === product.max_stock
+                          ? `${numberFormatter.format(product.min_stock || 0)} Stock`
+                          : ` ${numberFormatter.format(product.min_stock || 0)} - ${numberFormatter.format(product.max_stock || 0)} Stock`
+                        : 'Stock N/A'}
+                    </TableCell>
+                    <TableCell className='font-medium'>
+                      {product?.preorder_enabled
+                        ? `${product?.preorder_day} days`
+                        : '-'}
+                    </TableCell>
+                    <TableCell>{formatDate(product.created_at)}</TableCell>
+                    <TableCell>{formatDate(product.updated_at)}</TableCell>
+                    <TableCell className='text-right'>
+                      <div className='flex justify-end gap-2'>
+                        <Button
+                          variant='outline'
+                          onClick={() => {
+                            setIsEditMode(true)
+                            setIsProductDialogOpen(true)
+                            setSelectedProductId(product?.id)
+                          }}
+                        >
+                          Edit
+                        </Button>
+                        <ConfirmDialog
+                          variant='outline'
+                          triggerText='Delete'
+                          onConfirm={async () => {
+                            await deleteProductMutate(product?.id)
+                          }}
+                        />
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )
+              })}
 
-            {products?.data?.length === 0 && (
+            {Array.isArray(products) && products?.length === 0 && (
               <TableRow>
                 <TableCell colSpan={6} className='text-center'>
                   There are no products yet.

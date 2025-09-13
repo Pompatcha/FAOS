@@ -4,99 +4,94 @@ import { useRouter } from 'next/navigation'
 
 import type { FC } from 'react'
 
-interface ProductData {
-  id: string
-  name: string
-  imageUrl: string
-  imageAlt?: string
-  priceRange: {
-    min: number
-    max: number
+import { numberFormatter, priceFormatter } from '@/lib/number'
+import { cn } from '@/lib/utils'
+
+export interface Product {
+  id: number
+  category: {
+    id: number
+    name: string
   }
-  stockQuantity: number
-  currency?: string
+  images: string[]
+  name: string
+  preorder_day: number
+  preorder_enabled: boolean
+  min_price: number
+  max_price: number
+  min_stock: number
+  max_stock: number
 }
 
 interface ProductCardProps {
-  productData?: ProductData
+  product?: Product
 }
 
-const DEFAULT_PRODUCT_DATA: ProductData = {
-  id: '098f6bcd4621d373cade4e832627b4f6',
-  name: 'ORGANIC THYME HONEY',
-  imageUrl: '/placeholder.svg',
-  imageAlt: 'Organic Thyme Honey product image',
-  priceRange: {
-    min: 250,
-    max: 500,
-  },
-  stockQuantity: 50,
-  currency: '฿',
-}
-
-const ProductCard: FC<ProductCardProps> = ({
-  productData = DEFAULT_PRODUCT_DATA,
-}) => {
+const ProductCard: FC<ProductCardProps> = ({ product }) => {
   const router = useRouter()
 
   const handleProductCardClick = () => {
-    router.push(`/product/${productData.id}`)
+    router.push(`/product/${product?.id || 0}`)
   }
 
-  const handleKeyboardNavigation = (event: React.KeyboardEvent) => {
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault()
-      handleProductCardClick()
-    }
-  }
-
-  const formatPriceRange = (
-    priceRange: ProductData['priceRange'],
-    currency: string,
-  ) => {
-    const { min, max } = priceRange
-    return `${currency}${min.toLocaleString()} - ${currency}${max.toLocaleString()}`
-  }
-
-  const getStockDisplayText = (stockQuantity: number) => {
-    return `${stockQuantity} stock`
-  }
-
-  const getCardClassName = () => {
-    return 'flex cursor-pointer flex-col gap-2.5 rounded-xl bg-white transition-all duration-200 hover:shadow-lg hover:scale-[1.02]'
-  }
+  const hasImages = product?.images && product.images.length > 0
+  const hasMultipleImages = hasImages && product.images.length > 1
 
   return (
     <div
-      className={getCardClassName()}
+      className='flex cursor-pointer flex-col gap-2.5 rounded-xl bg-white'
       onClick={handleProductCardClick}
-      onKeyDown={handleKeyboardNavigation}
-      tabIndex={0}
-      role='button'
-      aria-label={`View product details for ${productData.name}`}
     >
-      <img
-        className='h-72 w-full rounded-t-xl object-cover'
-        src={productData.imageUrl}
-        alt={productData.imageAlt || productData.name}
-        loading='lazy'
-      />
+      <div
+        className={cn(
+          'h-[200px] w-full overflow-hidden rounded-t-xl',
+          hasMultipleImages && 'group',
+        )}
+      >
+        {hasImages ? (
+          <div
+            className={cn(
+              'flex h-full w-full duration-500',
+              hasMultipleImages && 'group-hover:-translate-x-[100%]',
+            )}
+          >
+            {product.images.slice(0, 2).map((img, index) => (
+              <img
+                key={`${img}-${index}`}
+                src={img || '/placeholder.svg'}
+                alt={`รูปของ ${product?.name} ${index + 1}`}
+                className='h-full w-full flex-[0_0_100%] object-cover select-none'
+                draggable={false}
+                loading='lazy'
+              />
+            ))}
+          </div>
+        ) : (
+          <img className='h-full w-full object-cover' src='/placeholder.svg' />
+        )}
+      </div>
 
       <div className='flex flex-col gap-2.5 p-2.5'>
         <h3 className='line-clamp-2 font-medium text-gray-900'>
-          {productData.name}
+          {product?.name}
         </h3>
 
         <div className='flex items-end justify-between'>
           <span className='text-2xl font-bold text-red-800'>
-            {formatPriceRange(
-              productData.priceRange,
-              productData.currency || '฿',
-            )}
+            {product?.min_price && product?.max_price
+              ? product.min_price === product.max_price
+                ? priceFormatter.format(product.min_price)
+                : `${priceFormatter.format(product.min_price)} - ${priceFormatter.format(product.max_price)}`
+              : 'Price N/A'}
           </span>
 
           <span className='text-sm text-gray-600'>
-            {getStockDisplayText(productData.stockQuantity)}
+            {product?.min_stock !== undefined &&
+            product?.max_stock !== undefined
+              ? product.min_stock === product.max_stock
+                ? `Available ${numberFormatter.format(product.min_stock)} Stock`
+                : `Available ${numberFormatter.format(product.min_stock)} - ${numberFormatter.format(product.max_stock)} Stock`
+              : 'Stock N/A'}
           </span>
         </div>
       </div>
@@ -105,4 +100,3 @@ const ProductCard: FC<ProductCardProps> = ({
 }
 
 export { ProductCard }
-export type { ProductData, ProductCardProps }

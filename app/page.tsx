@@ -151,7 +151,7 @@ const SectionHeader = ({ title }: { title: string }) => (
 
 const HospitalBenefitItem = ({ benefit }: { benefit: HospitalBenefit }) => (
   <div className='flex gap-2.5'>
-    <div className='flex size-8 flex-shrink-0 items-center justify-center rounded-full border'>
+    <div className='flex size-8 flex-shrink-0 items-center justify-center rounded-full border border-[#f3d27a]'>
       <Check className='text-primary' />
     </div>
     <span className='w-full text-xl'>
@@ -167,7 +167,7 @@ const CertificationImageItem = ({
   certification: CertificationImage
 }) => (
   <img
-    className='size-18 object-contain duration-300 hover:scale-102 sm:size-28'
+    className='size-18 object-contain sm:size-28'
     src={certification.src}
     alt={certification.alt}
     loading='lazy'
@@ -231,7 +231,7 @@ const ResearchReferenceItem = ({
         }
       }}
     >
-      <div className='flex size-8 flex-shrink-0 items-center justify-center rounded-full border'>
+      <div className='flex size-8 flex-shrink-0 items-center justify-center rounded-full border border-[#f3d27a]'>
         <ArrowUpRight className='text-primary' />
       </div>
       <span className='w-full text-xl'>{reference.title}</span>

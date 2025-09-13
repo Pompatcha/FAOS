@@ -121,7 +121,7 @@ const BenefitCard: FC<BenefitCardProps> = ({ benefitItem }) => {
   return (
     <div
       onClick={handleReadMoreClick}
-      className='cursor-pointer overflow-hidden rounded-xl bg-white shadow-lg transition-all duration-200 hover:scale-[1.02]'
+      className='cursor-pointer overflow-hidden rounded-xl bg-white shadow-lg transition-all duration-200'
     >
       <img
         src={benefitItem.image}

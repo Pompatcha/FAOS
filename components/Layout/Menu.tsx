@@ -164,7 +164,7 @@ const Menu = () => {
 
   const getMobileSidebarClassName = (isMenuOpen: boolean) => {
     const baseClasses =
-      'bg-primary fixed top-0 right-0 z-50 h-full w-80 max-w-[85vw] transform border-l-8 shadow-2xl transition-transform duration-300 lg:hidden'
+      'bg-primary fixed top-0 right-0 z-50 h-full w-80 max-w-[85vw] transform border-l-8 border-[#f3d27a] shadow-2xl transition-transform duration-300 lg:hidden'
     const openClasses = 'translate-x-0'
     const closedClasses = 'translate-x-full'
 

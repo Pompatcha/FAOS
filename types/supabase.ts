@@ -343,7 +343,24 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_products_by_category: {
+        Args: { category_id_param: number }
+        Returns: {
+          category: Json
+          created_at: string
+          id: number
+          images: Json
+          max_price: number
+          max_stock: number
+          min_price: number
+          min_stock: number
+          name: string
+          options: Json
+          preorder_day: number
+          preorder_enabled: boolean
+          updated_at: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
