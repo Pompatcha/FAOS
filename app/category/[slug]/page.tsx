@@ -35,7 +35,7 @@ const CategoryPage = ({ params }: { params: Promise<{ slug: string }> }) => {
         </div>
       ) : (
         <div className='flex flex-col items-center justify-center rounded-xl bg-white py-12 text-center shadow-lg'>
-          <Package className='text-muted-foreground mb-4 h-16 w-16' />
+          <Package className='text-muted-foreground mb-4 size-16' />
           <h3 className='text-foreground mb-2 text-lg font-semibold'>
             No products in this category
           </h3>

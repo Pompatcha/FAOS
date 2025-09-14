@@ -85,28 +85,45 @@ const getProducts = async () => {
   }
 }
 
-const getProduct = async (id: string) => {
+const getProduct = async (productId: string) => {
   const supabase = createClient()
 
   try {
-    const { data, error } = await supabase
+    const { data: product, error: productError } = await supabase
       .from('products')
       .select(
         `
         *,
-        category:categories(*),
-        images:product_images(*),
+        category:categories(id, name),
+        images:product_images(id, image_url),
         options:product_options(*)
       `,
       )
-      .eq('id', id)
+      .eq('id', productId)
       .single()
 
-    if (error) {
-      throw error
+    if (productError) {
+      throw productError
     }
 
-    return data ? data : []
+    const options = product.options || []
+
+    const prices = options
+      .map((opt: { option_price: number }) => Number(opt.option_price))
+      .filter((p: number) => !isNaN(p))
+    const stocks = options
+      .map((opt: { option_stock: number }) => Number(opt.option_stock))
+      .filter((s: number) => !isNaN(s))
+
+    const productWithStats = {
+      ...product,
+      min_price: prices.length > 0 ? Math.min(...prices) : null,
+      max_price: prices.length > 0 ? Math.max(...prices) : null,
+      min_stock: stocks.length > 0 ? Math.min(...stocks) : null,
+      max_stock: stocks.length > 0 ? Math.max(...stocks) : null,
+    }
+
+    return productWithStats
   } catch (error) {
     return error
   }
