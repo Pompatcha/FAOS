@@ -1,23 +1,8 @@
 import { IndexLayout } from '@/components/Layout/Index'
 
-type SectionHeaderProps = {
-  title: string
-  variant?: 'default' | 'gray'
-}
-
-const SectionHeader = ({ title, variant = 'default' }: SectionHeaderProps) => (
-  <div
-    className={`flex w-full flex-col rounded-t-lg p-2.5 text-center shadow ${
-      variant === 'gray' ? 'rounded-b-lg bg-gray-500' : 'bg-secondary'
-    }`}
-  >
-    <h2
-      className={`text-2xl font-bold ${
-        variant === 'gray' ? 'text-white' : 'text-red-800'
-      }`}
-    >
-      {title}
-    </h2>
+const SectionHeader = ({ title }: { title: string }) => (
+  <div className='bg-secondary flex w-full flex-col rounded-t-lg p-2.5 text-center shadow'>
+    <h2 className='text-2xl font-bold text-red-800'>{title}</h2>
   </div>
 )
 
@@ -191,11 +176,11 @@ const AboutPage = () => {
           <div className='flex flex-col justify-center gap-5 sm:flex-row'>
             <img
               src='https://i.ibb.co/C5MxqMM5/IMG-8158.jpg'
-              className='max-w-96'
+              className='sm:max-w-96'
             />
             <img
               src='https://i.ibb.co/351rJLyB/IMG-8438.jpg'
-              className='max-w-96'
+              className='sm:max-w-96'
             />
           </div>
         </div>

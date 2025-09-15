@@ -256,7 +256,7 @@ const ProductPage = () => {
                 <Plus /> Add Product
               </Button>
             </DialogTrigger>
-            <DialogContent className='max-h-[90vh] min-w-2xl overflow-y-auto'>
+            <DialogContent className='max-h-[90vh] w-full overflow-y-auto sm:min-w-2xl'>
               <DialogHeader>
                 <DialogTitle className='text-2xl'>
                   {isEditMode ? 'Edit Product' : 'Add New Product'}
@@ -722,7 +722,7 @@ const ProductPage = () => {
       </div>
 
       <div>
-        <div className='grid grid-cols-4 gap-5 text-[#4a2c00]'>
+        <div className='grid gap-5 text-[#4a2c00] sm:grid-cols-3'>
           <HeaderCard
             label='Total Products'
             value={

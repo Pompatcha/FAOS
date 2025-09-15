@@ -10,7 +10,6 @@ import { toast } from 'sonner'
 import { IndexLayout } from '@/components/Layout/Index'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
@@ -254,61 +253,6 @@ const RegisterPage = () => {
                           {errors.confirmPassword.message}
                         </p>
                       )}
-                    </div>
-
-                    {/* Terms Checkbox */}
-                    <div className='grid gap-3'>
-                      <div className='flex items-center space-x-2'>
-                        <Checkbox
-                          id='agreeToTerms'
-                          {...register('agreeToTerms', {
-                            required:
-                              'You must agree to the terms and conditions',
-                          })}
-                          disabled={isSubmitting}
-                        />
-                        <Label
-                          htmlFor='agreeToTerms'
-                          className='text-sm leading-none'
-                        >
-                          I agree to the{' '}
-                          <button
-                            type='button'
-                            onClick={() => router.push('/')}
-                            className='text-blue-600 underline hover:text-blue-800'
-                          >
-                            Terms and Conditions
-                          </button>{' '}
-                          and{' '}
-                          <button
-                            type='button'
-                            onClick={() => router.push('/')}
-                            className='text-blue-600 underline hover:text-blue-800'
-                          >
-                            Privacy Policy
-                          </button>
-                        </Label>
-                      </div>
-                      {errors.agreeToTerms && (
-                        <p className='text-sm text-red-600' role='alert'>
-                          {errors.agreeToTerms.message}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Newsletter Checkbox */}
-                    <div className='flex items-center space-x-2'>
-                      <Checkbox
-                        id='subscribeToNewsletter'
-                        {...register('subscribeToNewsletter')}
-                        disabled={isSubmitting}
-                      />
-                      <Label
-                        htmlFor='subscribeToNewsletter'
-                        className='text-sm leading-none'
-                      >
-                        Subscribe to our newsletter for updates and promotions
-                      </Label>
                     </div>
 
                     {/* Submit Button */}

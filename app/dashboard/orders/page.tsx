@@ -175,7 +175,7 @@ const OrderPage = () => {
       </div>
 
       <div>
-        <div className='grid grid-cols-4 gap-5 text-[#4a2c00]'>
+        <div className='grid gap-5 text-[#4a2c00] sm:grid-cols-3'>
           <HeaderCard label='New Orders' value={0} href='/dashboard/orders' />
         </div>
       </div>
