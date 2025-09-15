@@ -6,21 +6,25 @@ import { useRouter } from 'next/navigation'
 import React, { useState, useEffect } from 'react'
 
 import { getCategories } from '@/actions/category'
+import { useAuth } from '@/contexts/AuthContext.tsx'
 
 import GoogleTranslate from '../GoogleTranslate'
 
 interface SubMenuItem {
   title: string
-  href: string
+  href?: string
+  onClick?: () => void
 }
 
 interface MenuItem {
   title: string
   href?: string
+  onClick?: () => void
   submenu?: SubMenuItem[]
 }
 
 const Menu = () => {
+  const { user, signOut } = useAuth()
   const { data: categories } = useQuery({
     queryKey: ['categories'],
     queryFn: () => getCategories(),
@@ -47,17 +51,25 @@ const Menu = () => {
     baseItems.push(
       { title: 'Our Shop', href: '/ourshop' },
       { title: 'About me', href: '/about' },
-      { title: 'Login/Register', href: '/login' },
-      {
-        title: 'Control Panel',
-        href: '/',
-        submenu: [
-          { title: 'Dashboard', href: '/dashboard' },
-          { title: 'Products', href: '/dashboard/products' },
-          { title: 'Orders', href: '/dashboard/orders' },
-        ],
-      },
     )
+
+    if (!user) {
+      baseItems.push({ title: 'Login/Register', href: '/login' })
+    }
+
+    if (user) {
+      baseItems.push(
+        {
+          title: 'Control Panel',
+          submenu: [
+            { title: 'Dashboard', href: '/dashboard' },
+            { title: 'Products', href: '/dashboard/products' },
+            { title: 'Orders', href: '/dashboard/orders' },
+          ],
+        },
+        { title: 'Logout', onClick: signOut },
+      )
+    }
 
     return baseItems
   }
@@ -90,6 +102,18 @@ const Menu = () => {
     setExpandedMobileSubmenu(null)
   }
 
+  const handleMenuClick = (item: MenuItem | SubMenuItem) => {
+    if (item.onClick) {
+      item.onClick()
+    } else if (item.href) {
+      navigateTo(item.href)
+    }
+
+    setActiveSubmenu(null)
+    setIsMobileMenuOpen(false)
+    setExpandedMobileSubmenu(null)
+  }
+
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen)
   }
@@ -110,6 +134,7 @@ const Menu = () => {
           priority
           className='object-contain'
         />
+        <GoogleTranslate />
       </div>
 
       <nav className='bg-primary w-full p-2.5 shadow-lg'>
@@ -124,9 +149,7 @@ const Menu = () => {
             >
               <button
                 className='hover:bg-primary/80 flex cursor-pointer items-center gap-2 px-6 py-4 font-bold text-white transition-colors duration-200 hover:underline'
-                onClick={() =>
-                  !item.submenu && item.href && navigateTo(item.href)
-                }
+                onClick={() => !item.submenu && handleMenuClick(item)}
                 type='button'
               >
                 <span className='font-medium whitespace-nowrap'>
@@ -151,10 +174,10 @@ const Menu = () => {
                   }`}
                 >
                   <div className='py-2'>
-                    {item.submenu.map((subItem) => (
+                    {item.submenu.map((subItem, index) => (
                       <button
-                        key={subItem.href}
-                        onClick={() => navigateTo(subItem.href)}
+                        key={subItem.href || subItem.title || index}
+                        onClick={() => handleMenuClick(subItem)}
                         className='hover:bg-primary/80 block w-full cursor-pointer px-4 py-3 text-left text-white transition-colors duration-150 hover:underline'
                         type='button'
                       >
@@ -166,7 +189,6 @@ const Menu = () => {
               )}
             </div>
           ))}
-          <GoogleTranslate />
         </div>
 
         {/* Mobile Navigation Header */}
@@ -219,8 +241,8 @@ const Menu = () => {
                   onClick={() => {
                     if (item.submenu) {
                       toggleMobileSubmenu(item.title)
-                    } else if (item.href) {
-                      navigateTo(item.href)
+                    } else {
+                      handleMenuClick(item)
                     }
                   }}
                   type='button'
@@ -245,10 +267,10 @@ const Menu = () => {
                     }`}
                   >
                     <div className='bg-primary/80'>
-                      {item.submenu.map((subItem) => (
+                      {item.submenu.map((subItem, index) => (
                         <button
-                          key={subItem.href}
-                          onClick={() => navigateTo(subItem.href)}
+                          key={subItem.href || subItem.title || index}
+                          onClick={() => handleMenuClick(subItem)}
                           className='hover:bg-primary/60 block w-full px-8 py-3 text-left text-white/90 transition-colors duration-150'
                           type='button'
                         >

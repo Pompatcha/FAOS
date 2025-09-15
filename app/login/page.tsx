@@ -7,6 +7,7 @@ import { useForm } from 'react-hook-form'
 import { SocialIcon } from 'react-social-icons'
 import { toast } from 'sonner'
 
+import { login, loginWithGoogle, loginWithFacebook } from '@/actions/auth'
 import { IndexLayout } from '@/components/Layout/Index'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -39,9 +40,14 @@ const LoginPage = () => {
     setIsSubmitting(true)
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      toast.success('Login successful! Redirecting...')
-      router.push('/')
+      const result = await login(data.email, data.password)
+
+      if (result.success) {
+        toast.success('Login successful! Redirecting...')
+        router.push('/')
+      } else {
+        toast.error(result.message || 'Login failed. Please try again.')
+      }
     } catch (error) {
       console.error('Login error:', error)
       toast.error('Login failed. Please check your credentials and try again.')
@@ -50,9 +56,30 @@ const LoginPage = () => {
     }
   }
 
-  const handleSocialAuth = (providerName: string) => {
-    console.log('Social auth clicked:', providerName)
-    toast.info(`${providerName} authentication not implemented yet`)
+  const handleSocialAuth = async (providerName: string) => {
+    setIsSubmitting(true)
+
+    try {
+      let result
+
+      if (providerName === 'Google') {
+        result = await loginWithGoogle()
+      } else if (providerName === 'Facebook') {
+        result = await loginWithFacebook()
+      }
+
+      if (result?.success) {
+        toast.success(`Redirecting to ${providerName}...`)
+        router.push(result?.data?.url ?? '')
+      } else {
+        toast.error(result?.message || `${providerName} login failed`)
+      }
+    } catch (error) {
+      console.error(`${providerName} login error:`, error)
+      toast.error(`${providerName} authentication failed`)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (

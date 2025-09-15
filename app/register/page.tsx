@@ -7,6 +7,11 @@ import { useForm } from 'react-hook-form'
 import { SocialIcon } from 'react-social-icons'
 import { toast } from 'sonner'
 
+import {
+  register as registerUser,
+  loginWithGoogle,
+  loginWithFacebook,
+} from '@/actions/auth'
 import { IndexLayout } from '@/components/Layout/Index'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -68,12 +73,18 @@ const RegisterPage = () => {
     setIsSubmitting(true)
 
     try {
-      console.log('Signup form submitted:', data)
-      await new Promise((resolve) => setTimeout(resolve, 2000))
-      toast.success(
-        'Account created successfully! Please check your email for verification.',
-      )
-      router.push('/login')
+      const result = await registerUser(data.email, data.password)
+
+      if (result.success) {
+        toast.success(
+          'Account created successfully! Please check your email for verification.',
+        )
+        router.push('/login')
+      } else {
+        toast.error(
+          result.message || 'Account creation failed. Please try again.',
+        )
+      }
     } catch (error) {
       console.error('Signup error:', error)
       toast.error('Account creation failed. Please try again.')
@@ -82,9 +93,29 @@ const RegisterPage = () => {
     }
   }
 
-  const handleSocialAuth = (providerName: string) => {
-    console.log('Social auth clicked:', providerName)
-    toast.info(`${providerName} authentication not implemented yet`)
+  const handleSocialAuth = async (providerName: string) => {
+    setIsSubmitting(true)
+
+    try {
+      let result
+
+      if (providerName === 'Google') {
+        result = await loginWithGoogle()
+      } else if (providerName === 'Facebook') {
+        result = await loginWithFacebook()
+      }
+
+      if (result?.success) {
+        toast.success(`Redirecting to ${providerName}...`)
+      } else {
+        toast.error(result?.message || `${providerName} signup failed`)
+      }
+    } catch (error) {
+      console.error(`${providerName} signup error:`, error)
+      toast.error(`${providerName} authentication failed`)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (

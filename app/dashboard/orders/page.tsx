@@ -23,6 +23,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { useRequireAuth } from '@/contexts/AuthContext.tsx'
 import { formatDate } from '@/lib/date'
 import { formatPrice } from '@/lib/price'
 
@@ -107,6 +108,7 @@ const paymentMethods = {
 }
 
 const OrderPage = () => {
+  useRequireAuth()
   const [trackingNumber, setTrackingNumber] = useState('')
   const [shippedOrders, setShippedOrders] = useState<string[]>([])
   const [showTrackingDialog, setShowTrackingDialog] = useState(false)

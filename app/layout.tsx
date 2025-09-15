@@ -9,7 +9,7 @@ const IBMPlexSansThai = IBM_Plex_Sans_Thai({
 })
 
 import { Toaster } from '@/components/ui/sonner'
-import AuthProvider from '@/contexts/AuthProvider'
+import { AuthProvider } from '@/contexts/AuthContext.tsx'
 
 import Providers from '../contexts/QueryProviders'
 

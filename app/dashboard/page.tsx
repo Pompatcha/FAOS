@@ -1,9 +1,14 @@
+'use client'
+
 import type { FC } from 'react'
 
 import { HeaderCard } from '@/components/HeaderCard'
 import { IndexLayout } from '@/components/Layout/Index'
+import { useRequireAuth } from '@/contexts/AuthContext.tsx'
 
 const DashboardPage: FC = () => {
+  useRequireAuth()
+
   return (
     <IndexLayout>
       <div className='flex justify-between'>
