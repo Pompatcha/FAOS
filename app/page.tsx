@@ -1,12 +1,15 @@
 'use client'
 
+import { useQuery } from '@tanstack/react-query'
 import { ArrowUpRight, Check } from 'lucide-react'
 import { SocialIcon } from 'react-social-icons'
 
+import { getRecommendedProducts } from '@/actions/product'
 import { Benefit } from '@/components/Benefit'
 import { ImageSlider } from '@/components/ImageSlider'
 import { IndexLayout } from '@/components/Layout/Index'
 import { NatureGoldBanner } from '@/components/NatureGoldBanner'
+import { ProductCard } from '@/components/ProductCard'
 
 const hospitalBenefits = [
   {
@@ -127,6 +130,13 @@ const openLink = (href?: string) => {
 }
 
 const Homepage = () => {
+  const { data: products } = useQuery({
+    queryKey: ['recommended/products'],
+    queryFn: () => getRecommendedProducts(),
+  })
+
+  const hasProducts = products && Array.isArray(products) && products.length > 0
+
   return (
     <IndexLayout>
       <NatureGoldBanner />
@@ -138,6 +148,21 @@ const Homepage = () => {
           'https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/360_F_1405149352_K4qhIYVahGLumUCry09QJaDyquDaXVrh.jpg',
         ]}
       />
+
+      {/* Recommended products Section */}
+      <div className='bg-secondary flex w-full flex-col rounded-lg p-2.5 text-center shadow'>
+        <h2 className='text-2xl font-bold text-red-800'>
+          Recommended products
+        </h2>
+      </div>
+
+      {hasProducts ? (
+        <div className='grid gap-5 sm:grid-cols-2 lg:grid-cols-3'>
+          {products.map((product) => {
+            return <ProductCard key={product?.id} product={product} />
+          })}
+        </div>
+      ) : null}
 
       {/* Company Description Section */}
       <section className='flex flex-col'>
