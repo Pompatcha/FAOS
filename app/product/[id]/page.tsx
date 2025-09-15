@@ -1,7 +1,9 @@
 'use client'
 import { useQuery } from '@tanstack/react-query'
 import { Info } from 'lucide-react'
-import { use } from 'react'
+import { use, useState } from 'react'
+
+import type { ProductOptionInput } from '@/actions/product'
 
 import { getProduct } from '@/actions/product'
 import { ImageSlider } from '@/components/ImageSlider'
@@ -12,8 +14,34 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { priceFormatter } from '@/lib/number'
 
+interface ProductOptionWithId extends ProductOptionInput {
+  id: number
+}
+
 const ProductPage = ({ params }: { params: Promise<{ id: string }> }) => {
   const { id } = use(params)
+
+  const [selectedOptions, setSelectedOptions] = useState<{
+    [key: string]: number
+  }>({})
+  const [quantity, setQuantity] = useState<number>(1)
+
+  const getMaxStock = () => {
+    if (!product?.options || product.options.length === 0) {
+      return product?.max_stock || 0
+    }
+
+    const selectedOptionIds = Object.values(selectedOptions)
+    if (selectedOptionIds.length === 0) {
+      return product?.min_stock || 0
+    }
+
+    const selectedOption = product.options.find((option: { id: number }) =>
+      selectedOptionIds.includes(option.id),
+    )
+
+    return selectedOption?.option_stock || 0
+  }
 
   const { data: product, isLoading: productLoading } = useQuery({
     queryKey: ['product/detail', id],
@@ -77,10 +105,125 @@ const ProductPage = ({ params }: { params: Promise<{ id: string }> }) => {
                   }}
                   className='space-y-6'
                 >
+                  {product?.options && product.options.length > 0 && (
+                    <div className='space-y-4'>
+                      {Object.entries(
+                        (product.options as ProductOptionWithId[]).reduce(
+                          (
+                            acc: { [key: string]: ProductOptionWithId[] },
+                            option: ProductOptionWithId,
+                          ) => {
+                            if (!acc[option.option_name]) {
+                              acc[option.option_name] = []
+                            }
+                            acc[option.option_name].push(option)
+                            return acc
+                          },
+                          {},
+                        ),
+                      ).map(([optionName, options]) => (
+                        <div key={optionName} className='space-y-2'>
+                          <label className='block text-sm font-medium text-gray-700'>
+                            {optionName}
+                          </label>
+                          <div className='grid gap-2 sm:grid-cols-2'>
+                            {options.map((option: ProductOptionWithId) => (
+                              <button
+                                key={option.id}
+                                type='button'
+                                onClick={() => {
+                                  setSelectedOptions((prev) => ({
+                                    ...prev,
+                                    [optionName]: option.id,
+                                  }))
+                                }}
+                                className={`rounded-lg border p-3 text-sm font-medium transition-all ${
+                                  selectedOptions[optionName] === option.id
+                                    ? 'border-primary text-primary bg-primary/10'
+                                    : 'border-gray-300 bg-white hover:border-gray-400'
+                                } ${
+                                  Number(option.option_stock) <= 0
+                                    ? 'cursor-not-allowed opacity-50'
+                                    : 'cursor-pointer'
+                                } `}
+                                disabled={Number(option.option_stock) <= 0}
+                              >
+                                <div className='text-left'>
+                                  <div className='font-semibold'>
+                                    {option.option_value}
+                                  </div>
+                                  <div className='text-xs text-gray-500'>
+                                    {priceFormatter.format(
+                                      Number(option.option_price),
+                                    )}
+                                  </div>
+                                  <div className='text-xs text-gray-400'>
+                                    Stock: {option.option_stock}
+                                  </div>
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className='space-y-2'>
+                    <label className='block text-sm font-medium text-gray-700'>
+                      Quantity
+                    </label>
+                    <div className='flex items-center space-x-3'>
+                      <button
+                        type='button'
+                        onClick={() =>
+                          setQuantity((prev) => Math.max(1, prev - 1))
+                        }
+                        className='hover:bg-primary/10 flex size-8 cursor-pointer items-center justify-center rounded-full border border-gray-300 bg-white disabled:cursor-not-allowed disabled:opacity-50'
+                        disabled={quantity <= 1}
+                      >
+                        -
+                      </button>
+
+                      <input
+                        type='number'
+                        min='1'
+                        max={getMaxStock()}
+                        value={quantity}
+                        onChange={(e) => {
+                          const value = parseInt(e.target.value) || 1
+                          const maxStock = getMaxStock()
+                          setQuantity(Math.min(Math.max(1, value), maxStock))
+                        }}
+                        className='focus:border-primary focus:ring-primary w-16 rounded border border-gray-300 px-2 py-1 text-center text-sm focus:outline-none'
+                      />
+
+                      <button
+                        type='button'
+                        onClick={() =>
+                          setQuantity((prev) =>
+                            Math.min(getMaxStock(), prev + 1),
+                          )
+                        }
+                        className='hover:bg-primary/10 flex size-8 cursor-pointer items-center justify-center rounded-full border border-gray-300 bg-white disabled:cursor-not-allowed disabled:opacity-50'
+                        disabled={quantity >= getMaxStock()}
+                      >
+                        +
+                      </button>
+
+                      <span className='text-xs text-gray-500'>
+                        Max: {getMaxStock()}
+                      </span>
+                    </div>
+                  </div>
+
                   <Button
                     type='submit'
                     size='lg'
                     className='w-full py-3 text-lg'
+                    disabled={
+                      !Object.keys(selectedOptions || {}).length || !quantity
+                    }
                   >
                     Add to Cart
                   </Button>

@@ -5,7 +5,7 @@ import type { Tables } from '@/types/supabase'
 import { createClient } from '@/utils/supabase/client'
 
 type ProductInput = Omit<Tables<'products'>, 'id' | 'created_at' | 'updated_at'>
-type ProductOptionInput = Omit<
+export type ProductOptionInput = Omit<
   Tables<'product_options'>,
   'id' | 'product_id' | 'created_at'
 >
