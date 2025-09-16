@@ -712,7 +712,7 @@ const ProductPage = () => {
                   <Button
                     type='submit'
                     disabled={createPending || updatePending}
-                    className='bg-[#4a2c00] hover:bg-[#4a2c00]/80'
+                    className='bg-primary'
                   >
                     {isEditMode ? 'Update Product' : 'Create Product'}
                   </Button>

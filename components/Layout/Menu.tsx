@@ -65,6 +65,7 @@ const Menu = () => {
             { title: 'Dashboard', href: '/dashboard' },
             { title: 'Products', href: '/dashboard/products' },
             { title: 'Orders', href: '/dashboard/orders' },
+            { title: 'Profile', href: '/dashboard/profile' },
           ],
         },
         { title: 'Logout', onClick: signOut },
