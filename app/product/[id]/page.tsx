@@ -1,10 +1,12 @@
 'use client'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Info } from 'lucide-react'
 import { use, useState } from 'react'
+import { toast } from 'sonner'
 
 import type { ProductOptionInput } from '@/actions/product'
 
+import { addToCart } from '@/actions/cart'
 import { getProduct } from '@/actions/product'
 import { ImageSlider } from '@/components/ImageSlider'
 import { IndexLayout } from '@/components/Layout/Index'
@@ -12,6 +14,7 @@ import { Loading } from '@/components/Layout/Loading'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { useAuth } from '@/contexts/AuthContext.tsx'
 import { priceFormatter } from '@/lib/number'
 
 interface ProductOptionWithId extends ProductOptionInput {
@@ -20,6 +23,8 @@ interface ProductOptionWithId extends ProductOptionInput {
 
 const ProductPage = ({ params }: { params: Promise<{ id: string }> }) => {
   const { id } = use(params)
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
 
   const [selectedOptions, setSelectedOptions] = useState<{
     [key: string]: number
@@ -43,11 +48,94 @@ const ProductPage = ({ params }: { params: Promise<{ id: string }> }) => {
     return selectedOption?.option_stock || 0
   }
 
+  const getSelectedOption = () => {
+    if (!product?.options || product.options.length === 0) {
+      return null
+    }
+
+    const selectedOptionIds = Object.values(selectedOptions)
+    if (selectedOptionIds.length === 0) {
+      return null
+    }
+
+    return product.options.find((option: { id: number }) =>
+      selectedOptionIds.includes(option.id),
+    )
+  }
+
+  const getCurrentPrice = () => {
+    const selectedOption = getSelectedOption()
+    if (selectedOption) {
+      return Number(selectedOption.option_price)
+    }
+    return product?.min_price || 0
+  }
+
   const { data: product, isLoading: productLoading } = useQuery({
     queryKey: ['product/detail', id],
     queryFn: () => getProduct(id),
     enabled: !!id,
   })
+
+  const addToCartMutation = useMutation({
+    mutationFn: addToCart,
+    onSuccess: (result) => {
+      if (result.success) {
+        toast.success('Product added to cart successfully!')
+        queryClient.invalidateQueries({ queryKey: ['cart', user?.id] })
+        queryClient.invalidateQueries({ queryKey: ['cart-count', user?.id] })
+      } else {
+        toast.error(result.message || 'Failed to add product to cart')
+      }
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'An error occurred while adding to cart')
+    },
+  })
+
+  const handleAddToCart = () => {
+    if (!user?.id) {
+      toast.error('Please login to add items to cart')
+      return
+    }
+
+    if (!product) {
+      toast.error('Product not found')
+      return
+    }
+
+    if (product.options && product.options.length > 0) {
+      const optionGroups = (product.options as ProductOptionWithId[]).reduce(
+        (acc: { [key: string]: ProductOptionWithId[] }, option) => {
+          if (!acc[option.option_name]) {
+            acc[option.option_name] = []
+          }
+          acc[option.option_name].push(option)
+          return acc
+        },
+        {},
+      )
+
+      const requiredOptionsCount = Object.keys(optionGroups).length
+      const selectedOptionsCount = Object.keys(selectedOptions).length
+
+      if (selectedOptionsCount < requiredOptionsCount) {
+        toast.error('Please select all required options')
+        return
+      }
+    }
+
+    const selectedOption = getSelectedOption()
+    const cartData = {
+      product_id: Number(id),
+      product_option_id: selectedOption?.id || null,
+      quantity,
+      unit_price: getCurrentPrice(),
+      user_id: user.id,
+    }
+
+    addToCartMutation.mutate(cartData)
+  }
 
   const images =
     Array.isArray(product?.images) && product?.images.length > 0
@@ -55,6 +143,32 @@ const ProductPage = ({ params }: { params: Promise<{ id: string }> }) => {
           (image: { image_url: string }) => image?.image_url,
         )
       : ['/placeholder.svg']
+
+  const isAddToCartDisabled = () => {
+    if (!user?.id) return false
+    if (addToCartMutation.isPending) return true
+    if (quantity <= 0 || quantity > getMaxStock()) return true
+
+    if (product?.options && product.options.length > 0) {
+      const optionGroups = (product.options as ProductOptionWithId[]).reduce(
+        (acc: { [key: string]: ProductOptionWithId[] }, option) => {
+          if (!acc[option.option_name]) {
+            acc[option.option_name] = []
+          }
+          acc[option.option_name].push(option)
+          return acc
+        },
+        {},
+      )
+
+      const requiredOptionsCount = Object.keys(optionGroups).length
+      const selectedOptionsCount = Object.keys(selectedOptions).length
+
+      if (selectedOptionsCount < requiredOptionsCount) return true
+    }
+
+    return false
+  }
 
   return (
     <IndexLayout>
@@ -102,6 +216,7 @@ const ProductPage = ({ params }: { params: Promise<{ id: string }> }) => {
                 <form
                   onSubmit={(e) => {
                     e.preventDefault()
+                    handleAddToCart()
                   }}
                   className='space-y-6'
                 >
@@ -221,11 +336,13 @@ const ProductPage = ({ params }: { params: Promise<{ id: string }> }) => {
                     type='submit'
                     size='lg'
                     className='w-full py-3 text-lg'
-                    disabled={
-                      !Object.keys(selectedOptions || {}).length || !quantity
-                    }
+                    disabled={isAddToCartDisabled()}
                   >
-                    Add to Cart
+                    {addToCartMutation.isPending
+                      ? 'Adding to Cart...'
+                      : !user?.id
+                        ? 'Login to Add to Cart'
+                        : 'Add to Cart'}
                   </Button>
                 </form>
               </CardContent>
