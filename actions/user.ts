@@ -6,14 +6,14 @@ import { createClient } from '@/utils/supabase/client'
 
 type UserInput = Omit<Tables<'users'>, 'id' | 'created_at' | 'role'>
 
-const getUserById = async (id: number) => {
+const getUserById = async (userId: string) => {
   const supabase = createClient()
 
   try {
     const { data: user, error: fetchUserError } = await supabase
       .from('users')
-      .select('id, first_name, last_name, telephone, shipping_address')
-      .eq('id', id)
+      .select('first_name, last_name, telephone, shipping_address')
+      .eq('userId', userId)
       .single()
 
     if (fetchUserError) {
@@ -36,14 +36,14 @@ const getUserById = async (id: number) => {
   }
 }
 
-const updateUser = async (id: number, userData: UserInput) => {
+const updateUser = async (userId: string, userData: UserInput) => {
   const supabase = createClient()
 
   try {
     const { data: user, error: updateUserError } = await supabase
       .from('users')
       .update(userData)
-      .eq('id', id)
+      .eq('userId', userId)
       .select()
       .single()
 
