@@ -1,7 +1,20 @@
 'use client'
 import { useState } from 'react'
+
+import { HeaderCard } from '@/components/HeaderCard'
+import { IndexLayout } from '@/components/Layout/Index'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+  DialogHeader,
+} from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Separator } from '@/components/ui/separator'
 import {
   Table,
   TableBody,
@@ -10,416 +23,452 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Badge } from '@/components/ui/badge'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import { Search, Eye, Package, Truck } from 'lucide-react'
-import { OrderModal } from './components/order-modal'
-import { ConfirmModal } from './components/confirm-modal'
-import {
-  useAllOrders,
-  useAllOrderStatistics,
-  useUpdateOrderWithTracking,
-} from '@/hooks/use-orders'
-import { OrderWithDetails, Order } from '@/actions/orders'
+import { useRequireAuth } from '@/contexts/AuthContext.tsx'
 import { formatDate } from '@/lib/date'
-import { formatPrice } from '@/lib/currency'
-import { toast } from 'sonner'
+import { formatPrice } from '@/lib/price'
 
-interface ConfirmModalState {
-  isOpen: boolean
-  title: string
-  description: string
-  onConfirm: () => void
+const mockOrders = [
+  {
+    id: 1,
+    order_number: 'ORD-2025-001',
+    status: 'pending',
+    total_amount: 1250.0,
+    subtotal: 1150.0,
+    tax_amount: 100.0,
+    shipping_amount: 0.0,
+    discount_amount: 0.0,
+    shipping_first_name: 'John',
+    shipping_last_name: 'Doe',
+    shipping_address: '123 Sukhumvit Road, Watthana',
+    shipping_city: 'Bangkok',
+    shipping_postal_code: '10110',
+    shipping_phone: '+66-81-234-5678',
+    payment_method: 'credit_card',
+    payment_status: 'unpaid',
+    payment_date: null,
+    notes: 'Please deliver in the morning',
+    created_at: '2025-09-01T10:00:00Z',
+    user: { email: 'john.doe@email.com' },
+    order_items: [
+      {
+        id: 1,
+        product_name: 'Premium Coffee Beans',
+        product_option_details: { size: 'Large', roast: 'Dark' },
+        quantity: 2,
+        unit_price: 450.0,
+        total_price: 900.0,
+      },
+      {
+        id: 2,
+        product_name: 'Coffee Grinder',
+        product_option_details: null,
+        quantity: 1,
+        unit_price: 250.0,
+        total_price: 250.0,
+      },
+    ],
+  },
+  {
+    id: 2,
+    order_number: 'ORD-2025-002',
+    status: 'processing',
+    total_amount: 890.0,
+    subtotal: 820.0,
+    tax_amount: 70.0,
+    shipping_amount: 0.0,
+    discount_amount: 0.0,
+    shipping_first_name: 'Jane',
+    shipping_last_name: 'Smith',
+    shipping_address: '456 Silom Road, Bang Rak',
+    shipping_city: 'Bangkok',
+    shipping_postal_code: '10500',
+    shipping_phone: '+66-82-345-6789',
+    payment_method: 'promptpay',
+    payment_status: 'paid',
+    payment_date: '2025-08-31T15:30:00Z',
+    notes: '',
+    created_at: '2025-08-31T14:00:00Z',
+    user: { email: 'jane.smith@email.com' },
+    order_items: [
+      {
+        id: 3,
+        product_name: 'Espresso Machine',
+        product_option_details: { color: 'Black', warranty: '2 years' },
+        quantity: 1,
+        unit_price: 820.0,
+        total_price: 820.0,
+      },
+    ],
+  },
+]
+
+const paymentMethods = {
+  credit_card: 'Credit Card',
+  promptpay: 'PromptPay',
 }
 
-export default function OrdersPage() {
-  const [searchTerm, setSearchTerm] = useState<string>('')
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false)
-  const [selectedOrder, setSelectedOrder] = useState<OrderWithDetails | null>(
-    null,
+const OrderPage = () => {
+  useRequireAuth()
+  const [trackingNumber, setTrackingNumber] = useState('')
+  const [shippedOrders, setShippedOrders] = useState<string[]>([])
+  const [showTrackingDialog, setShowTrackingDialog] = useState(false)
+  const [showDetailDialog, setShowDetailDialog] = useState(false)
+  const [selectedOrder, setSelectedOrder] = useState('')
+
+  const getPaymentMethod = (method: string) => {
+    return paymentMethods[method as keyof typeof paymentMethods] || method
+  }
+
+  const getOrderStatus = (order: (typeof mockOrders)[0]) => {
+    if (
+      shippedOrders.includes(order.order_number) &&
+      order.status === 'processing'
+    ) {
+      return 'Shipped'
+    }
+    return order.status.charAt(0).toUpperCase() + order.status.slice(1)
+  }
+
+  const canShip = (order: (typeof mockOrders)[0]) => {
+    const nonShippable = ['shipped', 'delivered', 'cancelled', 'pending']
+    return (
+      !shippedOrders.includes(order.order_number) &&
+      !nonShippable.includes(order.status)
+    )
+  }
+
+  const openShipDialog = (orderNumber: string) => {
+    setSelectedOrder(orderNumber)
+    setShowTrackingDialog(true)
+  }
+
+  const openDetailDialog = (orderNumber: string) => {
+    setSelectedOrder(orderNumber)
+    setShowDetailDialog(true)
+  }
+
+  const confirmShip = () => {
+    if (trackingNumber.trim()) {
+      setShippedOrders((prev) => [...prev, selectedOrder])
+      setTrackingNumber('')
+      setShowTrackingDialog(false)
+    }
+  }
+
+  const cancelShip = () => {
+    setTrackingNumber('')
+    setShowTrackingDialog(false)
+  }
+
+  const selectedOrderData = mockOrders.find(
+    (order) => order.order_number === selectedOrder,
   )
 
-  const { data: orders = [], isLoading: ordersLoading } = useAllOrders()
-  const { data: statistics } = useAllOrderStatistics()
-  const updateOrderMutation = useUpdateOrderWithTracking()
-
-  const [confirmModal, setConfirmModal] = useState<ConfirmModalState>({
-    isOpen: false,
-    title: '',
-    description: '',
-    onConfirm: () => {},
-  })
-
-  const filteredOrders = orders.filter((order) => {
-    if (!order) return false
-
-    const searchLower = searchTerm.toLowerCase()
-    const customerName = order?.customers?.full_name || 'Unknown Customer'
-    const customerEmail = order?.customers?.email || ''
-    const orderNumber = order?.order_number || ''
-
-    return (
-      orderNumber.toLowerCase().includes(searchLower) ||
-      customerName.toLowerCase().includes(searchLower) ||
-      customerEmail.toLowerCase().includes(searchLower) ||
-      (order.order_items &&
-        order.order_items.some((item) =>
-          item?.product_name?.toLowerCase().includes(searchLower),
-        ))
-    )
-  })
-
-  const handleUpdateOrderStatus = async (
-    orderId: string,
-    newStatus: Order['status'],
-    trackingNumber?: string,
-    notes?: string,
-  ) => {
-    try {
-      await updateOrderMutation.mutateAsync({
-        orderId,
-        status: newStatus,
-        trackingNumber,
-        notes,
-        updatedBy: 'admin',
-      })
-      toast.success(`Order status updated to ${newStatus}`)
-      setConfirmModal({
-        isOpen: false,
-        title: '',
-        description: '',
-        onConfirm: () => {},
-      })
-      setIsModalOpen(false)
-    } catch (error) {
-      toast.error('Failed to update order status')
-    }
-  }
-
-  const showConfirmModal = (
-    orderId: string,
-    newStatus: Order['status'],
-    actionText: string,
-    description: string,
-  ) => {
-    setConfirmModal({
-      isOpen: true,
-      title: `Confirm ${actionText}`,
-      description: description,
-      onConfirm: () => handleUpdateOrderStatus(orderId, newStatus),
-    })
-  }
-
-  const openOrderModal = (order: OrderWithDetails) => {
-    setSelectedOrder(order)
-    setIsModalOpen(true)
-  }
-
-  if (ordersLoading) {
-    return null
-  }
-
-  const getStatusBadge = (status: Order['status']) => {
-    switch (status) {
-      case 'pending':
-        return (
-          <Badge
-            variant='outline'
-            className='border-orange-200 text-orange-600'
-          >
-            Pending Payment
-          </Badge>
-        )
-      case 'processing':
-        return (
-          <Badge variant='default' className='bg-blue-500 text-white'>
-            Processing
-          </Badge>
-        )
-      case 'shipped':
-        return (
-          <Badge variant='secondary' className='bg-purple-500 text-white'>
-            Shipped
-          </Badge>
-        )
-      case 'delivered':
-        return (
-          <Badge variant='default' className='bg-green-500 text-white'>
-            Delivered
-          </Badge>
-        )
-      case 'cancelled':
-        return <Badge variant='destructive'>Cancelled</Badge>
-      case 'expired':
-        return (
-          <Badge variant='outline' className='border-gray-400 text-gray-600'>
-            Expired
-          </Badge>
-        )
-      default:
-        return <Badge variant='outline'>Unknown</Badge>
-    }
-  }
-
-  const getStatusActions = (order: OrderWithDetails) => {
-    const orderNumber = order.order_number || 'N/A'
-
-    switch (order.status) {
-      case 'pending':
-        return (
-          <Button
-            size='sm'
-            onClick={() =>
-              showConfirmModal(
-                order.id,
-                'processing',
-                'Process Order',
-                `Do you want to start processing order ${orderNumber}?`,
-              )
-            }
-          >
-            <Package className='mr-1 h-3 w-3' />
-            Process
-          </Button>
-        )
-      case 'processing':
-        return (
-          <Button size='sm' onClick={() => openOrderModal(order)}>
-            <Truck className='mr-1 h-3 w-3' />
-            Ship
-          </Button>
-        )
-      case 'shipped':
-        return (
-          <Button
-            size='sm'
-            onClick={() =>
-              showConfirmModal(
-                order.id,
-                'delivered',
-                'Mark as Delivered',
-                `Do you want to mark order ${orderNumber} as delivered?`,
-              )
-            }
-          >
-            Delivered
-          </Button>
-        )
-      default:
-        return null
-    }
-  }
-
-  const getCustomerInfo = (order: OrderWithDetails) => {
-    const customer = order?.customers
-    return {
-      name: customer?.full_name || 'Unknown Customer',
-      email: customer?.email || '',
-    }
-  }
-
   return (
-    <div className='space-y-6'>
-      <div className='flex items-center justify-between'>
-        <div>
-          <h1 className='text-3xl font-bold'>Order Management</h1>
-          <p className='text-muted-foreground'>Manage customer orders</p>
+    <IndexLayout>
+      <div className='flex justify-between'>
+        <div className='flex flex-col gap-2.5 text-white'>
+          <span className='text-4xl'>Orders</span>
+          <span>
+            Track and manage all your customer orders in one place. <br />
+            Process payments, update order status, and ensure timely delivery.
+          </span>
         </div>
       </div>
 
-      <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-5'>
-        <Card>
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>Total Orders</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className='text-2xl font-bold text-[#dda700]'>
-              {statistics?.total || 0}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>
-              Pending Payment
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className='text-2xl font-bold text-orange-600'>
-              {statistics?.pending || 0}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>Processing</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className='text-2xl font-bold text-blue-600'>
-              {statistics?.processing || 0}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>Shipped</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className='text-2xl font-bold text-purple-600'>
-              {statistics?.shipped || 0}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>Delivered</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className='text-2xl font-bold text-green-600'>
-              {statistics?.delivered || 0}
-            </div>
-          </CardContent>
-        </Card>
+      <div>
+        <div className='grid gap-5 text-[#4a2c00] sm:grid-cols-3'>
+          <HeaderCard label='New Orders' value={0} href='/dashboard/orders' />
+        </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Order List</CardTitle>
-          <CardDescription>
-            Total {filteredOrders.length} orders
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className='mb-4 flex items-center space-x-2'>
-            <div className='relative max-w-sm flex-1'>
-              <Search className='text-muted-foreground absolute top-2.5 left-2 h-4 w-4' />
+      <div className='rounded-xl bg-white p-5'>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className='w-[120px]'>Order Number</TableHead>
+              <TableHead>Customer</TableHead>
+              <TableHead>Order Status</TableHead>
+              <TableHead>Payment Status</TableHead>
+              <TableHead>Payment Method</TableHead>
+              <TableHead>Items</TableHead>
+              <TableHead className='text-right'>Total Amount</TableHead>
+              <TableHead>Order Date</TableHead>
+              <TableHead className='text-center'>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {mockOrders.map((order) => (
+              <TableRow key={order.id}>
+                <TableCell className='font-medium'>
+                  {order.order_number}
+                </TableCell>
+                <TableCell>{`${order.shipping_first_name} ${order.shipping_last_name}`}</TableCell>
+                <TableCell>
+                  <Badge>{getOrderStatus(order)}</Badge>
+                </TableCell>
+                <TableCell>
+                  <Badge>
+                    {order.payment_status.charAt(0).toUpperCase() +
+                      order.payment_status.slice(1)}
+                  </Badge>
+                </TableCell>
+                <TableCell>{getPaymentMethod(order.payment_method)}</TableCell>
+                <TableCell>
+                  {order.order_items.length}{' '}
+                  {order.order_items.length === 1 ? 'item' : 'items'}
+                </TableCell>
+                <TableCell className='text-right'>
+                  {formatPrice(order.total_amount)}
+                </TableCell>
+                <TableCell>{formatDate(order.created_at)}</TableCell>
+                <TableCell className='text-center'>
+                  <div className='flex justify-center gap-2'>
+                    <Button
+                      variant='outline'
+                      onClick={() => openDetailDialog(order.order_number)}
+                    >
+                      View
+                    </Button>
+                    {canShip(order) && (
+                      <Button
+                        onClick={() => openShipDialog(order.order_number)}
+                      >
+                        Ship Order
+                      </Button>
+                    )}
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* Order Detail Dialog */}
+      <Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>
+        <DialogContent className='flex max-h-[90vh] flex-col overflow-hidden sm:max-w-[600px]'>
+          <DialogHeader>
+            <DialogTitle>Order Details {selectedOrder}</DialogTitle>
+            <DialogDescription>
+              Complete information about the selected order
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedOrderData && (
+            <div className='-mr-2 space-y-6 overflow-y-auto pr-2'>
+              <div>
+                <h3 className='mb-3 font-semibold'>Customer Information</h3>
+                <div className='grid grid-cols-2 gap-4 text-sm'>
+                  <div>
+                    <span className='text-gray-600'>Name:</span>
+                    <p className='font-medium'>
+                      {`${selectedOrderData.shipping_first_name} ${selectedOrderData.shipping_last_name}`}
+                    </p>
+                  </div>
+                  <div>
+                    <span className='text-gray-600'>Email:</span>
+                    <p className='font-medium'>
+                      {selectedOrderData.user.email}
+                    </p>
+                  </div>
+                  <div>
+                    <span className='text-gray-600'>Phone:</span>
+                    <p className='font-medium'>
+                      {selectedOrderData.shipping_phone}
+                    </p>
+                  </div>
+                  <div>
+                    <span className='text-gray-600'>Order Date:</span>
+                    <p className='font-medium'>
+                      {formatDate(selectedOrderData.created_at)}
+                    </p>
+                  </div>
+                </div>
+                <div className='mt-3'>
+                  <span className='text-gray-600'>Shipping Address:</span>
+                  <p className='font-medium'>
+                    {selectedOrderData.shipping_address}
+                    {selectedOrderData.shipping_city &&
+                      `, ${selectedOrderData.shipping_city}`}
+                    {selectedOrderData.shipping_postal_code &&
+                      ` ${selectedOrderData.shipping_postal_code}`}
+                  </p>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div>
+                <h3 className='mb-3 font-semibold'>Order Status</h3>
+                <div className='grid grid-cols-2 gap-4'>
+                  <div>
+                    <span className='text-gray-600'>Order Status:</span>
+                    <div className='mt-1'>
+                      <Badge>{getOrderStatus(selectedOrderData)}</Badge>
+                    </div>
+                  </div>
+                  <div>
+                    <span className='text-gray-600'>Payment Status:</span>
+                    <div className='mt-1'>
+                      <Badge>
+                        {selectedOrderData.payment_status
+                          .charAt(0)
+                          .toUpperCase() +
+                          selectedOrderData.payment_status.slice(1)}
+                      </Badge>
+                    </div>
+                  </div>
+                  <div>
+                    <span className='text-gray-600'>Payment Method:</span>
+                    <p className='font-medium'>
+                      {getPaymentMethod(selectedOrderData.payment_method)}
+                    </p>
+                  </div>
+                  {selectedOrderData.payment_date && (
+                    <div>
+                      <span className='text-gray-600'>Payment Date:</span>
+                      <p className='font-medium'>
+                        {formatDate(selectedOrderData.payment_date)}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <Separator />
+
+              <div>
+                <h3 className='mb-3 font-semibold'>Order Items</h3>
+                <div className='space-y-3'>
+                  {selectedOrderData.order_items.map((item) => (
+                    <div
+                      key={item.id}
+                      className='flex items-start justify-between border-b py-3 last:border-0'
+                    >
+                      <div className='flex-1'>
+                        <p className='font-medium'>{item.product_name}</p>
+                        {item.product_option_details && (
+                          <div className='mt-1 text-sm text-gray-600'>
+                            {Object.entries(item.product_option_details).map(
+                              ([key, value]) => (
+                                <span key={key} className='mr-3'>
+                                  {key}: {value}
+                                </span>
+                              ),
+                            )}
+                          </div>
+                        )}
+                        <p className='text-sm text-gray-600'>
+                          Quantity: {item.quantity}
+                        </p>
+                      </div>
+                      <div className='text-right'>
+                        <p className='font-medium'>
+                          {formatPrice(item.total_price)}
+                        </p>
+                        <p className='text-sm text-gray-600'>
+                          {formatPrice(item.unit_price)} each
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <Separator />
+
+              <div>
+                <h3 className='mb-3 font-semibold'>Order Summary</h3>
+                <div className='space-y-2'>
+                  <div className='flex justify-between'>
+                    <span>Subtotal:</span>
+                    <span>{formatPrice(selectedOrderData.subtotal)}</span>
+                  </div>
+                  <div className='flex justify-between'>
+                    <span>Tax:</span>
+                    <span>{formatPrice(selectedOrderData.tax_amount)}</span>
+                  </div>
+                  <div className='flex justify-between'>
+                    <span>Shipping:</span>
+                    <span>
+                      {formatPrice(selectedOrderData.shipping_amount)}
+                    </span>
+                  </div>
+                  {selectedOrderData.discount_amount > 0 && (
+                    <div className='flex justify-between text-red-600'>
+                      <span>Discount:</span>
+                      <span>
+                        -{formatPrice(selectedOrderData.discount_amount)}
+                      </span>
+                    </div>
+                  )}
+                  <div className='flex justify-between border-t pt-2.5 text-lg font-semibold'>
+                    <span>Total:</span>
+                    <span>{formatPrice(selectedOrderData.total_amount)}</span>
+                  </div>
+                </div>
+              </div>
+
+              {selectedOrderData.notes && (
+                <>
+                  <Separator />
+                  <div>
+                    <h3 className='mb-2 font-semibold'>Notes</h3>
+                    <p className='text-sm text-gray-600'>
+                      {selectedOrderData.notes}
+                    </p>
+                  </div>
+                </>
+              )}
+
+              <div className='flex justify-end border-t pt-4'>
+                <Button
+                  variant='outline'
+                  onClick={() => setShowDetailDialog(false)}
+                >
+                  Close
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Tracking Dialog */}
+      <Dialog open={showTrackingDialog} onOpenChange={setShowTrackingDialog}>
+        <DialogContent className='sm:max-w-[425px]'>
+          <DialogHeader>
+            <DialogTitle>Ship Order {selectedOrder}</DialogTitle>
+            <DialogDescription>
+              Please enter the tracking number for this order. This will update
+              the order status to &quot;Shipped&quot;.
+            </DialogDescription>
+          </DialogHeader>
+          <div className='mt-4 space-y-4'>
+            <div>
+              <Label htmlFor='tracking'>Tracking Number</Label>
               <Input
-                placeholder='Search by order number, customer, or product...'
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className='pl-8'
+                id='tracking'
+                value={trackingNumber}
+                onChange={(e) => setTrackingNumber(e.target.value)}
+                placeholder='Enter tracking number'
+                className='mt-1'
               />
             </div>
+            <div className='flex justify-end space-x-2'>
+              <Button variant='outline' onClick={cancelShip}>
+                Cancel
+              </Button>
+              <Button onClick={confirmShip} disabled={!trackingNumber.trim()}>
+                Save & Ship
+              </Button>
+            </div>
           </div>
-
-          <div className='rounded-md border'>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Order Number</TableHead>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Items</TableHead>
-                  <TableHead>Order Date</TableHead>
-                  <TableHead>Total</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className='text-right'>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredOrders.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className='py-8 text-center'>
-                      <div className='text-gray-500'>
-                        {searchTerm
-                          ? 'No orders match your search'
-                          : 'No orders found'}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredOrders.map((order) => {
-                    const customerInfo = getCustomerInfo(order)
-
-                    return (
-                      <TableRow key={order.id}>
-                        <TableCell className='font-medium'>
-                          {order.order_number || 'N/A'}
-                        </TableCell>
-                        <TableCell>
-                          <div>
-                            <div className='font-medium'>
-                              {customerInfo.name}
-                            </div>
-                            <div className='text-muted-foreground text-sm'>
-                              {customerInfo.email}
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className='text-sm'>
-                            {order.order_items?.length || 0} item
-                            {(order.order_items?.length || 0) > 1 ? 's' : ''}
-                            <div className='max-w-[200px] truncate text-xs text-gray-500'>
-                              {order.order_items
-                                ?.map(
-                                  (item) =>
-                                    item?.product_name || 'Unknown Product',
-                                )
-                                .join(', ') || 'No items'}
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {order.created_at
-                            ? formatDate(order.created_at)
-                            : 'N/A'}
-                        </TableCell>
-                        <TableCell>
-                          {order.total_amount
-                            ? formatPrice(order.total_amount)
-                            : '฿0.00'}
-                        </TableCell>
-                        <TableCell>{getStatusBadge(order.status)}</TableCell>
-                        <TableCell className='text-right'>
-                          <div className='flex justify-end space-x-2'>
-                            <Button
-                              variant='ghost'
-                              size='sm'
-                              onClick={() => openOrderModal(order)}
-                            >
-                              <Eye className='h-4 w-4' />
-                            </Button>
-                            {getStatusActions(order)}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    )
-                  })
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
-
-      <OrderModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        order={selectedOrder}
-        onUpdateStatus={handleUpdateOrderStatus}
-        showConfirmModal={showConfirmModal}
-        isLoading={updateOrderMutation.isPending}
-      />
-      <ConfirmModal
-        isOpen={confirmModal.isOpen}
-        onClose={() =>
-          setConfirmModal({
-            isOpen: false,
-            title: '',
-            description: '',
-            onConfirm: () => {},
-          })
-        }
-        onConfirm={confirmModal.onConfirm}
-        title={confirmModal.title}
-        description={confirmModal.description}
-      />
-    </div>
+        </DialogContent>
+      </Dialog>
+    </IndexLayout>
   )
 }
+
+export default OrderPage

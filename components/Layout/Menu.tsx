@@ -1,132 +1,189 @@
 'use client'
-import { useState } from 'react'
-import { ChevronDown, ShoppingCart, User } from 'lucide-react'
-import { Profile } from '../Homepage/Profile'
+import { useQuery } from '@tanstack/react-query'
+import { ChevronDown, Menu as MenuIcon, X } from 'lucide-react'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import Cart from '../Products/Cart'
-import { useCartCount } from '@/hooks/use-carts'
+import React, { useState, useEffect } from 'react'
+
+import { getCategories } from '@/actions/category'
+import { useAuth } from '@/contexts/AuthContext.tsx'
+
+import GoogleTranslate from '../GoogleTranslate'
+
+interface SubMenuItem {
+  title: string
+  href?: string
+  onClick?: () => void
+}
+
+interface MenuItem {
+  title: string
+  href?: string
+  onClick?: () => void
+  submenu?: SubMenuItem[]
+}
 
 const Menu = () => {
+  const { user, signOut } = useAuth()
+  const { data: categories } = useQuery({
+    queryKey: ['categories'],
+    queryFn: () => getCategories(),
+  })
+
   const router = useRouter()
-  const [activeMenu, setActiveMenu] = useState<string | null>(null)
-  const [isCartOpen, setIsCartOpen] = useState(false)
-  const [isProfileOpen, setIsProfileOpen] = useState(false)
+  const [activeSubmenu, setActiveSubmenu] = useState<string | null>(null)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [expandedMobileSubmenu, setExpandedMobileSubmenu] = useState<
+    string | null
+  >(null)
 
-  const { data: cartCount = 0 } = useCartCount()
+  const getNavigationMenuItems = (): MenuItem[] => {
+    const baseItems: MenuItem[] = [{ title: 'Home', href: '/' }]
 
-  const menuItems = [
-    {
-      title: 'Home',
-      href: '/',
-    },
-    {
-      title: 'Honey',
-      href: '/category/honey',
-    },
-    {
-      title: 'Olive oil',
-      href: '/category/olive-oil',
-    },
-    {
-      title: 'Organic skin care',
-      href: '/category/organic-skin-care',
-    },
-    {
-      title: 'Our Shop',
-      submenu: [
-        { title: 'Bangkok', href: '/our-shop/bangkok' },
-        { title: 'Pattaya', href: '/our-shop/pattaya' },
-        { title: 'Chiang Mai', href: '/our-shop/chiang-mai' },
-        { title: 'Phuket', href: '/our-shop/phuket' },
-        { title: 'Krabi', href: '/our-shop/krabi' },
-        { title: 'Prachinburi', href: '/our-shop/prachinburi' },
-        { title: 'Hua Hin', href: '/our-shop/hua-hin' },
-      ],
-    },
-    {
-      title: 'About me',
-      href: '/about',
-    },
-  ]
-
-  const handleMenuClick = (
-    href: string | undefined,
-    hasSubmenu: boolean = false,
-  ) => {
-    if (!hasSubmenu && href) {
-      router.push(href)
-      setActiveMenu(null)
+    if (categories?.data) {
+      const categoryItems = categories.data.map((category) => ({
+        title: category.name,
+        href: `/category/${category.id}`,
+      }))
+      baseItems.push(...categoryItems)
     }
+
+    baseItems.push(
+      { title: 'Our Shop', href: '/ourshop' },
+      { title: 'About me', href: '/about' },
+    )
+
+    if (!user) {
+      baseItems.push({ title: 'Login/Register', href: '/login' })
+    }
+
+    if (user) {
+      baseItems.push(
+        {
+          title: 'Control Panel',
+          submenu: [
+            { title: 'Dashboard', href: '/dashboard' },
+            { title: 'Products', href: '/dashboard/products' },
+            { title: 'Orders', href: '/dashboard/orders' },
+            { title: 'Profile', href: '/dashboard/profile' },
+            { title: 'Cart', href: '/cart' },
+          ],
+        },
+        { title: 'Logout', onClick: signOut },
+      )
+    }
+
+    return baseItems
   }
 
-  const handleSubmenuClick = (href: string) => {
+  const NAVIGATION_MENU_ITEMS = getNavigationMenuItems()
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setIsMobileMenuOpen(false)
+        setExpandedMobileSubmenu(null)
+      }
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  useEffect(() => {
+    document.body.style.overflow = isMobileMenuOpen ? 'hidden' : ''
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [isMobileMenuOpen])
+
+  const navigateTo = (href: string) => {
     router.push(href)
-    setActiveMenu(null)
+    setActiveSubmenu(null)
+    setIsMobileMenuOpen(false)
+    setExpandedMobileSubmenu(null)
   }
 
-  const handleMenuHover = (menuId: string) => {
-    setActiveMenu(menuId)
+  const handleMenuClick = (item: MenuItem | SubMenuItem) => {
+    if (item.onClick) {
+      item.onClick()
+    } else if (item.href) {
+      navigateTo(item.href)
+    }
+
+    setActiveSubmenu(null)
+    setIsMobileMenuOpen(false)
+    setExpandedMobileSubmenu(null)
   }
 
-  const handleMenuLeave = () => {
-    setTimeout(() => {
-      setActiveMenu(null)
-    }, 150)
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen)
   }
 
-  const handleProfileClick = () => {
-    setIsProfileOpen(true)
-  }
-
-  const handleCartClick = () => {
-    setIsCartOpen(true)
+  const toggleMobileSubmenu = (title: string) => {
+    setExpandedMobileSubmenu(expandedMobileSubmenu === title ? null : title)
   }
 
   return (
-    <>
-      <nav className='sticky top-0 z-50 w-full border-8 border-[#e2b007] bg-[#e2b007] shadow-lg'>
-        <div className='item flex justify-center'>
-          {menuItems.map((item) => (
+    <div className='sticky top-0 z-40'>
+      {/* Logo Section */}
+      <div className='bg-secondary flex w-full justify-center'>
+        <Image
+          src='/logo.png'
+          width={120}
+          height={120}
+          alt='FAOS Logo'
+          priority
+          className='object-contain'
+        />
+        <GoogleTranslate />
+      </div>
+
+      <nav className='bg-primary w-full p-2.5 shadow-lg'>
+        {/* Desktop Navigation */}
+        <div className='hidden justify-center lg:flex'>
+          {NAVIGATION_MENU_ITEMS.map((item) => (
             <div
               key={item.title}
               className='group relative'
-              onMouseEnter={() => item.submenu && handleMenuHover(item.title)}
-              onMouseLeave={() => item.submenu && handleMenuLeave()}
+              onMouseEnter={() => item.submenu && setActiveSubmenu(item.title)}
+              onMouseLeave={() => item.submenu && setActiveSubmenu(null)}
             >
               <button
-                className={`flex items-center gap-2 px-6 py-4 font-bold text-white transition-colors duration-200 hover:bg-[#f3d27a] hover:text-white`}
-                onClick={() => handleMenuClick(item.href, !!item.submenu)}
+                className='hover:bg-primary/80 flex cursor-pointer items-center gap-2 px-6 py-4 font-bold text-white transition-colors duration-200 hover:underline'
+                onClick={() => !item.submenu && handleMenuClick(item)}
+                type='button'
               >
                 <span className='font-medium whitespace-nowrap'>
                   {item.title}
                 </span>
                 {item.submenu && (
                   <ChevronDown
-                    className={`h-4 w-4 transition-transform duration-200 ${
-                      activeMenu === item.title ? 'rotate-180' : ''
+                    className={`transition-transform duration-200 ${
+                      activeSubmenu === item.title ? 'rotate-180' : ''
                     }`}
                   />
                 )}
               </button>
 
+              {/* Desktop Submenu */}
               {item.submenu && (
                 <div
-                  className={`absolute top-full left-0 z-50 min-w-[200px] origin-top border-2 border-[#f3d27a] bg-[#e2b007] shadow-xl transition-all duration-200 ${
-                    activeMenu === item.title
+                  className={`bg-primary absolute top-full left-0 z-50 min-w-[200px] origin-top rounded-xl border-2 border-[#f3d27a] shadow-xl transition-all duration-200 ${
+                    activeSubmenu === item.title
                       ? 'visible scale-y-100 opacity-100'
                       : 'invisible scale-y-0 opacity-0'
-                  } `}
-                  onMouseEnter={() => setActiveMenu(item.title)}
-                  onMouseLeave={handleMenuLeave}
+                  }`}
                 >
                   <div className='py-2'>
                     {item.submenu.map((subItem, index) => (
                       <button
-                        key={index}
-                        onClick={() => handleSubmenuClick(subItem.href)}
-                        className='block w-full px-4 py-3 text-left text-white transition-colors duration-150 hover:bg-[#f3d27a] hover:text-white'
+                        key={subItem.href || subItem.title || index}
+                        onClick={() => handleMenuClick(subItem)}
+                        className='hover:bg-primary/80 block w-full cursor-pointer px-4 py-3 text-left text-white transition-colors duration-150 hover:underline'
+                        type='button'
                       >
-                        <span>{subItem.title}</span>
+                        {subItem.title}
                       </button>
                     ))}
                   </div>
@@ -136,39 +193,101 @@ const Menu = () => {
           ))}
         </div>
 
-        <div className='flex justify-center gap-4 pb-4'>
+        {/* Mobile Navigation Header */}
+        <div className='flex items-center justify-between px-4 py-3 lg:hidden'>
+          <span className='text-lg font-bold text-white'>FAOS Co.,Ltd.</span>
           <button
-            onClick={handleProfileClick}
-            className='z-40 size-13 rounded-full border-2 border-white bg-[#e2b007] p-3 text-white shadow-lg transition-all duration-200 hover:scale-105 hover:bg-[#f3d27a]'
-            aria-label='Open profile'
+            onClick={toggleMobileMenu}
+            className='hover:bg-primary/80 p-2 text-white transition-colors duration-200'
+            aria-label='Toggle mobile menu'
+            type='button'
           >
-            <User className='h-6 w-6' />
-          </button>
-
-          <Profile
-            isOpen={isProfileOpen}
-            onClose={() => setIsProfileOpen(false)}
-          />
-
-          <button
-            onClick={handleCartClick}
-            className='z-40 size-13 rounded-full border-2 border-white bg-[#e2b007] p-3 text-white shadow-lg transition-all duration-200 hover:scale-105 hover:bg-[#f3d27a]'
-            aria-label={`Open cart with ${cartCount} items`}
-          >
-            <div className='relative'>
-              <ShoppingCart className='h-6 w-6' />
-              {cartCount > 0 && (
-                <span className='absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white'>
-                  {cartCount > 99 ? '99+' : cartCount}
-                </span>
-              )}
-            </div>
+            {isMobileMenuOpen ? (
+              <X className='h-6 w-6' />
+            ) : (
+              <MenuIcon className='h-6 w-6' />
+            )}
           </button>
         </div>
 
-        <Cart isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+        {/* Mobile Menu Overlay */}
+        {isMobileMenuOpen && (
+          <div
+            className='fixed inset-0 z-40 bg-black/50 lg:hidden'
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+        )}
+
+        {/* Mobile Menu Sidebar */}
+        <div
+          className={`bg-primary fixed top-0 right-0 z-50 h-full w-80 max-w-[85vw] transform border-l-8 border-[#f3d27a] shadow-2xl transition-transform duration-300 lg:hidden ${
+            isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
+          }`}
+        >
+          <div className='flex items-center justify-end p-4'>
+            <button
+              onClick={() => setIsMobileMenuOpen(false)}
+              className='hover:bg-primary/80 rounded p-2 text-white transition-colors duration-200'
+              aria-label='Close mobile menu'
+              type='button'
+            >
+              <X className='h-6 w-6' />
+            </button>
+          </div>
+
+          <div className='h-full overflow-y-auto pb-20'>
+            {NAVIGATION_MENU_ITEMS.map((item) => (
+              <div key={item.title}>
+                <button
+                  className='hover:bg-primary/80 flex w-full items-center justify-between px-4 py-4 text-left font-medium text-white transition-colors duration-200'
+                  onClick={() => {
+                    if (item.submenu) {
+                      toggleMobileSubmenu(item.title)
+                    } else {
+                      handleMenuClick(item)
+                    }
+                  }}
+                  type='button'
+                >
+                  <span>{item.title}</span>
+                  {item.submenu && (
+                    <ChevronDown
+                      className={`transition-transform duration-300 ${
+                        expandedMobileSubmenu === item.title ? 'rotate-180' : ''
+                      }`}
+                    />
+                  )}
+                </button>
+
+                {/* Mobile Submenu */}
+                {item.submenu && (
+                  <div
+                    className={`overflow-hidden transition-all duration-300 ${
+                      expandedMobileSubmenu === item.title
+                        ? 'max-h-96 opacity-100'
+                        : 'max-h-0 opacity-0'
+                    }`}
+                  >
+                    <div className='bg-primary/80'>
+                      {item.submenu.map((subItem, index) => (
+                        <button
+                          key={subItem.href || subItem.title || index}
+                          onClick={() => handleMenuClick(subItem)}
+                          className='hover:bg-primary/60 block w-full px-8 py-3 text-left text-white/90 transition-colors duration-150'
+                          type='button'
+                        >
+                          - {subItem.title}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
       </nav>
-    </>
+    </div>
   )
 }
 

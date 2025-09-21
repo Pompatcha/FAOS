@@ -1,345 +1,361 @@
 'use client'
-import { SetStateAction, useCallback, useEffect, useState } from 'react'
-import useEmblaCarousel from 'embla-carousel-react'
-import { ChevronLeft, ChevronRight, Minus, Plus } from 'lucide-react'
-import { Header } from '@/components/Layout/Header'
-import { Menu } from '@/components/Layout/Menu'
-import { Banner } from '@/components/Homepage/Banner'
-import { Footer } from '@/components/Layout/Footer'
-import { formatPrice } from '@/lib/currency'
-import { getProduct } from '@/actions/products'
-import { Product } from '@/types/product'
-import { useQuery } from '@tanstack/react-query'
-import { useAddToCart } from '@/hooks/use-carts'
-import { use } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { Info } from 'lucide-react'
+import { use, useState } from 'react'
+import { toast } from 'sonner'
+
+import type { ProductOptionInput } from '@/actions/product'
+
+import { addToCart } from '@/actions/cart'
+import { getProduct } from '@/actions/product'
+import { ImageSlider } from '@/components/ImageSlider'
+import { IndexLayout } from '@/components/Layout/Index'
 import { Loading } from '@/components/Layout/Loading'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { useAuth } from '@/contexts/AuthContext.tsx'
+import { priceFormatter } from '@/lib/number'
 
-interface ProductImageSliderProps {
-  images: { image_url: string; alt_text?: string }[]
-  productName: string
+interface ProductOptionWithId extends ProductOptionInput {
+  id: number
 }
 
-interface ProductDetailProps {
-  product: Product
-}
-
-const ProductImageSlider = ({
-  images,
-  productName,
-}: ProductImageSliderProps) => {
-  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false })
-  const [thumbsRef] = useEmblaCarousel({
-    containScroll: 'keepSnaps',
-    dragFree: true,
-  })
-
-  const [selectedIndex, setSelectedIndex] = useState(0)
-
-  const scrollTo = useCallback(
-    (index: number) => {
-      if (emblaApi) emblaApi.scrollTo(index)
-    },
-    [emblaApi],
-  )
-
-  const onSelect = useCallback(
-    (emblaApi: { selectedScrollSnap: () => SetStateAction<number> }) => {
-      setSelectedIndex(emblaApi.selectedScrollSnap())
-    },
-    [],
-  )
-
-  useEffect(() => {
-    if (!emblaApi) return
-
-    onSelect(emblaApi)
-    emblaApi.on('reInit', onSelect)
-    emblaApi.on('select', onSelect)
-  }, [emblaApi, onSelect])
-
-  const scrollPrev = useCallback(() => {
-    if (emblaApi) emblaApi.scrollPrev()
-  }, [emblaApi])
-
-  const scrollNext = useCallback(() => {
-    if (emblaApi) emblaApi.scrollNext()
-  }, [emblaApi])
-
-  if (!images || images.length === 0) {
-    return (
-      <img
-        className='h-96 w-full rounded-2xl object-cover'
-        src='/placeholder.svg'
-      />
-    )
-  }
-
-  return (
-    <div className='w-full'>
-      <div className='relative mb-4'>
-        <div className='overflow-hidden rounded-lg' ref={emblaRef}>
-          <div className='flex'>
-            {images.map((image, index: number) => (
-              <div key={index} className='w-full flex-none'>
-                <img
-                  src={image.image_url}
-                  alt={image.alt_text || `${productName} - ภาพที่ ${index + 1}`}
-                  className='h-96 w-full object-cover'
-                  width={400}
-                  height={384}
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {images.length > 1 && (
-          <>
-            <button
-              className='absolute top-1/2 left-2 -translate-y-1/2 rounded-full bg-white/80 p-2 shadow-lg transition-all hover:scale-110 hover:bg-white'
-              onClick={scrollPrev}
-            >
-              <ChevronLeft className='h-5 w-5 text-gray-700' />
-            </button>
-
-            <button
-              className='absolute top-1/2 right-2 -translate-y-1/2 rounded-full bg-white/80 p-2 shadow-lg transition-all hover:scale-110 hover:bg-white'
-              onClick={scrollNext}
-            >
-              <ChevronRight className='h-5 w-5 text-gray-700' />
-            </button>
-          </>
-        )}
-      </div>
-
-      {images.length > 1 && (
-        <div className='overflow-hidden' ref={thumbsRef}>
-          <div className='flex gap-2'>
-            {images.map((image, index: number) => (
-              <button
-                key={index}
-                className={`h-20 w-20 flex-none overflow-hidden rounded-lg border-2 transition-all ${
-                  index === selectedIndex
-                    ? 'scale-105 border-amber-500'
-                    : 'border-gray-200 hover:border-amber-300'
-                }`}
-                onClick={() => scrollTo(index)}
-              >
-                <img
-                  src={image.image_url}
-                  alt={
-                    image.alt_text || `${productName} - ภาพย่อที่ ${index + 1}`
-                  }
-                  className='h-full w-full object-cover'
-                  width={80}
-                  height={80}
-                />
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
-
-const ProductDetail = ({ product }: ProductDetailProps) => {
-  const [quantity, setQuantity] = useState(1)
-  const addToCartMutation = useAddToCart()
-
-  const handleAddToCart = async () => {
-    try {
-      await addToCartMutation.mutateAsync({
-        product_id: product.id,
-        quantity: quantity,
-      })
-
-      setQuantity(1)
-    } catch (error) {
-      alert(error)
-    }
-  }
-
-  const handleQuantityChange = (newQuantity: number) => {
-    if (newQuantity >= 1 && newQuantity <= product.stock) {
-      setQuantity(newQuantity)
-    }
-  }
-
-  const isOutOfStock = product.stock === 0 || product.status === 'out_of_stock'
-  const isInactive = product.status === 'inactive'
-  const isAvailable = product.status === 'active' && product.stock > 0
-
-  return (
-    <div className='flex flex-col gap-5'>
-      <h1 className='text-2xl font-bold text-[#8a6a1b]'>{product.name}</h1>
-
-      <div className='flex items-center gap-3'>
-        <span className='text-2xl font-bold text-[#dda700]'>
-          {formatPrice(product.price)}
-        </span>
-        {isOutOfStock && (
-          <span className='rounded-full bg-red-100 px-2 py-1 text-sm text-red-700'>
-            Out of Stock
-          </span>
-        )}
-        {isInactive && (
-          <span className='rounded-full bg-gray-100 px-2 py-1 text-sm text-gray-700'>
-            Inactive
-          </span>
-        )}
-      </div>
-
-      {product.description && (
-        <p className='leading-relaxed text-gray-600'>{product.description}</p>
-      )}
-
-      <div className='flex items-center gap-2 text-sm text-gray-600'>
-        <span
-          className={`font-medium ${
-            product.stock <= 10 ? 'text-red-600' : 'text-green-600'
-          }`}
-        >
-          {product.stock} units available
-        </span>
-      </div>
-
-      {isAvailable && (
-        <div className='flex items-center gap-4'>
-          <div className='flex items-center gap-3'>
-            <button
-              onClick={() => handleQuantityChange(quantity - 1)}
-              disabled={quantity <= 1}
-              className='flex size-8 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition-colors hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50'
-            >
-              <Minus className='size-4' />
-            </button>
-            <span className='min-w-[2rem] text-center font-medium'>
-              {quantity}
-            </span>
-            <button
-              onClick={() => handleQuantityChange(quantity + 1)}
-              disabled={quantity >= product.stock}
-              className='flex size-8 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition-colors hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50'
-            >
-              <Plus className='size-4' />
-            </button>
-          </div>
-        </div>
-      )}
-
-      <div className='flex gap-3'>
-        <button
-          onClick={handleAddToCart}
-          disabled={!isAvailable || addToCartMutation.isPending}
-          className='flex-1 cursor-pointer rounded-lg bg-[#dda700] px-4 py-2 font-medium text-white transition-colors hover:bg-[#cc9600] disabled:cursor-not-allowed disabled:opacity-50'
-        >
-          {addToCartMutation.isPending
-            ? 'Adding...'
-            : isOutOfStock
-              ? 'Out of Stock'
-              : isInactive
-                ? 'Unavailable'
-                : 'Add to Cart'}
-        </button>
-      </div>
-    </div>
-  )
-}
-
-export default function ProductPage({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}) {
+const ProductPage = ({ params }: { params: Promise<{ id: string }> }) => {
   const { id } = use(params)
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
 
-  const {
-    data: product,
-    isLoading,
-    error,
-  } = useQuery({
-    queryKey: ['product', id],
-    queryFn: async () => {
-      return await getProduct(id)
-    },
-    staleTime: 1000 * 60 * 5,
+  const [selectedOptions, setSelectedOptions] = useState<{
+    [key: string]: number
+  }>({})
+  const [quantity, setQuantity] = useState<number>(1)
+
+  const getMaxStock = () => {
+    if (!product?.options || product.options.length === 0) {
+      return product?.max_stock || 0
+    }
+
+    const selectedOptionIds = Object.values(selectedOptions)
+    if (selectedOptionIds.length === 0) {
+      return product?.min_stock || 0
+    }
+
+    const selectedOption = product.options.find((option: { id: number }) =>
+      selectedOptionIds.includes(option.id),
+    )
+
+    return selectedOption?.option_stock || 0
+  }
+
+  const getSelectedOption = () => {
+    if (!product?.options || product.options.length === 0) {
+      return null
+    }
+
+    const selectedOptionIds = Object.values(selectedOptions)
+    if (selectedOptionIds.length === 0) {
+      return null
+    }
+
+    return product.options.find((option: { id: number }) =>
+      selectedOptionIds.includes(option.id),
+    )
+  }
+
+  const getCurrentPrice = () => {
+    const selectedOption = getSelectedOption()
+    if (selectedOption) {
+      return Number(selectedOption.option_price)
+    }
+    return product?.min_price || 0
+  }
+
+  const { data: product, isLoading: productLoading } = useQuery({
+    queryKey: ['product/detail', id],
+    queryFn: () => getProduct(id),
+    enabled: !!id,
   })
 
-  if (isLoading) {
-    return <Loading />
+  const addToCartMutation = useMutation({
+    mutationFn: addToCart,
+    onSuccess: (result) => {
+      if (result.success) {
+        toast.success('Product added to cart successfully!')
+        queryClient.invalidateQueries({ queryKey: ['cart', user?.id] })
+        queryClient.invalidateQueries({ queryKey: ['cart-count', user?.id] })
+      } else {
+        toast.error(result.message || 'Failed to add product to cart')
+      }
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'An error occurred while adding to cart')
+    },
+  })
+
+  const handleAddToCart = () => {
+    if (!user?.id) {
+      toast.error('Please login to add items to cart')
+      return
+    }
+
+    if (!product) {
+      toast.error('Product not found')
+      return
+    }
+
+    if (product.options && product.options.length > 0) {
+      const optionGroups = (product.options as ProductOptionWithId[]).reduce(
+        (acc: { [key: string]: ProductOptionWithId[] }, option) => {
+          if (!acc[option.option_name]) {
+            acc[option.option_name] = []
+          }
+          acc[option.option_name].push(option)
+          return acc
+        },
+        {},
+      )
+
+      const requiredOptionsCount = Object.keys(optionGroups).length
+      const selectedOptionsCount = Object.keys(selectedOptions).length
+
+      if (selectedOptionsCount < requiredOptionsCount) {
+        toast.error('Please select all required options')
+        return
+      }
+    }
+
+    const selectedOption = getSelectedOption()
+    const cartData = {
+      product_id: Number(id),
+      product_option_id: selectedOption?.id || null,
+      quantity,
+      unit_price: getCurrentPrice(),
+      user_id: user.id,
+    }
+
+    addToCartMutation.mutate(cartData)
   }
 
-  if (error) {
-    return (
-      <div className='flex min-h-full flex-col items-center'>
-        <Header />
-        <Menu />
-        <div className='w-full bg-[#fff9df] p-5'>
-          <Banner />
-          <div className='flex h-96 items-center justify-center'>
-            <div className='text-center'>
-              <div className='mb-4 text-6xl text-gray-400'>😕</div>
-              <h2 className='mb-2 text-2xl font-bold text-gray-700'>
-                Product Not Found
-              </h2>
-              <p className='text-gray-600'>
-                The product you&apos;re looking for doesn&apos;t exist or has
-                been removed.
-              </p>
-            </div>
-          </div>
-        </div>
-        <Footer />
-      </div>
-    )
-  }
+  const images =
+    Array.isArray(product?.images) && product?.images.length > 0
+      ? product?.images?.flatMap(
+          (image: { image_url: string }) => image?.image_url,
+        )
+      : ['/placeholder.svg']
 
-  if (!product) {
-    return (
-      <div className='flex min-h-screen flex-col items-center'>
-        <Header />
-        <Menu />
-        <div className='w-full bg-[#fff9df] p-5'>
-          <Banner />
-          <div className='flex h-96 items-center justify-center'>
-            <div className='text-center'>
-              <div className='mb-4 text-6xl text-gray-400'>📦</div>
-              <h2 className='mb-2 text-2xl font-bold text-gray-700'>
-                No Product Data
-              </h2>
-              <p className='text-gray-600'>
-                Unable to load product information.
-              </p>
-            </div>
-          </div>
-        </div>
-        <Footer />
-      </div>
-    )
+  const isAddToCartDisabled = () => {
+    if (!user?.id) return false
+    if (addToCartMutation.isPending) return true
+    if (quantity <= 0 || quantity > getMaxStock()) return true
+
+    if (product?.options && product.options.length > 0) {
+      const optionGroups = (product.options as ProductOptionWithId[]).reduce(
+        (acc: { [key: string]: ProductOptionWithId[] }, option) => {
+          if (!acc[option.option_name]) {
+            acc[option.option_name] = []
+          }
+          acc[option.option_name].push(option)
+          return acc
+        },
+        {},
+      )
+
+      const requiredOptionsCount = Object.keys(optionGroups).length
+      const selectedOptionsCount = Object.keys(selectedOptions).length
+
+      if (selectedOptionsCount < requiredOptionsCount) return true
+    }
+
+    return false
   }
 
   return (
-    <div className='flex min-h-screen flex-col items-center'>
-      <Header />
-      <Menu />
+    <IndexLayout>
+      <Loading isLoading={productLoading} />
 
-      <div className='w-full bg-[#fff9df] p-5'>
-        <Banner />
+      <div className='container mx-auto'>
+        <div className='grid grid-cols-1 gap-5 lg:grid-cols-2'>
+          <div className='aspect-square'>
+            <ImageSlider images={images} />
+          </div>
 
-        <div className='mt-8 grid grid-cols-1 gap-8 lg:grid-cols-2'>
-          <ProductImageSlider
-            images={product.images || []}
-            productName={product.name}
-          />
+          <div className='h-fit rounded-xl border-4 border-[#f3d27a] bg-gradient-to-r from-[#f9e6b3] to-[#f3d27a]'>
+            <div className='flex flex-col gap-2.5 p-5'>
+              <div className='text-[#4a2c00]'>
+                <h1 className='mb-2 text-3xl font-bold'>{product?.name}</h1>
+                <p className='text-lg'>{product?.short_description}</p>
+              </div>
 
-          <div>
-            <ProductDetail product={product} />
+              <div className='flex items-center gap-2 text-red-800'>
+                <span className='text-3xl font-bold'>
+                  {product?.min_price && product?.max_price
+                    ? product.min_price === product.max_price
+                      ? priceFormatter.format(product.min_price)
+                      : `${priceFormatter.format(product.min_price)} - ${priceFormatter.format(product.max_price)}`
+                    : 'n/a'}
+                </span>
+              </div>
+            </div>
+
+            {product?.preorder_enabled && (
+              <Alert variant='destructive'>
+                <Info />
+                <AlertDescription>
+                  Pre-Order Item - Ships {product?.preorder_day} days
+                </AlertDescription>
+                <AlertDescription>
+                  This item is available for pre-order. Your order will be
+                  processed and shipped once the product becomes available.
+                </AlertDescription>
+              </Alert>
+            )}
+
+            <Card className='shadow-2xl'>
+              <CardContent className='p-5'>
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault()
+                    handleAddToCart()
+                  }}
+                  className='space-y-6'
+                >
+                  {product?.options && product.options.length > 0 && (
+                    <div className='space-y-4'>
+                      {Object.entries(
+                        (product.options as ProductOptionWithId[]).reduce(
+                          (
+                            acc: { [key: string]: ProductOptionWithId[] },
+                            option: ProductOptionWithId,
+                          ) => {
+                            if (!acc[option.option_name]) {
+                              acc[option.option_name] = []
+                            }
+                            acc[option.option_name].push(option)
+                            return acc
+                          },
+                          {},
+                        ),
+                      ).map(([optionName, options]) => (
+                        <div key={optionName} className='space-y-2'>
+                          <label className='block text-sm font-medium text-gray-700'>
+                            {optionName}
+                          </label>
+                          <div className='grid gap-2 sm:grid-cols-2'>
+                            {options.map((option: ProductOptionWithId) => (
+                              <button
+                                key={option.id}
+                                type='button'
+                                onClick={() => {
+                                  setSelectedOptions((prev) => ({
+                                    ...prev,
+                                    [optionName]: option.id,
+                                  }))
+                                }}
+                                className={`rounded-lg border p-3 text-sm font-medium transition-all ${
+                                  selectedOptions[optionName] === option.id
+                                    ? 'border-primary text-primary bg-primary/10'
+                                    : 'border-gray-300 bg-white hover:border-gray-400'
+                                } ${
+                                  Number(option.option_stock) <= 0
+                                    ? 'cursor-not-allowed opacity-50'
+                                    : 'cursor-pointer'
+                                } `}
+                                disabled={Number(option.option_stock) <= 0}
+                              >
+                                <div className='text-left'>
+                                  <div className='font-semibold'>
+                                    {option.option_value}
+                                  </div>
+                                  <div className='text-xs text-gray-500'>
+                                    {priceFormatter.format(
+                                      Number(option.option_price),
+                                    )}
+                                  </div>
+                                  <div className='text-xs text-gray-400'>
+                                    Stock: {option.option_stock}
+                                  </div>
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className='space-y-2'>
+                    <label className='block text-sm font-medium text-gray-700'>
+                      Quantity
+                    </label>
+                    <div className='flex items-center space-x-3'>
+                      <button
+                        type='button'
+                        onClick={() =>
+                          setQuantity((prev) => Math.max(1, prev - 1))
+                        }
+                        className='hover:bg-primary/10 flex size-8 cursor-pointer items-center justify-center rounded-full border border-gray-300 bg-white disabled:cursor-not-allowed disabled:opacity-50'
+                        disabled={quantity <= 1}
+                      >
+                        -
+                      </button>
+
+                      <input
+                        type='number'
+                        min='1'
+                        max={getMaxStock()}
+                        value={quantity}
+                        onChange={(e) => {
+                          const value = parseInt(e.target.value) || 1
+                          const maxStock = getMaxStock()
+                          setQuantity(Math.min(Math.max(1, value), maxStock))
+                        }}
+                        className='focus:border-primary focus:ring-primary w-16 rounded border border-gray-300 px-2 py-1 text-center text-sm focus:outline-none'
+                      />
+
+                      <button
+                        type='button'
+                        onClick={() =>
+                          setQuantity((prev) =>
+                            Math.min(getMaxStock(), prev + 1),
+                          )
+                        }
+                        className='hover:bg-primary/10 flex size-8 cursor-pointer items-center justify-center rounded-full border border-gray-300 bg-white disabled:cursor-not-allowed disabled:opacity-50'
+                        disabled={quantity >= getMaxStock()}
+                      >
+                        +
+                      </button>
+
+                      <span className='text-xs text-gray-500'>
+                        Max: {getMaxStock()}
+                      </span>
+                    </div>
+                  </div>
+
+                  <Button
+                    type='submit'
+                    size='lg'
+                    className='w-full py-3 text-lg'
+                    disabled={isAddToCartDisabled()}
+                  >
+                    {addToCartMutation.isPending
+                      ? 'Adding to Cart...'
+                      : !user?.id
+                        ? 'Login to Add to Cart'
+                        : 'Add to Cart'}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+
+            <div className='p-5'>
+              <span>{product?.description}</span>
+            </div>
           </div>
         </div>
-
-        <Footer className='mt-5 text-black' />
       </div>
-    </div>
+    </IndexLayout>
   )
 }
+
+export default ProductPage

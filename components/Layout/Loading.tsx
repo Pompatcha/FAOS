@@ -1,11 +1,16 @@
-import { Package } from 'lucide-react'
+import { Loader } from 'lucide-react'
 
-const Loading = () => {
+interface LoadingProps {
+  isLoading: boolean
+}
+
+const Loading = ({ isLoading }: LoadingProps) => {
+  if (!isLoading) return null
+
   return (
-    <div className='flex min-h-screen items-center justify-center bg-[#fff9df]'>
-      <div className='text-center'>
-        <Package className='mx-auto mb-4 h-12 w-12 animate-spin text-[#dda700]' />
-        <p>Loading your data...</p>
+    <div className='fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm'>
+      <div className='flex flex-col items-center space-y-2'>
+        <Loader className='h-8 w-8 animate-spin text-white' />
       </div>
     </div>
   )
