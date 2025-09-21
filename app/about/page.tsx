@@ -34,7 +34,7 @@ const AboutPage = () => {
             apply to our bodies. We believe that{' '}
             <span className='font-bold text-red-800'>
               the quality of what we eat and use every day
-            </span>
+            </span>{' '}
             has a direct impact on our health. When we consume products that
             contain toxins, our bodies absorb those harmful substances, which
             can lead to frequent illness.{' '}
