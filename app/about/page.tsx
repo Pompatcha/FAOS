@@ -10,7 +10,7 @@ const AboutPage = () => {
   return (
     <IndexLayout>
       <section className='flex flex-col'>
-        <SectionHeader title='Holistic Olive oil and Honey Olive oil and Honey, Healthy Products' />
+        <SectionHeader title='High Premuim Product of Holistic Olive oil and Honey, Healthy Products' />
         <div className='flex w-full flex-col items-center gap-5 rounded-b-lg bg-white p-5 sm:flex-row'>
           <span className='text-xl'>
             FAOS Thailand began with a simple but powerful idea.{' '}
@@ -24,7 +24,7 @@ const AboutPage = () => {
             Through community cooking experiments and cooperative learning, we
             found that{' '}
             <span className='font-bold text-red-800'>
-              Thai and Greek food traditions share many values.
+              Heritage of Thai and Greek food traditions share many values.
             </span>{' '}
             Both emphasize fresh ingredients, natural preparation, and a strong
             connection to the land. These shared principles inspired us to
@@ -64,7 +64,7 @@ const AboutPage = () => {
         <SectionHeader title='Founder of FAOS Premium Organic Collection' />
         <div className='flex w-full flex-col items-center gap-5 rounded-b-lg bg-white p-5'>
           <span className='text-xl'>
-            Patcharin Chanaphukdee the founder of pure organics products, a
+            Patcharin Chanaphukdee the founder of pure and Heritage organics products, a
             visionary based in Bangkok, Thailand, the land historically known as{' '}
             <span className='font-bold text-red-800'>
               Suvaṇṇabhūmior the &quot;Land of Gold.&quot;
@@ -97,7 +97,7 @@ const AboutPage = () => {
             ancient art of olive tree. I experimented with creating natural food
             from{' '}
             <span className='font-bold text-red-800'>
-              olive fruint and honey , other bloosom Flower, Herbal,
+              olive fruit and honey , other bloosom Flower, Herbal,
             </span>{' '}
             inspired by{' '}
             <span className='font-bold text-red-800'>
@@ -128,8 +128,7 @@ const AboutPage = () => {
             from Stamford International University, I’m dedicated to
             environmental sustainability and compliance management. Throughout
             my career, I have built a large social community and a deep
-            connection with various sectors. The inception of FAOS Premium
-            Organic Collection Olive Oil emerged from my personal journey
+            connection with various sectors. The inception of FAOS High Premium Organic Collection Olive Oil emerged from my personal journey
             <span className='font-bold text-red-800'>
               towardswell-being and sustainability.
             </span>{' '}
@@ -165,7 +164,7 @@ const AboutPage = () => {
             the process was safe, and the wine became a source of comfort that
             helped me regain emotional This transformative experience motivated
             me to share the benefits of natural, sustainable practices with
-            others. Premium Organic Collection was established to promote{' '}
+            others. High Premium Organic Collection was established to promote{' '}
             <span className='font-bold text-red-800'>green sustainability</span>{' '}
             and offer products that nourish both the body and mind. Through the
             company&apos;s efforts, I hope to contribute to the well-being of
@@ -195,7 +194,7 @@ const AboutPage = () => {
             <span className='font-bold text-red-800'>
               community organic farms.
             </span>{' '}
-            Our mission is to create premium, natural products that promote{' '}
+            Our mission is to create high premium, natural products that promote{' '}
             <span className='font-bold text-red-800'>
               health, sustainability, and well-being.
             </span>
@@ -209,7 +208,7 @@ const AboutPage = () => {
           <span className='text-xl'>
             FAOS was founded with a vision: to produce{' '}
             <span className='font-bold text-red-800'>
-              Premium Organic Collection
+              High Premium Organic Collection
             </span>{' '}
             that contribute to a{' '}
             <span className='font-bold text-red-800'>
@@ -265,7 +264,7 @@ const AboutPage = () => {
             <span className='font-bold text-red-800'>
               rigorous lab testing
             </span>{' '}
-            to guarantee purity, taste, and exceptional quality. At FAOS Premium
+            to guarantee purity, taste, and exceptional quality. At FAOS High Premium
             Organic Collection, we believe that{' '}
             <span className='font-bold text-red-800'>
               Organics product is more than just a eat or consume—it’s a way to
