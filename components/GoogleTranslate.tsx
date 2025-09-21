@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useRef, useCallback } from 'react'
 
 declare global {
   interface Window {
@@ -26,39 +26,99 @@ declare global {
 }
 
 const GoogleTranslate = () => {
-  useEffect(() => {
-    if (!window.google || !window.google.translate) {
-      const script = document.createElement('script')
-      script.type = 'text/javascript'
-      script.src =
-        '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit'
-      document.body.appendChild(script)
+  const translateElementRef = useRef<HTMLDivElement>(null)
+  const scriptLoadedRef = useRef(false)
+  const widgetInitializedRef = useRef(false)
 
-      window.googleTranslateElementInit = () => {
-        if (window.google && window.google.translate) {
-          new window.google.translate.TranslateElement(
-            {
-              pageLanguage: 'en',
-              includedLanguages: 'th,en,zh-cn,ja,pt,fr,de,vi,es,it',
-              layout:
-                window.google.translate.TranslateElement.InlineLayout.SIMPLE,
-              autoDisplay: false,
-              multilanguagePage: true,
-            },
-            'google_translate_element',
-          )
-        }
-      }
-    } else if (window.google && window.google.translate) {
-      if (window.googleTranslateElementInit) {
-        window.googleTranslateElementInit()
+  const initializeWidget = useCallback(() => {
+    if (
+      window.google &&
+      window.google.translate &&
+      translateElementRef.current &&
+      !widgetInitializedRef.current
+    ) {
+      translateElementRef.current.innerHTML = ''
+
+      try {
+        new window.google.translate.TranslateElement(
+          {
+            pageLanguage: 'en',
+            includedLanguages: 'th,en,zh-cn,ja,pt,fr,de,vi,es,it',
+            layout:
+              window.google.translate.TranslateElement.InlineLayout.SIMPLE,
+            autoDisplay: false,
+            multilanguagePage: true,
+          },
+          'google_translate_element',
+        )
+        widgetInitializedRef.current = true
+      } catch (error) {
+        console.error('Google Translate initialization error:', error)
+        setTimeout(() => {
+          widgetInitializedRef.current = false
+          initializeWidget()
+        }, 500)
       }
     }
   }, [])
 
+  useEffect(() => {
+    widgetInitializedRef.current = false
+
+    const loadGoogleTranslate = () => {
+      if (!scriptLoadedRef.current) {
+        const script = document.createElement('script')
+        script.type = 'text/javascript'
+        script.src =
+          '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit'
+
+        window.googleTranslateElementInit = () => {
+          initializeWidget()
+        }
+
+        script.onload = () => {
+          scriptLoadedRef.current = true
+        }
+
+        script.onerror = () => {
+          console.error('Failed to load Google Translate script')
+          scriptLoadedRef.current = false
+        }
+
+        document.head.appendChild(script)
+      } else {
+        if (window.google && window.google.translate) {
+          initializeWidget()
+        } else {
+          const checkInterval = setInterval(() => {
+            if (window.google && window.google.translate) {
+              clearInterval(checkInterval)
+              initializeWidget()
+            }
+          }, 100)
+
+          setTimeout(() => clearInterval(checkInterval), 5000)
+        }
+      }
+    }
+
+    loadGoogleTranslate()
+
+    return () => {
+      widgetInitializedRef.current = false
+      if (translateElementRef.current) {
+        translateElementRef.current.innerHTML = ''
+      }
+    }
+  }, [initializeWidget])
+
   return (
     <div className='flex items-center gap-2'>
-      <div id='google_translate_element' className='google-translate-widget' />
+      <div
+        ref={translateElementRef}
+        id='google_translate_element'
+        className='google-translate-widget'
+      />
 
       <style jsx global>{`
         .google-translate-widget .goog-te-gadget {
