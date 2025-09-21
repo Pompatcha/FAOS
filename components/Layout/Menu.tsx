@@ -142,7 +142,7 @@ const Menu = () => {
 
       <nav className='bg-primary w-full p-2.5 shadow-lg'>
         {/* Desktop Navigation */}
-        <div className='hidden justify-center lg:flex'>
+        <div className='hidden justify-center gap-7 p-5 lg:flex'>
           {NAVIGATION_MENU_ITEMS.map((item) => (
             <div
               key={item.title}
@@ -151,7 +151,7 @@ const Menu = () => {
               onMouseLeave={() => item.submenu && setActiveSubmenu(null)}
             >
               <button
-                className='hover:bg-primary/80 flex cursor-pointer items-center gap-2 px-6 py-4 font-bold text-white transition-colors duration-200 hover:underline'
+                className='hover:bg-primary/80 flex cursor-pointer items-center gap-2.5 font-bold text-white transition-colors duration-200 hover:underline'
                 onClick={() => !item.submenu && handleMenuClick(item)}
                 type='button'
               >
