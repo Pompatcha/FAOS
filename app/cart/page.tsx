@@ -13,6 +13,7 @@ import {
   clearCart,
 } from '@/actions/cart'
 import { IndexLayout } from '@/components/Layout/Index'
+import { Loading } from '@/components/Layout/Loading'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
@@ -126,24 +127,6 @@ const CartPage: FC = () => {
     return calculateSubtotal()
   }
 
-  if (isLoading) {
-    return (
-      <IndexLayout>
-        <div className='container mx-auto max-w-4xl px-4 py-8'>
-          <Card className='bg-white'>
-            <CardContent className='p-6'>
-              <div className='space-y-4'>
-                <div className='h-6 animate-pulse rounded bg-gray-200' />
-                <div className='h-4 animate-pulse rounded bg-gray-200' />
-                <div className='h-4 animate-pulse rounded bg-gray-200' />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </IndexLayout>
-    )
-  }
-
   if (cartItems.length === 0) {
     return (
       <IndexLayout>
@@ -170,6 +153,7 @@ const CartPage: FC = () => {
 
   return (
     <IndexLayout>
+      <Loading isLoading={isLoading} />
       <div className='grid grid-cols-1 gap-6 lg:grid-cols-3'>
         <div className='lg:col-span-2'>
           <Card className='bg-white'>
