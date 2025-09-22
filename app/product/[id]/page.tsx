@@ -83,8 +83,14 @@ const ProductPage = ({ params }: { params: Promise<{ id: string }> }) => {
     onSuccess: (result) => {
       if (result.success) {
         toast.success('Product added to cart successfully!')
-        queryClient.invalidateQueries({ queryKey: ['cart', user?.id] })
-        queryClient.invalidateQueries({ queryKey: ['cart-count', user?.id] })
+        queryClient.invalidateQueries({
+          queryKey: ['cart', user?.id],
+          exact: true,
+        })
+        queryClient.invalidateQueries({
+          queryKey: ['cart/count', user?.id],
+          exact: true,
+        })
       } else {
         toast.error(result.message || 'Failed to add product to cart')
       }
@@ -350,9 +356,11 @@ const ProductPage = ({ params }: { params: Promise<{ id: string }> }) => {
               </CardContent>
             </Card>
 
-            <div className='p-5'>
-              <span>{product?.description}</span>
-            </div>
+            {product?.description && (
+              <div className='p-5'>
+                <span>{product?.description}</span>
+              </div>
+            )}
           </div>
         </div>
       </div>

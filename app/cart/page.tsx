@@ -37,8 +37,14 @@ const CartPage: FC = () => {
       updateCartQuantity(cartId, quantity),
     onSuccess: (result) => {
       if (result.success) {
-        queryClient.invalidateQueries({ queryKey: ['cart', user?.id] })
-        queryClient.invalidateQueries({ queryKey: ['cart-count', user?.id] })
+        queryClient.invalidateQueries({
+          queryKey: ['cart', user?.id],
+          exact: true,
+        })
+        queryClient.invalidateQueries({
+          queryKey: ['cart/count', user?.id],
+          exact: true,
+        })
         toast.success('Quantity updated successfully!')
       } else {
         toast.error(result.message || 'Failed to update quantity')
@@ -53,8 +59,14 @@ const CartPage: FC = () => {
     mutationFn: (cartId: number) => removeFromCart(cartId),
     onSuccess: (result) => {
       if (result.success) {
-        queryClient.invalidateQueries({ queryKey: ['cart', user?.id] })
-        queryClient.invalidateQueries({ queryKey: ['cart-count', user?.id] })
+        queryClient.invalidateQueries({
+          queryKey: ['cart', user?.id],
+          exact: true,
+        })
+        queryClient.invalidateQueries({
+          queryKey: ['cart/count', user?.id],
+          exact: true,
+        })
         toast.success('Item removed from cart!')
       } else {
         toast.error(result.message || 'Failed to remove item')
@@ -69,8 +81,14 @@ const CartPage: FC = () => {
     mutationFn: () => clearCart(user?.id || ''),
     onSuccess: (result) => {
       if (result.success) {
-        queryClient.invalidateQueries({ queryKey: ['cart', user?.id] })
-        queryClient.invalidateQueries({ queryKey: ['cart-count', user?.id] })
+        queryClient.invalidateQueries({
+          queryKey: ['cart', user?.id],
+          exact: true,
+        })
+        queryClient.invalidateQueries({
+          queryKey: ['cart/count', user?.id],
+          exact: true,
+        })
         toast.success('Cart cleared successfully!')
       } else {
         toast.error(result.message || 'Failed to clear cart')
@@ -170,11 +188,11 @@ const CartPage: FC = () => {
               </Button>
             </CardHeader>
             <CardContent className='space-y-4'>
-              {cartItems.map((item) => (
+              {cartItems?.map((item) => (
                 <div key={item.id} className='rounded-lg border p-4'>
                   <div className='flex flex-col gap-5'>
                     <img
-                      className='size-20'
+                      className='size-20 object-cover'
                       src={
                         item?.products?.images[0]?.image_url ||
                         '/placeholder.svg'
@@ -267,7 +285,7 @@ const CartPage: FC = () => {
             <CardContent className='space-y-4'>
               <div className='flex justify-between text-sm'>
                 <span className='text-gray-600'>
-                  Items ({cartItems.length})
+                  Items ({cartItems?.length})
                 </span>
                 <span className='font-medium'>
                   {priceFormatter.format(calculateSubtotal())}
