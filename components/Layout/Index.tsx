@@ -4,6 +4,7 @@ import type { FC, PropsWithChildren } from 'react'
 
 import { Footer } from './Footer'
 import { Menu } from './Menu'
+import { SearchBar } from '../SearchBar'
 import { Alert, AlertDescription } from '../ui/alert'
 
 const IndexLayout: FC<PropsWithChildren> = ({ children }) => {
@@ -12,6 +13,7 @@ const IndexLayout: FC<PropsWithChildren> = ({ children }) => {
       <Menu />
 
       <div className='flex flex-col gap-5 px-2.5 sm:px-10 sm:py-2.5'>
+        <SearchBar />
         <Alert variant='destructive' className='gap-0'>
           <Info />
           <AlertDescription className='text-lg'>
