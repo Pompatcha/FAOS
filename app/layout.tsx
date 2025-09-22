@@ -19,6 +19,7 @@ const metadata: Metadata = {
   description:
     "Explore our premium honey collection, made from nature's finest sources. Premium organic olive oil and honey collection offering the finest quality products.",
   keywords: [
+    'faos',
     'ไวน์พรีเมี่ยม',
     'ขายไวน์',
     'exclusive product',
@@ -76,7 +77,7 @@ const metadata: Metadata = {
       "Explore our premium honey collection, made from nature's finest sources.",
     images: [
       {
-        url: 'https://i.ibb.co/h14wZP5X/Screenshot-2568-04-03-at-23-00-10.png',
+        url: 'https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/9ce334db-6219-40d7-b091-ea18b655ff13.jpg',
         width: 1200,
         height: 630,
         alt: 'FAOS Premium Organic Collection',
@@ -89,7 +90,9 @@ const metadata: Metadata = {
     title: 'FAOS Premium Organic Collection | Premium Olive Oil and Honey',
     description:
       "Explore our premium honey collection, made from nature's finest sources.",
-    images: ['https://i.ibb.co/h14wZP5X/Screenshot-2568-04-03-at-23-00-10.png'],
+    images: [
+      'https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/9ce334db-6219-40d7-b091-ea18b655ff13.jpg',
+    ],
   },
   robots: {
     index: true,
