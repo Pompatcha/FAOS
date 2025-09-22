@@ -46,7 +46,7 @@ const GoogleTranslate = () => {
             includedLanguages: 'th,en,zh-cn,ja,pt,fr,de,vi,es,it',
             layout:
               window.google.translate.TranslateElement.InlineLayout.SIMPLE,
-            autoDisplay: false,
+            autoDisplay: true,
             multilanguagePage: true,
           },
           'google_translate_element',
