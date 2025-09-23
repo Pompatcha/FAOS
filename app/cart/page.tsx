@@ -13,6 +13,7 @@ import {
   clearCart,
 } from '@/actions/cart'
 import { IndexLayout } from '@/components/Layout/Index'
+import { Loading } from '@/components/Layout/Loading'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
@@ -37,8 +38,14 @@ const CartPage: FC = () => {
       updateCartQuantity(cartId, quantity),
     onSuccess: (result) => {
       if (result.success) {
-        queryClient.invalidateQueries({ queryKey: ['cart', user?.id] })
-        queryClient.invalidateQueries({ queryKey: ['cart-count', user?.id] })
+        queryClient.invalidateQueries({
+          queryKey: ['cart', user?.id],
+          exact: true,
+        })
+        queryClient.invalidateQueries({
+          queryKey: ['cart/count', user?.id],
+          exact: true,
+        })
         toast.success('Quantity updated successfully!')
       } else {
         toast.error(result.message || 'Failed to update quantity')
@@ -53,8 +60,14 @@ const CartPage: FC = () => {
     mutationFn: (cartId: number) => removeFromCart(cartId),
     onSuccess: (result) => {
       if (result.success) {
-        queryClient.invalidateQueries({ queryKey: ['cart', user?.id] })
-        queryClient.invalidateQueries({ queryKey: ['cart-count', user?.id] })
+        queryClient.invalidateQueries({
+          queryKey: ['cart', user?.id],
+          exact: true,
+        })
+        queryClient.invalidateQueries({
+          queryKey: ['cart/count', user?.id],
+          exact: true,
+        })
         toast.success('Item removed from cart!')
       } else {
         toast.error(result.message || 'Failed to remove item')
@@ -69,8 +82,14 @@ const CartPage: FC = () => {
     mutationFn: () => clearCart(user?.id || ''),
     onSuccess: (result) => {
       if (result.success) {
-        queryClient.invalidateQueries({ queryKey: ['cart', user?.id] })
-        queryClient.invalidateQueries({ queryKey: ['cart-count', user?.id] })
+        queryClient.invalidateQueries({
+          queryKey: ['cart', user?.id],
+          exact: true,
+        })
+        queryClient.invalidateQueries({
+          queryKey: ['cart/count', user?.id],
+          exact: true,
+        })
         toast.success('Cart cleared successfully!')
       } else {
         toast.error(result.message || 'Failed to clear cart')
@@ -108,24 +127,6 @@ const CartPage: FC = () => {
     return calculateSubtotal()
   }
 
-  if (isLoading) {
-    return (
-      <IndexLayout>
-        <div className='container mx-auto max-w-4xl px-4 py-8'>
-          <Card className='bg-white'>
-            <CardContent className='p-6'>
-              <div className='space-y-4'>
-                <div className='h-6 animate-pulse rounded bg-gray-200' />
-                <div className='h-4 animate-pulse rounded bg-gray-200' />
-                <div className='h-4 animate-pulse rounded bg-gray-200' />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </IndexLayout>
-    )
-  }
-
   if (cartItems.length === 0) {
     return (
       <IndexLayout>
@@ -152,6 +153,7 @@ const CartPage: FC = () => {
 
   return (
     <IndexLayout>
+      <Loading isLoading={isLoading} />
       <div className='grid grid-cols-1 gap-6 lg:grid-cols-3'>
         <div className='lg:col-span-2'>
           <Card className='bg-white'>
@@ -170,11 +172,11 @@ const CartPage: FC = () => {
               </Button>
             </CardHeader>
             <CardContent className='space-y-4'>
-              {cartItems.map((item) => (
+              {cartItems?.map((item) => (
                 <div key={item.id} className='rounded-lg border p-4'>
                   <div className='flex flex-col gap-5'>
                     <img
-                      className='size-20'
+                      className='size-20 object-cover'
                       src={
                         item?.products?.images[0]?.image_url ||
                         '/placeholder.svg'
@@ -267,7 +269,7 @@ const CartPage: FC = () => {
             <CardContent className='space-y-4'>
               <div className='flex justify-between text-sm'>
                 <span className='text-gray-600'>
-                  Items ({cartItems.length})
+                  Items ({cartItems?.length})
                 </span>
                 <span className='font-medium'>
                   {priceFormatter.format(calculateSubtotal())}

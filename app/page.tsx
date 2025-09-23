@@ -10,6 +10,7 @@ import { ImageSlider } from '@/components/ImageSlider'
 import { IndexLayout } from '@/components/Layout/Index'
 import { NatureGoldBanner } from '@/components/NatureGoldBanner'
 import { ProductCard } from '@/components/ProductCard'
+import { SearchBar } from '@/components/SearchBar'
 
 const hospitalBenefits = [
   {
@@ -139,6 +140,7 @@ const Homepage = () => {
 
   return (
     <IndexLayout>
+      <SearchBar />
       <NatureGoldBanner />
       <ImageSlider
         images={[

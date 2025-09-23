@@ -8,6 +8,7 @@ import React, { useState, useEffect } from 'react'
 import { getCategories } from '@/actions/category'
 import { useAuth } from '@/contexts/AuthContext.tsx'
 
+import { CartBox } from '../CartBox'
 import GoogleTranslate from '../GoogleTranslate'
 
 interface SubMenuItem {
@@ -65,8 +66,6 @@ const Menu = () => {
             { title: 'Dashboard', href: '/dashboard' },
             { title: 'Products', href: '/dashboard/products' },
             { title: 'Orders', href: '/dashboard/orders' },
-            { title: 'Profile', href: '/dashboard/profile' },
-            { title: 'Cart', href: '/cart' },
           ],
         },
         { title: 'Logout', onClick: signOut },
@@ -136,12 +135,15 @@ const Menu = () => {
           priority
           className='object-contain'
         />
+      </div>
+
+      <div className='absolute top-5 right-5'>
         <GoogleTranslate />
       </div>
 
       <nav className='bg-primary w-full p-2.5 shadow-lg'>
         {/* Desktop Navigation */}
-        <div className='hidden justify-center lg:flex'>
+        <div className='hidden items-center justify-center gap-7 p-5 lg:flex'>
           {NAVIGATION_MENU_ITEMS.map((item) => (
             <div
               key={item.title}
@@ -150,7 +152,7 @@ const Menu = () => {
               onMouseLeave={() => item.submenu && setActiveSubmenu(null)}
             >
               <button
-                className='hover:bg-primary/80 flex cursor-pointer items-center gap-2 px-6 py-4 font-bold text-white transition-colors duration-200 hover:underline'
+                className='hover:bg-primary/80 flex cursor-pointer items-center gap-2.5 font-bold text-white transition-colors duration-200 hover:underline'
                 onClick={() => !item.submenu && handleMenuClick(item)}
                 type='button'
               >
@@ -191,23 +193,27 @@ const Menu = () => {
               )}
             </div>
           ))}
+          {user && <CartBox />}
         </div>
 
         {/* Mobile Navigation Header */}
         <div className='flex items-center justify-between px-4 py-3 lg:hidden'>
           <span className='text-lg font-bold text-white'>FAOS Co.,Ltd.</span>
-          <button
-            onClick={toggleMobileMenu}
-            className='hover:bg-primary/80 p-2 text-white transition-colors duration-200'
-            aria-label='Toggle mobile menu'
-            type='button'
-          >
-            {isMobileMenuOpen ? (
-              <X className='h-6 w-6' />
-            ) : (
-              <MenuIcon className='h-6 w-6' />
-            )}
-          </button>
+          <div className='flex gap-2.5'>
+            <CartBox />
+            <button
+              onClick={toggleMobileMenu}
+              className='hover:bg-primary/80 p-2 text-white transition-colors duration-200'
+              aria-label='Toggle mobile menu'
+              type='button'
+            >
+              {isMobileMenuOpen ? (
+                <X className='h-6 w-6' />
+              ) : (
+                <MenuIcon className='h-6 w-6' />
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Mobile Menu Overlay */}

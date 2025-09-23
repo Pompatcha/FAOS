@@ -11,6 +11,7 @@ import { getProduct } from '@/actions/product'
 import { ImageSlider } from '@/components/ImageSlider'
 import { IndexLayout } from '@/components/Layout/Index'
 import { Loading } from '@/components/Layout/Loading'
+import { SearchBar } from '@/components/SearchBar'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -82,8 +83,14 @@ const ProductPage = ({ params }: { params: Promise<{ id: string }> }) => {
     onSuccess: (result) => {
       if (result.success) {
         toast.success('Product added to cart successfully!')
-        queryClient.invalidateQueries({ queryKey: ['cart', user?.id] })
-        queryClient.invalidateQueries({ queryKey: ['cart-count', user?.id] })
+        queryClient.invalidateQueries({
+          queryKey: ['cart', user?.id],
+          exact: true,
+        })
+        queryClient.invalidateQueries({
+          queryKey: ['cart/count', user?.id],
+          exact: true,
+        })
       } else {
         toast.error(result.message || 'Failed to add product to cart')
       }
@@ -172,6 +179,7 @@ const ProductPage = ({ params }: { params: Promise<{ id: string }> }) => {
 
   return (
     <IndexLayout>
+      <SearchBar />
       <Loading isLoading={productLoading} />
 
       <div className='container mx-auto'>
@@ -348,9 +356,11 @@ const ProductPage = ({ params }: { params: Promise<{ id: string }> }) => {
               </CardContent>
             </Card>
 
-            <div className='p-5'>
-              <span>{product?.description}</span>
-            </div>
+            {product?.description && (
+              <div className='p-5'>
+                <span>{product?.description}</span>
+              </div>
+            )}
           </div>
         </div>
       </div>
