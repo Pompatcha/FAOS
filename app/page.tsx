@@ -112,7 +112,7 @@ const researchLinks = [
 
 const founder = {
   name: 'Patcharin Chanaphukdee',
-  image: 'https://i.ibb.co/351rJLyB/IMG-8438.jpg',
+  image: 'https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/Profiles/pom.png',
   description:
     'Created for Health, Elegance and Well-Being. Elevate patient care and hospitality with the FAOS Collection, a luxurious blend of Thai-Greek heritage, organic purity and health innovation. Designed for discerning healthcare environments that prioritize natural healing and quality without compromise.',
 }

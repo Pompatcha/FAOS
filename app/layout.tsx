@@ -76,7 +76,7 @@ const metadata: Metadata = {
       "Explore our premium honey collection, made from nature's finest sources.",
     images: [
       {
-        url: 'https://i.ibb.co/h14wZP5X/Screenshot-2568-04-03-at-23-00-10.png',
+        url: 'https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/products/Honey.jpg',
         width: 1200,
         height: 630,
         alt: 'FAOS Premium Organic Collection',
@@ -89,7 +89,7 @@ const metadata: Metadata = {
     title: 'FAOS Premium Organic Collection | Premium Olive Oil and Honey',
     description:
       "Explore our premium honey collection, made from nature's finest sources.",
-    images: ['https://i.ibb.co/h14wZP5X/Screenshot-2568-04-03-at-23-00-10.png'],
+    images: ['https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/products/Coversheet%20honey%20and%20olive%20oil.jpg'],
   },
   robots: {
     index: true,

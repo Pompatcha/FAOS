@@ -174,11 +174,11 @@ const AboutPage = () => {
 
           <div className='flex flex-col justify-center gap-5 sm:flex-row'>
             <img
-              src='https://i.ibb.co/C5MxqMM5/IMG-8158.jpg'
+              src='https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/Profiles/pom1.png'
               className='sm:max-w-96'
             />
             <img
-              src='https://i.ibb.co/351rJLyB/IMG-8438.jpg'
+              src='https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/Profiles/pom2.png'
               className='sm:max-w-96'
             />
           </div>
