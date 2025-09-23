@@ -66,7 +66,7 @@ const benefitData = {
       title: "Using Natural Honey for Beautiful Skin, Hair, and Anti-Aging",
       href: "https://greekreporter.com/2023/07/09/greek-honey-for-beautiful-skin-hair-and-anti-aging/",
       image:
-        "https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/Honey_Greece_Greek_honey_credit_GR_AP.webp",
+        "https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/Cleopatra%20and%20honey%20skin%20care.jpg",
     },
   ],
   wine: [
