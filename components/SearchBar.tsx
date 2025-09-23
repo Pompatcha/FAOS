@@ -18,7 +18,7 @@ const SearchBar = () => {
   return (
     <div className='mx-auto flex w-full gap-2.5 sm:w-1/2'>
       <Input
-        className='bg-white'
+        className='!bg-white'
         placeholder='Search for product...'
         value={searchText}
         onChange={(e) => {
@@ -30,11 +30,12 @@ const SearchBar = () => {
           }
         }}
       />
-      <Button onClick={handleSearch} variant='outline'>
+      <Button className='!bg-white' onClick={handleSearch} variant='outline'>
         Search
       </Button>
       {searchText && (
         <Button
+          className='!bg-white'
           onClick={() => {
             clearSearchText()
           }}

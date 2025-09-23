@@ -48,7 +48,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Textarea } from '@/components/ui/textarea'
-import { useRequireAuth } from '@/contexts/AuthContext.tsx'
+import { useRequireAdmin } from '@/contexts/AuthContext.tsx'
 import { formatDate } from '@/lib/date'
 import { numberFormatter, priceFormatter } from '@/lib/number'
 import { truncateText } from '@/lib/text'
@@ -67,7 +67,7 @@ const defaultForm: ProductFormInput = {
 }
 
 const ProductPage = () => {
-  useRequireAuth()
+  useRequireAdmin()
   const [isEditMode, setIsEditMode] = useState(false)
   const [showDialog, setShowDialog] = useState(false)
   const [selectedId, setSelectedId] = useState('')

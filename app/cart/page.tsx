@@ -130,23 +130,15 @@ const CartPage: FC = () => {
   if (cartItems.length === 0) {
     return (
       <IndexLayout>
-        <Card className='bg-white'>
-          <CardContent className='flex flex-col items-center justify-center p-12'>
-            <ShoppingCart className='mb-4 h-24 w-24 text-gray-300' />
-            <h2 className='mb-2 text-2xl font-semibold text-gray-800'>
-              Your cart is empty
-            </h2>
-            <p className='mb-6 text-gray-600'>
-              Add some products to get started
-            </p>
-            <Button
-              onClick={() => window.history.back()}
-              className='bg-primary'
-            >
-              Continue Shopping
-            </Button>
-          </CardContent>
-        </Card>
+        <div className='flex flex-col items-center justify-center rounded-xl bg-white py-12 text-center shadow-lg'>
+          <ShoppingCart className='text-muted-foreground mb-4 size-16' />
+          <h3 className='text-foreground mb-2 text-lg font-semibold'>
+            There are no products in the cart.
+          </h3>
+          <p className='text-muted-foreground max-w-sm'>
+            Your cart is empty. Start shopping to add products to your cart.
+          </p>
+        </div>
       </IndexLayout>
     )
   }

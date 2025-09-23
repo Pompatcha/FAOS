@@ -25,7 +25,7 @@ interface MenuItem {
 }
 
 const Menu = () => {
-  const { user, signOut } = useAuth()
+  const { user, userProfile, signOut } = useAuth()
   const { data: categories } = useQuery({
     queryKey: ['categories'],
     queryFn: () => getCategories(),
@@ -58,7 +58,7 @@ const Menu = () => {
       baseItems.push({ title: 'Login/Register', href: '/login' })
     }
 
-    if (user) {
+    if (user && userProfile?.role === 'admin') {
       baseItems.push(
         {
           title: 'Control Panel',
