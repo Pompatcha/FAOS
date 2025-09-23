@@ -98,7 +98,7 @@ const benefitData = {
       title: "Wine healthy and Thai Food",
       href: "https://www.lifestyleasia.com/bk/dining/drinks/pair-wine-with-thai-food-like-a-pro/",
       image:
-        "https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/4721.avif",
+        "https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/food%20for%20king%20in%20thailand.jpg",
     },
   ],
 };

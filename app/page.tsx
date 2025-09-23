@@ -102,7 +102,7 @@ const researchLinks = [
   {
     id: 4,
     title: "Using Greek Honey for Beautiful Skin, Hair, and Anti-Aging",
-    href: "https://greekreporter.com/2023/07/09/greek-honey-for-beautiful-skin-hair-and-anti-aging/",
+    href: "https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/Cleopatra%20and%20honey%20skin%20care.jpg",
   },
   {
     id: 5,
