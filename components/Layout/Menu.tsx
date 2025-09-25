@@ -10,6 +10,7 @@ import { useAuth } from '@/contexts/AuthContext.tsx'
 
 import { CartBox } from '../CartBox'
 import GoogleTranslate from '../GoogleTranslate'
+import { ProfileBox } from '../ProfileBox'
 
 interface SubMenuItem {
   title: string
@@ -193,7 +194,12 @@ const Menu = () => {
               )}
             </div>
           ))}
-          {user && <CartBox />}
+          {user && (
+            <>
+              <CartBox />
+              <ProfileBox />
+            </>
+          )}
         </div>
 
         {/* Mobile Navigation Header */}
@@ -201,6 +207,7 @@ const Menu = () => {
           <span className='text-lg font-bold text-white'>FAOS Co.,Ltd.</span>
           <div className='flex gap-2.5'>
             <CartBox />
+            <ProfileBox />
             <button
               onClick={toggleMobileMenu}
               className='hover:bg-primary/80 p-2 text-white transition-colors duration-200'
