@@ -82,44 +82,6 @@ const ProductCard: FC<ProductCardProps> = ({ product }) => {
         )}
       </div>
 
-      {product?.preorder_enabled && (
-        <Alert variant='destructive'>
-          <Info />
-          <AlertDescription>
-            Pre-Order Item - Ships {product?.preorder_day} days
-          </AlertDescription>
-          <AlertDescription>
-            This item is available for pre-order. Your order will be processed
-            and shipped once the product becomes available.
-          </AlertDescription>
-        </Alert>
-      )}
-
-      <div className='flex flex-col gap-2.5 p-2.5'>
-        <h3 className='line-clamp-2 text-lg leading-tight font-semibold text-gray-800'>
-          {product?.name}
-        </h3>
-
-        <div className='flex items-end justify-between'>
-          <span className='text-xl font-bold text-red-800'>
-            {product?.min_price && product?.max_price
-              ? product.min_price === product.max_price
-                ? priceFormatter.format(product.min_price)
-                : `${priceFormatter.format(product.min_price)} - ${priceFormatter.format(product.max_price)}`
-              : 'n/a'}
-          </span>
-
-          <span className='text-sm text-gray-600'>
-            {product?.min_stock !== undefined &&
-            product?.max_stock !== undefined
-              ? product.min_stock === product.max_stock
-                ? `Available ${numberFormatter.format(product.min_stock)} Stock`
-                : `Available ${numberFormatter.format(product.min_stock)} - ${numberFormatter.format(product.max_stock)} Stock`
-              : 'n/a'}
-          </span>
-        </div>
-      </div>
-    </div>
   )
 }
 
