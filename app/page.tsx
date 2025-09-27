@@ -114,7 +114,7 @@ const researchLinks = [
 const founder = {
   name: "Patcharin Chanaphukdee",
   image:
-    "https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/pomfood.jpg",
+    "https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/Profiles/pom2.png",
   description:
     "Created for Health, Elegance and Well-Being. Elevate patient care and hospitality with the FAOS Collection, a luxurious blend of Thai-Greek heritage, organic purity and health innovation. Designed for discerning healthcare environments that prioritize natural healing and quality without compromise.",
 };
@@ -147,9 +147,9 @@ const Homepage = () => {
       <ImageSlider
         images={[
           "https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/Celebrating-Beekeeping-Around-the-World-Apimondia.jpg",
-          "https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/Screenshot-2568-06-25-at-06-21-30.png",
-          "https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/104926993.avif",
-          "https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/360_F_1405149352_K4qhIYVahGLumUCry09QJaDyquDaXVrh.jpg",
+          "https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/1.jpg",
+          "https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/2.jpg",
+          "https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/3.jpg",
         ]}
       />
 
