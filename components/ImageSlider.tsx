@@ -103,5 +103,4 @@ const ImageSlider: FC<ImageSliderProps> = ({ images = [] }) => {
     </div>
   )
 }
-
 export { ImageSlider }
