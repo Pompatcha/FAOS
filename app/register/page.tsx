@@ -121,7 +121,7 @@ const RegisterPage = () => {
   return (
     <IndexLayout>
       <div className='bg-primary flex flex-col items-center justify-center'>
-        <div className='w-full max-w-sm md:max-w-5xl'>
+        <div className='w-full'>
           <div className='flex flex-col gap-6'>
             <Card className='overflow-hidden border-none p-0'>
               <CardContent className='grid p-0 md:grid-cols-2'>

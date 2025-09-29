@@ -1,5 +1,4 @@
 'use client'
-
 import { useQuery } from '@tanstack/react-query'
 import { Package } from 'lucide-react'
 import { use } from 'react'
@@ -9,7 +8,6 @@ import { IndexLayout } from '@/components/Layout/Index'
 import { Loading } from '@/components/Layout/Loading'
 import { NatureGoldBanner } from '@/components/NatureGoldBanner'
 import { ProductCard } from '@/components/ProductCard'
-import { SearchBar } from '@/components/SearchBar'
 
 const CategoryPage = ({ params }: { params: Promise<{ slug: string }> }) => {
   const { slug } = use(params)
@@ -24,7 +22,6 @@ const CategoryPage = ({ params }: { params: Promise<{ slug: string }> }) => {
 
   return (
     <IndexLayout>
-      <SearchBar />
       <Loading isLoading={productsLoading} />
 
       <NatureGoldBanner />

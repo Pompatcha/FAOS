@@ -9,6 +9,7 @@ import type { Tables } from '@/types/supabase'
 
 import { getUserById, updateUser } from '@/actions/user'
 import { IndexLayout } from '@/components/Layout/Index'
+import { Loading } from '@/components/Layout/Loading'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -75,33 +76,19 @@ const ProfilePage: FC = () => {
     updateUserMutation.mutate(data)
   }
 
-  if (isLoading) {
-    return (
-      <IndexLayout>
-        <div className='flex justify-center'>
-          <Card className='w-full bg-white sm:w-2xl'>
-            <CardContent className='p-6'>
-              <div className='space-y-4'>
-                <div className='h-4 animate-pulse rounded bg-gray-200' />
-                <div className='h-4 animate-pulse rounded bg-gray-200' />
-                <div className='h-4 animate-pulse rounded bg-gray-200' />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </IndexLayout>
-    )
-  }
-
   return (
     <IndexLayout>
+      <Loading isLoading={isLoading} />
       <div className='flex justify-center'>
-        <Card className='w-full bg-white sm:w-2xl'>
+        <Card className='w-full bg-white'>
           <CardHeader>
             <CardTitle className='text-2xl'>Profile Information</CardTitle>
           </CardHeader>
           <CardContent className='space-y-6'>
-            <form onSubmit={handleSubmit(onSubmit)} className='space-y-6'>
+            <form
+              onSubmit={handleSubmit(onSubmit)}
+              className='grid gap-5 lg:grid-cols-2'
+            >
               <div className='space-y-2'>
                 <Label htmlFor='first_name'>First Name</Label>
                 <Input

@@ -11,7 +11,6 @@ import { getProduct } from '@/actions/product'
 import { ImageSlider } from '@/components/ImageSlider'
 import { IndexLayout } from '@/components/Layout/Index'
 import { Loading } from '@/components/Layout/Loading'
-import { SearchBar } from '@/components/SearchBar'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -179,7 +178,6 @@ const ProductPage = ({ params }: { params: Promise<{ id: string }> }) => {
 
   return (
     <IndexLayout>
-      <SearchBar />
       <Loading isLoading={productLoading} />
 
       <div className='container mx-auto'>

@@ -1,13 +1,17 @@
 'use client'
 
+import { SearchIcon, XIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
+import type { ComponentProps, FC } from 'react'
+
+import { cn } from '@/lib/utils'
 import { useProductStore } from '@/stores/product'
 
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 
-const SearchBar = () => {
+const SearchBar: FC<ComponentProps<'div'>> = ({ className }) => {
   const { searchText, setSearchText, clearSearchText } = useProductStore()
   const router = useRouter()
 
@@ -16,7 +20,7 @@ const SearchBar = () => {
   }
 
   return (
-    <div className='mx-auto flex w-full gap-2.5 sm:w-1/2'>
+    <div className={cn('flex gap-2.5', className)}>
       <Input
         className='!bg-white'
         placeholder='Search for product...'
@@ -31,7 +35,7 @@ const SearchBar = () => {
         }}
       />
       <Button className='!bg-white' onClick={handleSearch} variant='outline'>
-        Search
+        <SearchIcon />
       </Button>
       {searchText && (
         <Button
@@ -41,7 +45,7 @@ const SearchBar = () => {
           }}
           variant='outline'
         >
-          Clear
+          <XIcon />
         </Button>
       )}
     </div>
