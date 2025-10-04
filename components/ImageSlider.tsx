@@ -41,7 +41,7 @@ const ImageSlider: FC<ImageSliderProps> = ({ images = [] }) => {
   }, [emblaApi])
 
   return (
-    <div className='relative mx-auto'>
+    <div className='relative w-full'>
       <div className='embla overflow-hidden' ref={emblaRef}>
         <div className='embla__container flex'>
           {Array.isArray(images) &&

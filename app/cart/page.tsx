@@ -2,6 +2,8 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Minus, Plus, Trash2, ShoppingCart } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 import { toast } from 'sonner'
 
 import type { FC } from 'react'
@@ -12,19 +14,27 @@ import {
   removeFromCart,
   clearCart,
 } from '@/actions/cart'
+import { createOrderFromCart } from '@/actions/order'
 import { IndexLayout } from '@/components/Layout/Index'
 import { Loading } from '@/components/Layout/Loading'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
+import { Textarea } from '@/components/ui/textarea'
 import { useAuth, useRequireAuth } from '@/contexts/AuthContext.tsx'
 import { priceFormatter } from '@/lib/number'
 
 const CartPage: FC = () => {
   const { user } = useAuth()
   useRequireAuth()
-
+  const router = useRouter()
   const queryClient = useQueryClient()
+
+  const [shippingAddress, setShippingAddress] = useState('')
+  const [notes, setNotes] = useState('')
+
   const { data: cartResult, isLoading } = useQuery({
     queryKey: ['cart', user?.id],
     queryFn: () => getCartItems(user?.id || ''),
@@ -100,6 +110,34 @@ const CartPage: FC = () => {
     },
   })
 
+  const checkoutMutation = useMutation({
+    mutationFn: () =>
+      createOrderFromCart({
+        userId: user?.id || '',
+        shippingAddress: shippingAddress || undefined,
+        notes: notes || undefined,
+      }),
+    onSuccess: (result) => {
+      if (result.success) {
+        toast.success('Order created successfully!')
+        queryClient.invalidateQueries({
+          queryKey: ['cart', user?.id],
+          exact: true,
+        })
+        queryClient.invalidateQueries({
+          queryKey: ['cart/count', user?.id],
+          exact: true,
+        })
+        router.push('/dashboard/orders')
+      } else {
+        toast.error(result.message || 'Failed to create order')
+      }
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'An error occurred while creating order')
+    },
+  })
+
   const handleQuantityChange = (cartId: number, newQuantity: number) => {
     if (newQuantity < 1) return
     updateQuantityMutation.mutate({ cartId, quantity: newQuantity })
@@ -114,6 +152,17 @@ const CartPage: FC = () => {
 
     if (confirm('Are you sure you want to clear your cart?')) {
       clearCartMutation.mutate()
+    }
+  }
+
+  const handleCheckout = () => {
+    if (cartItems.length === 0) {
+      toast.error('Your cart is empty')
+      return
+    }
+
+    if (confirm('Are you sure you want to place this order?')) {
+      checkoutMutation.mutate()
     }
   }
 
@@ -284,8 +333,41 @@ const CartPage: FC = () => {
                 </span>
               </div>
 
-              <Button className='bg-primary mt-6 w-full py-6 text-lg'>
-                Proceed to Checkout
+              <div className='space-y-3'>
+                <div>
+                  <Label htmlFor='shipping-address'>
+                    Shipping Address (Optional)
+                  </Label>
+                  <Input
+                    id='shipping-address'
+                    placeholder='Enter shipping address'
+                    value={shippingAddress}
+                    onChange={(e) => setShippingAddress(e.target.value)}
+                    className='mt-1'
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor='notes'>Order Notes (Optional)</Label>
+                  <Textarea
+                    id='notes'
+                    placeholder='Any special requests or notes'
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    className='mt-1'
+                    rows={3}
+                  />
+                </div>
+              </div>
+
+              <Button
+                className='bg-primary mt-6 w-full py-6 text-lg'
+                onClick={handleCheckout}
+                disabled={checkoutMutation.isPending}
+              >
+                {checkoutMutation.isPending
+                  ? 'Processing...'
+                  : 'Proceed to Checkout'}
               </Button>
             </CardContent>
           </Card>

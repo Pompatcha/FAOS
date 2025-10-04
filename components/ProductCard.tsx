@@ -48,7 +48,7 @@ const ProductCard: FC<ProductCardProps> = ({ product }) => {
     >
       <PlusCircle
         size={35}
-        className='text-primary absolute top-2.5 left-2.5 z-20 rounded-full bg-white/10 backdrop-blur-md'
+        className='text-primary absolute top-2.5 left-2.5 z-20 rounded-full bg-white backdrop-blur-md'
       />
 
       <div

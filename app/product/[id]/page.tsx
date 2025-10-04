@@ -180,13 +180,11 @@ const ProductPage = ({ params }: { params: Promise<{ id: string }> }) => {
     <IndexLayout>
       <Loading isLoading={productLoading} />
 
-      <div className='container mx-auto'>
+      <div className='flex flex-col gap-5'>
         <div className='grid grid-cols-1 gap-5 lg:grid-cols-2'>
-          <div className='aspect-square'>
-            <ImageSlider images={images} />
-          </div>
+          <ImageSlider images={images} />
 
-          <div className='h-fit rounded-xl border-4 border-[#f3d27a] bg-gradient-to-r from-[#f9e6b3] to-[#f3d27a]'>
+          <div className='rounded-xl border-4 border-[#f3d27a] bg-gradient-to-r from-[#f9e6b3] to-[#f3d27a]'>
             <div className='flex flex-col gap-2.5 p-5'>
               <div className='text-[#4a2c00]'>
                 <h1 className='mb-2 text-3xl font-bold'>{product?.name}</h1>
@@ -205,7 +203,7 @@ const ProductPage = ({ params }: { params: Promise<{ id: string }> }) => {
             </div>
 
             {product?.preorder_enabled && (
-              <Alert variant='destructive'>
+              <Alert variant='destructive' className='mb-2.5'>
                 <Info />
                 <AlertDescription>
                   Pre-Order Item - Ships {product?.preorder_day} days
@@ -353,14 +351,22 @@ const ProductPage = ({ params }: { params: Promise<{ id: string }> }) => {
                 </form>
               </CardContent>
             </Card>
-
-            {product?.description && (
-              <div className='p-5'>
-                <span>{product?.description}</span>
-              </div>
-            )}
           </div>
         </div>
+
+        {product?.description && (
+          <section className='flex flex-col'>
+            <div className='bg-secondary flex w-full flex-col rounded-t-lg p-2.5 text-center shadow'>
+              <h2 className='text-2xl font-bold text-red-800'>
+                Product Description
+              </h2>
+            </div>
+
+            <div className='flex w-full flex-col items-center gap-5 rounded-b-lg bg-white p-5 sm:flex-row'>
+              <div className='w-full text-lg'>{product?.description}</div>
+            </div>
+          </section>
+        )}
       </div>
     </IndexLayout>
   )
