@@ -184,7 +184,7 @@ const ProductPage = ({ params }: { params: Promise<{ id: string }> }) => {
         <div className='grid grid-cols-1 gap-5 lg:grid-cols-2'>
           <ImageSlider images={images} />
 
-          <div className='rounded-xl border-4 border-[#f3d27a] bg-gradient-to-r from-[#f9e6b3] to-[#f3d27a]'>
+          <div className='h-fit rounded-xl border-4 border-[#f3d27a] bg-gradient-to-r from-[#f9e6b3] to-[#f3d27a]'>
             <div className='flex flex-col gap-2.5 p-5'>
               <div className='text-[#4a2c00]'>
                 <h1 className='mb-2 text-3xl font-bold'>{product?.name}</h1>
