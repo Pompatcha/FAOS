@@ -1,230 +1,129 @@
-import { IndexLayout } from "@/components/Layout/Index";
+import "./globals.css";
+import { IBM_Plex_Sans_Thai } from "next/font/google";
 
-const SectionHeader = ({ title }: { title: string }) => (
-  <div className="bg-secondary flex w-full flex-col rounded-t-lg p-2.5 text-center shadow">
-    <h2 className="text-2xl font-bold text-red-800">{title}</h2>
-  </div>
-);
+import type { Metadata } from "next";
+import type { FC, PropsWithChildren } from "react";
 
-const AboutPage = () => {
+const IBMPlexSansThai = IBM_Plex_Sans_Thai({
+  weight: ["400", "700"],
+});
+
+import { Toaster } from "@/components/ui/sonner";
+import { AuthProvider } from "@/contexts/AuthContext.tsx";
+
+import Providers from "../contexts/QueryProviders";
+
+const metadata: Metadata = {
+  title:
+    "FAOS Premium Organic Collection | Premium Olive Oil and Honey | Organics Olive Oil | Organic Honey",
+  description:
+    "Explore our premium honey collection, made from nature's finest sources. Premium organic olive oil and honey collection offering the finest quality products.",
+  keywords: [
+    "organic olive oil",
+    "premium honey",
+    "raw honey",
+    "thyme honey",
+    "organic Greek products",
+    "Mediterranean organic food",
+    "organic superfoods",
+    "น้ำมันมะกอกบริสุทธิ์",
+    "อาหารเพื่อสุขภาพ",
+    "faos",
+    "ไวน์พรีเมี่ยม",
+    "ขายไวน์",
+    "exclusive product",
+    "wine testing",
+    "ไวน์ออแกนนิกส์",
+    "wine cellar",
+    "wine bar",
+    "แอลกอฮอล์",
+    "ขายไวน์ออนไลน์",
+    "wine & beverage",
+    "ร้านขายไวน์",
+    "ร้านอาหาร",
+    "โรงแรม",
+    "สายไวน์",
+    "อาหาร",
+    "ไวน์กูรู",
+    "wineguru",
+    "wine event",
+    "wine pairing",
+    "wine pairing menu",
+    "จับคู่อาหารกับไวน์",
+    "ไวน์ราคาขายส่ง",
+    "ไวน์ขายส่ง",
+    "ไวน์ราคาพิเศษ",
+    "wine list",
+    "ไวน์สำหรับงานแต่งงาน",
+    "ไวน์สำหรับอีเวนต์",
+    "พิเศษในโรงแรม",
+    "wine connection",
+    "the wine merchant",
+    "scarlettwine",
+    "wine bar",
+    "the bar upstairs",
+    "wine beverage",
+    "mandarin oriental",
+    "capella",
+    "house wine",
+    "น้ำมันมะกอกปลอดสาร",
+    "ไวน์ปลอดสารเคมี",
+    "ไวน์แดง",
+    "ไวน์ขาว",
+    "ไวน์โรส",
+    "ไวน์สปาร์คกิ้ง",
+    "Wellness",
+    "ฟาร์มผึ้ง",
+    "น้ำผึ้งแท้100%",
+    "น้ำผึ้งฟาว์ส",
+    "เบเกอรี่",
+    "น้ำผึ้งกรีก",
+  ].join(", "),
+  authors: [{ name: "Patcharin Chanaphukdee" }],
+  openGraph: {
+    title: "FAOS Premium Organic Collection | Premium Olive Oil and Honey",
+    description:
+      "Explore our premium honey collection, made from nature's finest sources.",
+    images: [
+      {
+        url: "https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/italian%20food%20wine%20and%20olive%20oil%20food.%20Greek%20salad,%20hummus%20with%20pita,%20tzatziki,%20tabbouleh.Seafood%20&%20Grilled%20Fish.jpg",
+        width: 1200,
+        height: 630,
+        alt: "FAOS Premium Organic Collection",
+      },
+    ],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "FAOS Premium Organic Collection | Premium Olive Oil and Honey",
+    description:
+      "Explore our premium honey collection, made from nature's finest sources.",
+    images: [
+      "https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/Food%20for%20king%20in%20thailand%20see%20sald%20olive%20oil%20wine%20food%20.%20display%20FAOS%20band%20on%20the%20wine%20bottom%20and%20olive%20oil%20bottom.jpg",
+    ],
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  alternates: {
+    canonical: "/",
+  },
+};
+
+const RootLayout: FC<PropsWithChildren> = ({ children }) => {
   return (
-    <IndexLayout>
-      {/* Section 1 */}
-      <section className="flex flex-col">
-        <SectionHeader title="High Premium Product of Holistic Olive Oil and Honey, Healthy Products" />
-        <div className="flex w-full flex-col items-center gap-5 rounded-b-lg bg-white p-5 sm:flex-row">
-          <span className="text-xl">
-            FAOS Thailand began with a simple but powerful idea:{" "}
-            <span className="font-bold text-red-800">
-              Prioritizing mental health and consuming high-quality,
-            </span>{" "}
-            natural foods can lead to stronger physical and mental well-being.
-            This insight emerged through a surprising discovery from food
-            biologists and a deep study of traditional Greek cuisine, one of the
-            most respected food cultures in Europe for its health benefits.
-            Through community cooking experiments and cooperative learning, we
-            found that{" "}
-            <span className="font-bold text-red-800">
-              Thai and Greek food traditions share many values.
-            </span>{" "}
-            Both emphasize fresh ingredients, natural preparation, and a strong
-            connection to the land. These shared principles inspired us to
-            create a line of organic foods and cosmetic products made entirely
-            from nature. Every product we develop uses 100% natural ingredients
-            that preserve the purity of what we consume and apply to our bodies.
-            We believe that{" "}
-            <span className="font-bold text-red-800">
-              the quality of what we eat and use every day
-            </span>{" "}
-            has a direct impact on our health. When we consume products that
-            contain toxins, our bodies absorb those harmful substances, which
-            can lead to frequent illness.{" "}
-            <span className="font-bold text-red-800">
-              Between 2018 and 2022, Thailand saw a steady rise in mortality
-              rates, reaching nine deaths per one thousand people in 2022.
-            </span>{" "}
-            Male mortality has remained higher than female mortality every year.{" "}
-            <span className="font-bold text-red-800">
-              In 2022, the male rate was 10.3 while the female rate was 7.7 per
-              one thousand people.
-            </span>{" "}
-            At FAOS Thailand, we recognize that food and everyday products play
-            an important role in helping people live longer, healthier, and
-            happier lives. Our mission is to provide pure, natural alternatives
-            that support well-being both physically and mentally.{" "}
-            <span className="font-bold text-red-800">
-              We are committed to sharing these products with the people of
-              Thailand, throughout Asia, and across the world.
-            </span>
-          </span>
-        </div>
-      </section>
-
-      {/* Section 2 */}
-      <section className="flex flex-col">
-        <SectionHeader title="Founder of FAOS Premium Organic Collection" />
-        <div className="flex w-full flex-col items-center gap-5 rounded-b-lg bg-white p-5">
-          <span className="text-xl">
-            Patcharin Chanaphukdee, the founder of Pure Organic Products — a
-            visionary based in Bangkok, Thailand, the land historically known as{" "}
-            <span className="font-bold text-red-800">
-              Suvaṇṇabhūmi or the "Land of Gold."
-            </span>{" "}
-            With 19 years of experience in environmental compliance, I’m
-            dedicated to sustainability and compliance management. Throughout my
-            career, I have built a large social community and a deep connection
-            with various sectors. The inception of FAOS Premium Organic
-            Collection Olive Oil emerged from my personal journey{" "}
-            <span className="font-bold text-red-800">
-              towards well-being and sustainability.
-            </span>{" "}
-            While navigating a period of mental and physical distress caused by{" "}
-            <span className="font-bold text-red-800">
-              the negative influences of alcoholism in my life,
-            </span>{" "}
-            I was inspired to seek healing. Despite not being a consumer of
-            alcohol, I was deeply affected by its destructive consequences on
-            the people around me, leading to emotional unrest and physical
-            issues. In search of peace and healing, I found solace in natural
-            food and lifestyle during travels around the Mediterranean Sea in
-            Europe. This connection with nature deeply resonated with me.
-            Through health and wellness guidance and my own exploration of
-            nature, I discovered peace in beekeeping, honey, and olive
-            cultivation. This newfound appreciation for nature played a
-            significant role in calming my mind and emotions. My interest in
-            natural healing led me to explore the ancient art of winemaking. I
-            experimented with creating natural alcohol from{" "}
-            <span className="font-bold text-red-800">
-              grapes, honey, blossom flowers, and herbs,
-            </span>{" "}
-            inspired by{" "}
-            <span className="font-bold text-red-800">
-              traditional Mediterranean methods integrated with Asian
-              traditions.
-            </span>{" "}
-            Through careful research and scientific experimentation, I ensured
-            the process was safe, and this transformative experience motivated
-            me to share the benefits of natural, sustainable practices with
-            others.{" "}
-            <span className="font-bold text-red-800">
-              FAOS Premium Organic Collection
-            </span>{" "}
-            was established to promote{" "}
-            <span className="font-bold text-red-800">green sustainability</span>{" "}
-            and offer products that nourish both the body and mind. Through the
-            company’s efforts, I hope to contribute to the well-being of
-            individuals while advocating for a return to nature’s healing
-            properties.
-          </span>
-
-          <div className="flex flex-col justify-center gap-5 sm:flex-row">
-            <img
-              src="https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/Profiles/pom1.png"
-              className="sm:max-w-96"
-            />
-            <img
-              src="https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/Profiles/pom2.png"
-              className="sm:max-w-96"
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* Section 3 */}
-      <section className="flex flex-col">
-        <SectionHeader title="The Essence of Pure Organics Products" />
-        <div className="flex w-full flex-col items-center gap-5 rounded-b-lg bg-white p-5">
-          <span className="text-xl">
-            At <span className="font-bold text-red-800">Pure,</span> we take
-            pride in crafting the finest wines and honey, sourced directly from{" "}
-            <span className="font-bold text-red-800">
-              community organic farms.
-            </span>{" "}
-            Our mission is to create high premium, natural products that promote{" "}
-            <span className="font-bold text-red-800">
-              health, sustainability, and well-being.
-            </span>
-          </span>
-        </div>
-      </section>
-
-      {/* Section 4 */}
-      <section className="flex flex-col">
-        <SectionHeader title="Our Commitment to Quality & Sustainability" />
-        <div className="flex w-full flex-col items-center gap-5 rounded-b-lg bg-white p-5">
-          <span className="text-xl">
-            FAOS was founded with a vision: to produce{" "}
-            <span className="font-bold text-red-800">
-              High Premium Organic Collections
-            </span>{" "}
-            that contribute to a{" "}
-            <span className="font-bold text-red-800">
-              greener world and sustainable living.
-            </span>{" "}
-            We collaborate with organic farming communities across{" "}
-            <span className="font-bold text-red-800">Asia and the West,</span>{" "}
-            exchanging knowledge and expertise to create{" "}
-            <span className="font-bold text-red-800">
-              limited-edition natural products.
-            </span>
-          </span>
-        </div>
-      </section>
-
-      {/* Section 5 */}
-      <section className="flex flex-col">
-        <SectionHeader title="The Health Benefits of Organic Olive Oil" />
-        <div className="flex w-full flex-col items-center gap-5 rounded-b-lg bg-white p-5">
-          <span className="text-xl">
-            Our honey and olive oil are made using{" "}
-            <span className="font-bold text-red-800">
-              scientifically researched methods,
-            </span>{" "}
-            ensuring each bottle delivers both{" "}
-            <span className="font-bold text-red-800">
-              quality and health benefits.
-            </span>{" "}
-            Organic honey and olive oil, when enjoyed in moderation, can:
-            <br />
-            <b>• Reduce stress & anxiety</b>
-            <br />
-            <b>• Enhance social connections</b>
-            <br />
-            <b>• Support heart health</b>
-            <br />
-            <b>• Promote overall well-being</b>
-          </span>
-        </div>
-      </section>
-
-      {/* Section 6 */}
-      <section className="flex flex-col">
-        <SectionHeader title="From Farm to Bottle: A Commitment to Excellence" />
-        <div className="flex w-full flex-col items-center gap-5 rounded-b-lg bg-white p-5">
-          <span className="text-xl">
-            Every step of our honey and olive oil process—{" "}
-            <span className="font-bold text-red-800">
-              from selecting the best organic forests to bottling
-            </span>{" "}
-            —is carefully monitored. We work closely with{" "}
-            <span className="font-bold text-red-800">
-              certified organic farms,
-            </span>{" "}
-            ensuring that no harmful chemicals are used. Each batch undergoes{" "}
-            <span className="font-bold text-red-800">rigorous lab testing</span>{" "}
-            to guarantee purity, taste, and exceptional quality. At FAOS Premium
-            Organic Collection, we believe that{" "}
-            <span className="font-bold text-red-800">
-              organic products are more than just food—they’re a way to
-              celebrate life, good health, and meaningful connections.
-            </span>{" "}
-            Join us on our journey towards a healthier, sustainable future—one
-            sip at a time.
-          </span>
-        </div>
-      </section>
-    </IndexLayout>
+    <html lang="en">
+      <body className={`${IBMPlexSansThai.className} antialiased`}>
+        <Toaster />
+        <Providers>
+          <AuthProvider>{children}</AuthProvider>
+        </Providers>
+      </body>
+    </html>
   );
 };
 
-export default AboutPage;
+export default RootLayout;
+export { metadata };
