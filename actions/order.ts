@@ -202,7 +202,7 @@ const getUserOrders = async (userId: string) => {
   }
 }
 
-const getAllOrders = async () => {
+const getAllOrders = async ({ userId }: { userId?: number }) => {
   const supabase = createClient()
 
   try {
@@ -221,6 +221,7 @@ const getAllOrders = async () => {
       `,
       )
       .order('created_at', { ascending: false })
+      .eq('user_id', userId)
 
     if (ordersError) throw ordersError
 
@@ -408,13 +409,14 @@ const cancelOrder = async (orderId: number) => {
   }
 }
 
-const getOrderStatistics = async () => {
+const getOrderStatistics = async ({ userId }: { userId: number }) => {
   const supabase = createClient()
 
   try {
     const { count: totalOrders, error: totalError } = await supabase
       .from('orders')
       .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId)
 
     if (totalError) throw totalError
 
@@ -422,6 +424,7 @@ const getOrderStatistics = async () => {
       .from('orders')
       .select('*', { count: 'exact', head: true })
       .eq('status', 'pending')
+      .eq('user_id', userId)
 
     if (pendingError) throw pendingError
 
@@ -429,6 +432,7 @@ const getOrderStatistics = async () => {
       .from('orders')
       .select('*', { count: 'exact', head: true })
       .eq('status', 'processing')
+      .eq('user_id', userId)
 
     if (processingError) throw processingError
 
@@ -436,6 +440,7 @@ const getOrderStatistics = async () => {
       .from('orders')
       .select('*', { count: 'exact', head: true })
       .eq('status', 'completed')
+      .eq('user_id', userId)
 
     if (completedError) throw completedError
 
@@ -443,6 +448,7 @@ const getOrderStatistics = async () => {
       .from('orders')
       .select('total_amount')
       .eq('status', 'completed')
+      .eq('user_id', userId)
 
     if (revenueError) throw revenueError
 

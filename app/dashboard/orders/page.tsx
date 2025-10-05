@@ -100,12 +100,12 @@ const OrderPage = () => {
 
   const { data: ordersResult, isLoading } = useQuery({
     queryKey: ['orders', 'all'],
-    queryFn: () => getAllOrders(),
+    queryFn: () => getAllOrders({ userId: userProfile?.id ?? 0 }),
   })
 
   const { data: statsResult } = useQuery({
     queryKey: ['orders', 'statistics'],
-    queryFn: () => getOrderStatistics(),
+    queryFn: () => getOrderStatistics({ userId: userProfile?.id ?? 0 }),
   })
 
   const orders = ordersResult?.data || []
@@ -356,7 +356,6 @@ const OrderPage = () => {
         </Table>
       </div>
 
-      {/* Detail Dialog */}
       <Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>
         <DialogContent className='flex max-h-[90vh] flex-col overflow-hidden sm:max-w-[600px]'>
           <DialogHeader>
@@ -538,7 +537,6 @@ const OrderPage = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Ship Order Dialog */}
       <Dialog open={showTrackingDialog} onOpenChange={setShowTrackingDialog}>
         <DialogContent className='sm:max-w-[425px]'>
           <DialogHeader>
@@ -585,7 +583,6 @@ const OrderPage = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Cancel Order Dialog */}
       <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>

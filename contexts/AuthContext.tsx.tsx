@@ -15,6 +15,7 @@ import { getUser, getUserProfile } from '@/actions/auth'
 import { createClient } from '@/utils/supabase/client'
 
 interface UserProfile {
+  id: number | null
   role: string | null
 }
 
