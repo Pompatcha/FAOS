@@ -6,12 +6,22 @@ import { toast } from 'sonner'
 import {
   getAllOrders,
   updateOrderStatus,
-  updatePaymentStatus,
+  cancelOrder,
   getOrderStatistics,
 } from '@/actions/order'
 import { HeaderCard } from '@/components/HeaderCard'
 import { IndexLayout } from '@/components/Layout/Index'
 import { Loading } from '@/components/Layout/Loading'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -23,13 +33,6 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import {
   Table,
@@ -65,11 +68,8 @@ const OrderPage = () => {
   const [trackingNumber, setTrackingNumber] = useState('')
   const [showTrackingDialog, setShowTrackingDialog] = useState(false)
   const [showDetailDialog, setShowDetailDialog] = useState(false)
-  const [showStatusDialog, setShowStatusDialog] = useState(false)
-  const [showPaymentDialog, setShowPaymentDialog] = useState(false)
+  const [showCancelDialog, setShowCancelDialog] = useState(false)
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null)
-  const [newStatus, setNewStatus] = useState('')
-  const [newPaymentStatus, setNewPaymentStatus] = useState('')
 
   const { data: ordersResult, isLoading } = useQuery({
     queryKey: ['orders', 'all'],
@@ -90,17 +90,17 @@ const OrderPage = () => {
     totalRevenue: 0,
   }
 
-  const updateStatusMutation = useMutation({
+  const shipOrderMutation = useMutation({
     mutationFn: ({ orderId, status }: { orderId: number; status: string }) =>
       updateOrderStatus(orderId, status),
     onSuccess: (result) => {
       if (result.success) {
         queryClient.invalidateQueries({ queryKey: ['orders'] })
-        toast.success('Order status updated successfully!')
-        setShowStatusDialog(false)
+        toast.success('Order shipped successfully!')
         setShowTrackingDialog(false)
+        setTrackingNumber('')
       } else {
-        toast.error(result.message || 'Failed to update order status')
+        toast.error(result.message || 'Failed to ship order')
       }
     },
     onError: (error: Error) => {
@@ -108,21 +108,15 @@ const OrderPage = () => {
     },
   })
 
-  const updatePaymentMutation = useMutation({
-    mutationFn: ({
-      orderId,
-      paymentStatus,
-    }: {
-      orderId: number
-      paymentStatus: string
-    }) => updatePaymentStatus(orderId, paymentStatus),
+  const cancelOrderMutation = useMutation({
+    mutationFn: (orderId: number) => cancelOrder(orderId),
     onSuccess: (result) => {
       if (result.success) {
         queryClient.invalidateQueries({ queryKey: ['orders'] })
-        toast.success('Payment status updated successfully!')
-        setShowPaymentDialog(false)
+        toast.success('Order cancelled successfully! Stock has been restored.')
+        setShowCancelDialog(false)
       } else {
-        toast.error(result.message || 'Failed to update payment status')
+        toast.error(result.message || 'Failed to cancel order')
       }
     },
     onError: (error: Error) => {
@@ -155,44 +149,48 @@ const OrderPage = () => {
     setShowDetailDialog(true)
   }
 
-  const openStatusDialog = (orderId: number, currentStatus: string) => {
+  const openShipDialog = (orderId: number) => {
     setSelectedOrderId(orderId)
-    setNewStatus(currentStatus)
-    setShowStatusDialog(true)
+    setShowTrackingDialog(true)
   }
 
-  const openPaymentDialog = (orderId: number, currentStatus: string) => {
+  const openCancelDialog = (orderId: number) => {
     setSelectedOrderId(orderId)
-    setNewPaymentStatus(currentStatus)
-    setShowPaymentDialog(true)
+    setShowCancelDialog(true)
   }
 
   const confirmShip = () => {
     if (trackingNumber.trim() && selectedOrderId) {
-      updateStatusMutation.mutate({
+      shipOrderMutation.mutate({
         orderId: selectedOrderId,
         status: 'shipped',
       })
-      setTrackingNumber('')
     }
   }
 
-  const confirmStatusUpdate = () => {
-    if (selectedOrderId && newStatus) {
-      updateStatusMutation.mutate({
-        orderId: selectedOrderId,
-        status: newStatus,
-      })
+  const confirmCancel = () => {
+    if (selectedOrderId) {
+      cancelOrderMutation.mutate(selectedOrderId)
     }
   }
 
-  const confirmPaymentUpdate = () => {
-    if (selectedOrderId && newPaymentStatus) {
-      updatePaymentMutation.mutate({
-        orderId: selectedOrderId,
-        paymentStatus: newPaymentStatus,
-      })
-    }
+  const canShip = (order: any) => {
+    return (
+      userProfile?.role === 'admin' &&
+      order.payment_status === 'paid' &&
+      order.status !== 'shipped' &&
+      order.status !== 'delivered' &&
+      order.status !== 'cancelled'
+    )
+  }
+
+  const canCancel = (order: any) => {
+    return (
+      userProfile?.role === 'admin' &&
+      order.status !== 'shipped' &&
+      order.status !== 'delivered' &&
+      order.status !== 'cancelled'
+    )
   }
 
   const selectedOrder = orders.find((order) => order.id === selectedOrderId)
@@ -206,7 +204,7 @@ const OrderPage = () => {
           <span className='text-4xl'>Orders</span>
           <span>
             Track and manage all your customer orders in one place. <br />
-            Process payments, update order status, and ensure timely delivery.
+            Process shipments and ensure timely delivery.
           </span>
         </div>
       </div>
@@ -303,27 +301,24 @@ const OrderPage = () => {
                         View
                       </Button>
 
-                      {userProfile?.role === 'admin' && (
-                        <>
-                          <Button
-                            variant='outline'
-                            size='sm'
-                            onClick={() =>
-                              openStatusDialog(order.id, order.status)
-                            }
-                          >
-                            Status
-                          </Button>
-                          <Button
-                            variant='outline'
-                            size='sm'
-                            onClick={() =>
-                              openPaymentDialog(order.id, order.payment_status)
-                            }
-                          >
-                            Payment
-                          </Button>
-                        </>
+                      {canShip(order) && (
+                        <Button
+                          variant='default'
+                          size='sm'
+                          onClick={() => openShipDialog(order.id)}
+                        >
+                          Ship
+                        </Button>
+                      )}
+
+                      {canCancel(order) && (
+                        <Button
+                          variant='destructive'
+                          size='sm'
+                          onClick={() => openCancelDialog(order.id)}
+                        >
+                          Cancel
+                        </Button>
                       )}
                     </div>
                   </TableCell>
@@ -334,6 +329,7 @@ const OrderPage = () => {
         </Table>
       </div>
 
+      {/* Detail Dialog */}
       <Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>
         <DialogContent className='flex max-h-[90vh] flex-col overflow-hidden sm:max-w-[600px]'>
           <DialogHeader>
@@ -515,107 +511,13 @@ const OrderPage = () => {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={showStatusDialog} onOpenChange={setShowStatusDialog}>
-        <DialogContent className='sm:max-w-[425px]'>
-          <DialogHeader>
-            <DialogTitle>Update Order Status</DialogTitle>
-            <DialogDescription>
-              Change the status of order {selectedOrder?.order_number}
-            </DialogDescription>
-          </DialogHeader>
-          <div className='mt-4 space-y-4'>
-            <div>
-              <Label htmlFor='status'>Order Status</Label>
-              <Select value={newStatus} onValueChange={setNewStatus}>
-                <SelectTrigger className='mt-1'>
-                  <SelectValue placeholder='Select status' />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(orderStatuses).map(([key, label]) => (
-                    <SelectItem key={key} value={key}>
-                      {label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className='flex justify-end space-x-2'>
-              <Button
-                variant='outline'
-                onClick={() => setShowStatusDialog(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={confirmStatusUpdate}
-                disabled={
-                  !newStatus ||
-                  newStatus === selectedOrder?.status ||
-                  updateStatusMutation.isPending
-                }
-              >
-                {updateStatusMutation.isPending ? 'Updating...' : 'Update'}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
-        <DialogContent className='sm:max-w-[425px]'>
-          <DialogHeader>
-            <DialogTitle>Update Payment Status</DialogTitle>
-            <DialogDescription>
-              Change the payment status of order {selectedOrder?.order_number}
-            </DialogDescription>
-          </DialogHeader>
-          <div className='mt-4 space-y-4'>
-            <div>
-              <Label htmlFor='payment-status'>Payment Status</Label>
-              <Select
-                value={newPaymentStatus}
-                onValueChange={setNewPaymentStatus}
-              >
-                <SelectTrigger className='mt-1'>
-                  <SelectValue placeholder='Select payment status' />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(paymentStatuses).map(([key, label]) => (
-                    <SelectItem key={key} value={key}>
-                      {label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className='flex justify-end space-x-2'>
-              <Button
-                variant='outline'
-                onClick={() => setShowPaymentDialog(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={confirmPaymentUpdate}
-                disabled={
-                  !newPaymentStatus ||
-                  newPaymentStatus === selectedOrder?.payment_status ||
-                  updatePaymentMutation.isPending
-                }
-              >
-                {updatePaymentMutation.isPending ? 'Updating...' : 'Update'}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
+      {/* Ship Order Dialog */}
       <Dialog open={showTrackingDialog} onOpenChange={setShowTrackingDialog}>
         <DialogContent className='sm:max-w-[425px]'>
           <DialogHeader>
             <DialogTitle>Ship Order {selectedOrder?.order_number}</DialogTitle>
             <DialogDescription>
-              Enter tracking number and mark order as shipped
+              Enter tracking number to mark order as shipped
             </DialogDescription>
           </DialogHeader>
           <div className='mt-4 space-y-4'>
@@ -625,9 +527,13 @@ const OrderPage = () => {
                 id='tracking'
                 value={trackingNumber}
                 onChange={(e) => setTrackingNumber(e.target.value)}
-                placeholder='Enter tracking number'
+                placeholder='Enter tracking number (e.g., TH1234567890)'
                 className='mt-1'
               />
+              <p className='mt-2 text-sm text-gray-500'>
+                Once shipped, customers can track their package with the
+                shipping provider.
+              </p>
             </div>
             <div className='flex justify-end space-x-2'>
               <Button
@@ -641,16 +547,42 @@ const OrderPage = () => {
               </Button>
               <Button
                 onClick={confirmShip}
-                disabled={
-                  !trackingNumber.trim() || updateStatusMutation.isPending
-                }
+                disabled={!trackingNumber.trim() || shipOrderMutation.isPending}
               >
-                {updateStatusMutation.isPending ? 'Shipping...' : 'Ship Order'}
+                {shipOrderMutation.isPending
+                  ? 'Shipping...'
+                  : 'Mark as Shipped'}
               </Button>
             </div>
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Cancel Order Dialog */}
+      <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancel Order</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to cancel order{' '}
+              {selectedOrder?.order_number}? This will restore the stock for all
+              items in this order. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>No, keep order</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmCancel}
+              disabled={cancelOrderMutation.isPending}
+              className='bg-destructive hover:bg-destructive/90 text-white'
+            >
+              {cancelOrderMutation.isPending
+                ? 'Cancelling...'
+                : 'Yes, cancel order'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </IndexLayout>
   )
 }

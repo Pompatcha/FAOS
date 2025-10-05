@@ -39,7 +39,8 @@ const createOrderFromCart = async (input: CreateOrderFromCartInput) => {
         product_options:product_option_id (
           id,
           option_name,
-          option_value
+          option_value,
+          option_stock
         )
       `,
       )
@@ -51,6 +52,19 @@ const createOrderFromCart = async (input: CreateOrderFromCartInput) => {
         data: null,
         message: 'Cart is empty',
         success: false,
+      }
+    }
+
+    for (const item of cartItems) {
+      if (item.product_option_id && item.product_options) {
+        const currentStock = item.product_options.option_stock || 0
+        if (currentStock < item.quantity) {
+          return {
+            data: null,
+            message: `สินค้า "${item.products?.name}" (${item.product_options.option_name}: ${item.product_options.option_value}) มีสต็อกไม่เพียงพอ (เหลือ ${currentStock} ชิ้น)`,
+            success: false,
+          }
+        }
       }
     }
 
@@ -85,20 +99,36 @@ const createOrderFromCart = async (input: CreateOrderFromCartInput) => {
 
     if (orderError) throw orderError
 
-    const orderItems: OrderItemInput[] = cartItems.map((item) => ({
-      product_id: item.product_id,
-      product_option_id: item.product_option_id,
-      product_name: item.products?.name || 'Unknown Product',
-      product_option_details: item.product_options
-        ? {
-            [item.product_options.option_name]:
-              item.product_options.option_value,
-          }
-        : null,
-      quantity: item.quantity,
-      unit_price: item.unit_price,
-      total_price: Number(item.unit_price) * item.quantity,
-    }))
+    const orderItems: OrderItemInput[] = []
+
+    for (const item of cartItems) {
+      if (item.product_option_id && item.product_options) {
+        const newStock =
+          (item.product_options.option_stock || 0) - item.quantity
+
+        const { error: stockError } = await supabase
+          .from('product_options')
+          .update({ option_stock: newStock })
+          .eq('id', item.product_option_id)
+
+        if (stockError) throw stockError
+      }
+
+      orderItems.push({
+        product_id: item.product_id,
+        product_option_id: item.product_option_id,
+        product_name: item.products?.name || 'Unknown Product',
+        product_option_details: item.product_options
+          ? {
+              [item.product_options.option_name]:
+                item.product_options.option_value,
+            }
+          : null,
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+        total_price: Number(item.unit_price) * item.quantity,
+      })
+    }
 
     const { error: itemsError } = await supabase.from('order_items').insert(
       orderItems.map((item) => ({
@@ -322,6 +352,36 @@ const cancelOrder = async (orderId: number) => {
   const supabase = createClient()
 
   try {
+    const { data: orderItems, error: fetchError } = await supabase
+      .from('order_items')
+      .select('*')
+      .eq('order_id', orderId)
+
+    if (fetchError) throw fetchError
+
+    if (orderItems && orderItems.length > 0) {
+      for (const item of orderItems) {
+        if (item.product_option_id) {
+          const { data: currentOption } = await supabase
+            .from('product_options')
+            .select('option_stock')
+            .eq('id', item.product_option_id)
+            .single()
+
+          if (currentOption) {
+            const newStock = (currentOption.option_stock || 0) + item.quantity
+
+            const { error: stockError } = await supabase
+              .from('product_options')
+              .update({ option_stock: newStock })
+              .eq('id', item.product_option_id)
+
+            if (stockError) throw stockError
+          }
+        }
+      }
+    }
+
     const { data: updatedOrder, error: updateError } = await supabase
       .from('orders')
       .update({

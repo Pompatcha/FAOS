@@ -17,6 +17,16 @@ import {
 import { createOrderFromCart } from '@/actions/order'
 import { IndexLayout } from '@/components/Layout/Index'
 import { Loading } from '@/components/Layout/Loading'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -34,6 +44,8 @@ const CartPage: FC = () => {
 
   const [shippingAddress, setShippingAddress] = useState('')
   const [notes, setNotes] = useState('')
+  const [showClearDialog, setShowClearDialog] = useState(false)
+  const [showCheckoutDialog, setShowCheckoutDialog] = useState(false)
 
   const { data: cartResult, isLoading } = useQuery({
     queryKey: ['cart', user?.id],
@@ -101,6 +113,7 @@ const CartPage: FC = () => {
           exact: true,
         })
         toast.success('Cart cleared successfully!')
+        setShowClearDialog(false)
       } else {
         toast.error(result.message || 'Failed to clear cart')
       }
@@ -128,6 +141,7 @@ const CartPage: FC = () => {
           queryKey: ['cart/count', user?.id],
           exact: true,
         })
+        setShowCheckoutDialog(false)
         router.push('/dashboard/orders')
       } else {
         toast.error(result.message || 'Failed to create order')
@@ -149,10 +163,7 @@ const CartPage: FC = () => {
 
   const handleClearCart = () => {
     if (cartItems.length === 0) return
-
-    if (confirm('Are you sure you want to clear your cart?')) {
-      clearCartMutation.mutate()
-    }
+    setShowClearDialog(true)
   }
 
   const handleCheckout = () => {
@@ -160,10 +171,15 @@ const CartPage: FC = () => {
       toast.error('Your cart is empty')
       return
     }
+    setShowCheckoutDialog(true)
+  }
 
-    if (confirm('Are you sure you want to place this order?')) {
-      checkoutMutation.mutate()
-    }
+  const confirmClearCart = () => {
+    clearCartMutation.mutate()
+  }
+
+  const confirmCheckout = () => {
+    checkoutMutation.mutate()
   }
 
   const calculateSubtotal = () => {
@@ -373,6 +389,58 @@ const CartPage: FC = () => {
           </Card>
         </div>
       </div>
+
+      <AlertDialog open={showClearDialog} onOpenChange={setShowClearDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Clear Cart</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to clear all items from your cart? This
+              action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmClearCart}
+              disabled={clearCartMutation.isPending}
+              className='bg-destructive hover:bg-destructive/90 text-white'
+            >
+              {clearCartMutation.isPending ? 'Clearing...' : 'Yes, clear cart'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={showCheckoutDialog}
+        onOpenChange={setShowCheckoutDialog}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Order</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to place this order for{' '}
+              <span className='font-semibold'>
+                {priceFormatter.format(calculateTotal())}
+              </span>
+              ? Please review your cart items and shipping details before
+              confirming.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Review Cart</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmCheckout}
+              disabled={checkoutMutation.isPending}
+            >
+              {checkoutMutation.isPending
+                ? 'Processing...'
+                : 'Confirm & Place Order'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </IndexLayout>
   )
 }
