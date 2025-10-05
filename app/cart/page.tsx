@@ -2,6 +2,8 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Minus, Plus, Trash2, ShoppingCart } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 import { toast } from 'sonner'
 
 import type { FC } from 'react'
@@ -12,18 +14,39 @@ import {
   removeFromCart,
   clearCart,
 } from '@/actions/cart'
+import { createOrderFromCart } from '@/actions/order'
 import { IndexLayout } from '@/components/Layout/Index'
+import { Loading } from '@/components/Layout/Loading'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
+import { Textarea } from '@/components/ui/textarea'
 import { useAuth, useRequireAuth } from '@/contexts/AuthContext.tsx'
 import { priceFormatter } from '@/lib/number'
 
 const CartPage: FC = () => {
   const { user } = useAuth()
   useRequireAuth()
-
+  const router = useRouter()
   const queryClient = useQueryClient()
+
+  const [shippingAddress, setShippingAddress] = useState('')
+  const [notes, setNotes] = useState('')
+  const [showClearDialog, setShowClearDialog] = useState(false)
+  const [showCheckoutDialog, setShowCheckoutDialog] = useState(false)
+
   const { data: cartResult, isLoading } = useQuery({
     queryKey: ['cart', user?.id],
     queryFn: () => getCartItems(user?.id || ''),
@@ -37,8 +60,14 @@ const CartPage: FC = () => {
       updateCartQuantity(cartId, quantity),
     onSuccess: (result) => {
       if (result.success) {
-        queryClient.invalidateQueries({ queryKey: ['cart', user?.id] })
-        queryClient.invalidateQueries({ queryKey: ['cart-count', user?.id] })
+        queryClient.invalidateQueries({
+          queryKey: ['cart', user?.id],
+          exact: true,
+        })
+        queryClient.invalidateQueries({
+          queryKey: ['cart/count', user?.id],
+          exact: true,
+        })
         toast.success('Quantity updated successfully!')
       } else {
         toast.error(result.message || 'Failed to update quantity')
@@ -53,8 +82,14 @@ const CartPage: FC = () => {
     mutationFn: (cartId: number) => removeFromCart(cartId),
     onSuccess: (result) => {
       if (result.success) {
-        queryClient.invalidateQueries({ queryKey: ['cart', user?.id] })
-        queryClient.invalidateQueries({ queryKey: ['cart-count', user?.id] })
+        queryClient.invalidateQueries({
+          queryKey: ['cart', user?.id],
+          exact: true,
+        })
+        queryClient.invalidateQueries({
+          queryKey: ['cart/count', user?.id],
+          exact: true,
+        })
         toast.success('Item removed from cart!')
       } else {
         toast.error(result.message || 'Failed to remove item')
@@ -69,15 +104,51 @@ const CartPage: FC = () => {
     mutationFn: () => clearCart(user?.id || ''),
     onSuccess: (result) => {
       if (result.success) {
-        queryClient.invalidateQueries({ queryKey: ['cart', user?.id] })
-        queryClient.invalidateQueries({ queryKey: ['cart-count', user?.id] })
+        queryClient.invalidateQueries({
+          queryKey: ['cart', user?.id],
+          exact: true,
+        })
+        queryClient.invalidateQueries({
+          queryKey: ['cart/count', user?.id],
+          exact: true,
+        })
         toast.success('Cart cleared successfully!')
+        setShowClearDialog(false)
       } else {
         toast.error(result.message || 'Failed to clear cart')
       }
     },
     onError: (error: Error) => {
       toast.error(error.message || 'An error occurred while clearing cart')
+    },
+  })
+
+  const checkoutMutation = useMutation({
+    mutationFn: () =>
+      createOrderFromCart({
+        userId: user?.id || '',
+        shippingAddress: shippingAddress || undefined,
+        notes: notes || undefined,
+      }),
+    onSuccess: (result) => {
+      if (result.success) {
+        toast.success('Order created successfully!')
+        queryClient.invalidateQueries({
+          queryKey: ['cart', user?.id],
+          exact: true,
+        })
+        queryClient.invalidateQueries({
+          queryKey: ['cart/count', user?.id],
+          exact: true,
+        })
+        setShowCheckoutDialog(false)
+        router.push('/dashboard/orders')
+      } else {
+        toast.error(result.message || 'Failed to create order')
+      }
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'An error occurred while creating order')
     },
   })
 
@@ -92,10 +163,23 @@ const CartPage: FC = () => {
 
   const handleClearCart = () => {
     if (cartItems.length === 0) return
+    setShowClearDialog(true)
+  }
 
-    if (confirm('Are you sure you want to clear your cart?')) {
-      clearCartMutation.mutate()
+  const handleCheckout = () => {
+    if (cartItems.length === 0) {
+      toast.error('Your cart is empty')
+      return
     }
+    setShowCheckoutDialog(true)
+  }
+
+  const confirmClearCart = () => {
+    clearCartMutation.mutate()
+  }
+
+  const confirmCheckout = () => {
+    checkoutMutation.mutate()
   }
 
   const calculateSubtotal = () => {
@@ -108,50 +192,25 @@ const CartPage: FC = () => {
     return calculateSubtotal()
   }
 
-  if (isLoading) {
-    return (
-      <IndexLayout>
-        <div className='container mx-auto max-w-4xl px-4 py-8'>
-          <Card className='bg-white'>
-            <CardContent className='p-6'>
-              <div className='space-y-4'>
-                <div className='h-6 animate-pulse rounded bg-gray-200' />
-                <div className='h-4 animate-pulse rounded bg-gray-200' />
-                <div className='h-4 animate-pulse rounded bg-gray-200' />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </IndexLayout>
-    )
-  }
-
   if (cartItems.length === 0) {
     return (
       <IndexLayout>
-        <Card className='bg-white'>
-          <CardContent className='flex flex-col items-center justify-center p-12'>
-            <ShoppingCart className='mb-4 h-24 w-24 text-gray-300' />
-            <h2 className='mb-2 text-2xl font-semibold text-gray-800'>
-              Your cart is empty
-            </h2>
-            <p className='mb-6 text-gray-600'>
-              Add some products to get started
-            </p>
-            <Button
-              onClick={() => window.history.back()}
-              className='bg-primary'
-            >
-              Continue Shopping
-            </Button>
-          </CardContent>
-        </Card>
+        <div className='flex flex-col items-center justify-center rounded-xl bg-white py-12 text-center shadow-lg'>
+          <ShoppingCart className='text-muted-foreground mb-4 size-16' />
+          <h3 className='text-foreground mb-2 text-lg font-semibold'>
+            There are no products in the cart.
+          </h3>
+          <p className='text-muted-foreground max-w-sm'>
+            Your cart is empty. Start shopping to add products to your cart.
+          </p>
+        </div>
       </IndexLayout>
     )
   }
 
   return (
     <IndexLayout>
+      <Loading isLoading={isLoading} />
       <div className='grid grid-cols-1 gap-6 lg:grid-cols-3'>
         <div className='lg:col-span-2'>
           <Card className='bg-white'>
@@ -170,11 +229,11 @@ const CartPage: FC = () => {
               </Button>
             </CardHeader>
             <CardContent className='space-y-4'>
-              {cartItems.map((item) => (
+              {cartItems?.map((item) => (
                 <div key={item.id} className='rounded-lg border p-4'>
                   <div className='flex flex-col gap-5'>
                     <img
-                      className='size-20'
+                      className='size-20 object-cover'
                       src={
                         item?.products?.images[0]?.image_url ||
                         '/placeholder.svg'
@@ -267,7 +326,7 @@ const CartPage: FC = () => {
             <CardContent className='space-y-4'>
               <div className='flex justify-between text-sm'>
                 <span className='text-gray-600'>
-                  Items ({cartItems.length})
+                  Items ({cartItems?.length})
                 </span>
                 <span className='font-medium'>
                   {priceFormatter.format(calculateSubtotal())}
@@ -290,13 +349,99 @@ const CartPage: FC = () => {
                 </span>
               </div>
 
-              <Button className='bg-primary mt-6 w-full py-6 text-lg'>
-                Proceed to Checkout
+              <div className='space-y-3'>
+                <div>
+                  <Label htmlFor='shipping-address'>
+                    Shipping Address (Optional)
+                  </Label>
+                  <Input
+                    id='shipping-address'
+                    placeholder='Enter shipping address'
+                    value={shippingAddress}
+                    onChange={(e) => setShippingAddress(e.target.value)}
+                    className='mt-1'
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor='notes'>Order Notes (Optional)</Label>
+                  <Textarea
+                    id='notes'
+                    placeholder='Any special requests or notes'
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    className='mt-1'
+                    rows={3}
+                  />
+                </div>
+              </div>
+
+              <Button
+                className='bg-primary mt-6 w-full py-6 text-lg'
+                onClick={handleCheckout}
+                // disabled={checkoutMutation.isPending}
+                disabled
+              >
+                {checkoutMutation.isPending
+                  ? 'Processing...'
+                  : 'Proceed to Checkout'}
               </Button>
             </CardContent>
           </Card>
         </div>
       </div>
+
+      <AlertDialog open={showClearDialog} onOpenChange={setShowClearDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Clear Cart</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to clear all items from your cart? This
+              action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmClearCart}
+              disabled={clearCartMutation.isPending}
+              className='bg-destructive hover:bg-destructive/90 text-white'
+            >
+              {clearCartMutation.isPending ? 'Clearing...' : 'Yes, clear cart'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={showCheckoutDialog}
+        onOpenChange={setShowCheckoutDialog}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Order</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to place this order for{' '}
+              <span className='font-semibold'>
+                {priceFormatter.format(calculateTotal())}
+              </span>
+              ? Please review your cart items and shipping details before
+              confirming.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Review Cart</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmCheckout}
+              disabled={checkoutMutation.isPending}
+            >
+              {checkoutMutation.isPending
+                ? 'Processing...'
+                : 'Confirm & Place Order'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </IndexLayout>
   )
 }

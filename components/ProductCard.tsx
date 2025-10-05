@@ -1,14 +1,12 @@
 'use client'
 
-import { Info, PlusCircle } from 'lucide-react'
+import { PlusCircle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 import type { FC } from 'react'
 
 import { numberFormatter, priceFormatter } from '@/lib/number'
 import { cn } from '@/lib/utils'
-
-import { Alert, AlertDescription } from './ui/alert'
 
 export interface Product {
   id: number
@@ -50,7 +48,7 @@ const ProductCard: FC<ProductCardProps> = ({ product }) => {
     >
       <PlusCircle
         size={35}
-        className='text-primary absolute top-2.5 left-2.5 z-20 rounded-full bg-white'
+        className='text-primary absolute top-2.5 left-2.5 z-20 rounded-full bg-white backdrop-blur-md'
       />
 
       <div
@@ -68,6 +66,7 @@ const ProductCard: FC<ProductCardProps> = ({ product }) => {
           >
             {product.images.slice(0, 2).map((img, index) => (
               <img
+                // eslint-disable-next-line react/no-array-index-key
                 key={`${img}-${index}`}
                 src={img?.image_url || '/placeholder.svg'}
                 alt={`รูปของ ${product?.name} ${index + 1}`}
@@ -78,23 +77,10 @@ const ProductCard: FC<ProductCardProps> = ({ product }) => {
             ))}
           </div>
         ) : (
+          // eslint-disable-next-line jsx-a11y/alt-text
           <img className='h-full w-full object-cover' src='/placeholder.svg' />
         )}
       </div>
-
-      {product?.preorder_enabled && (
-        <Alert variant='destructive'>
-          <Info />
-          <AlertDescription>
-            Pre-Order Item - Ships {product?.preorder_day} days
-          </AlertDescription>
-          <AlertDescription>
-            This item is available for pre-order. Your order will be processed
-            and shipped once the product becomes available.
-          </AlertDescription>
-        </Alert>
-      )}
-
       <div className='flex flex-col gap-2.5 p-2.5'>
         <h3 className='line-clamp-2 text-lg leading-tight font-semibold text-gray-800'>
           {product?.name}
@@ -105,7 +91,9 @@ const ProductCard: FC<ProductCardProps> = ({ product }) => {
             {product?.min_price && product?.max_price
               ? product.min_price === product.max_price
                 ? priceFormatter.format(product.min_price)
-                : `${priceFormatter.format(product.min_price)} - ${priceFormatter.format(product.max_price)}`
+                : `${priceFormatter.format(
+                    product.min_price,
+                  )} - ${priceFormatter.format(product.max_price)}`
               : 'n/a'}
           </span>
 
@@ -114,7 +102,9 @@ const ProductCard: FC<ProductCardProps> = ({ product }) => {
             product?.max_stock !== undefined
               ? product.min_stock === product.max_stock
                 ? `Available ${numberFormatter.format(product.min_stock)} Stock`
-                : `Available ${numberFormatter.format(product.min_stock)} - ${numberFormatter.format(product.max_stock)} Stock`
+                : `Available ${numberFormatter.format(
+                    product.min_stock,
+                  )} - ${numberFormatter.format(product.max_stock)} Stock`
               : 'n/a'}
           </span>
         </div>

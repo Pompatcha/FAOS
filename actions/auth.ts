@@ -143,6 +143,36 @@ const logout = async () => {
   }
 }
 
+const getUserProfile = async (userId: string) => {
+  const supabase = await createClient()
+
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .select('id, role')
+      .eq('userId', userId)
+      .single()
+
+    if (error) {
+      throw error
+    }
+
+    return {
+      success: true,
+      data,
+    }
+  } catch (error) {
+    return {
+      success: false,
+      data: null,
+      message:
+        error instanceof Error
+          ? error.message
+          : 'An error occurred while fetching user profile',
+    }
+  }
+}
+
 const getUser = async () => {
   const supabase = await createClient()
 
@@ -237,6 +267,7 @@ export {
   register,
   logout,
   getUser,
+  getUserProfile,
   createUserRecord,
   loginWithGoogle,
   loginWithFacebook,

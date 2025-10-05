@@ -19,6 +19,19 @@ const metadata: Metadata = {
   description:
     "Explore our premium honey collection, made from nature's finest sources. Premium organic olive oil and honey collection offering the finest quality products.",
   keywords: [
+<<<<<<< HEAD
+=======
+    "organic olive oil",
+    "premium honey",
+    "raw honey",
+    "thyme honey",
+    "organic Greek products",
+    "Mediterranean organic food",
+    "organic superfoods",
+    "น้ำมันมะกอกบริสุทธิ์",
+    "อาหารเพื่อสุขภาพ",
+    "faos",
+>>>>>>> ae976a88c81859e0121b1f7b306790702f3e4c21
     "ไวน์พรีเมี่ยม",
     "ขายไวน์",
     "exclusive product",
@@ -76,7 +89,11 @@ const metadata: Metadata = {
       "Explore our premium honey collection, made from nature's finest sources.",
     images: [
       {
+<<<<<<< HEAD
         url: "https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/products/Honey.jpg",
+=======
+        url: "https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/italian%20food%20wine%20and%20olive%20oil%20food.%20Greek%20salad,%20hummus%20with%20pita,%20tzatziki,%20tabbouleh.Seafood%20&%20Grilled%20Fish.jpg",
+>>>>>>> ae976a88c81859e0121b1f7b306790702f3e4c21
         width: 1200,
         height: 630,
         alt: "FAOS Premium Organic Collection",
@@ -90,7 +107,11 @@ const metadata: Metadata = {
     description:
       "Explore our premium honey collection, made from nature's finest sources.",
     images: [
+<<<<<<< HEAD
       "https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/products/1.jpg",
+=======
+      "https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/Food%20for%20king%20in%20thailand%20see%20sald%20olive%20oil%20wine%20food%20.%20display%20FAOS%20band%20on%20the%20wine%20bottom%20and%20olive%20oil%20bottom.jpg",
+>>>>>>> ae976a88c81859e0121b1f7b306790702f3e4c21
     ],
   },
   robots: {

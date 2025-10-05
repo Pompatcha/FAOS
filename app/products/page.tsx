@@ -1,21 +1,40 @@
 'use client'
 import { useQuery } from '@tanstack/react-query'
 import { Package } from 'lucide-react'
-import { use } from 'react'
+import { useEffect, useState } from 'react'
 
-import { getProductsByCategory } from '@/actions/product'
+import { getProductsBySearch } from '@/actions/product'
 import { IndexLayout } from '@/components/Layout/Index'
 import { Loading } from '@/components/Layout/Loading'
 import { NatureGoldBanner } from '@/components/NatureGoldBanner'
 import { ProductCard } from '@/components/ProductCard'
+import { useProductStore } from '@/stores/product'
 
-const CategoryPage = ({ params }: { params: Promise<{ slug: string }> }) => {
-  const { slug } = use(params)
+const useDebounce = (value: string, delay: number) => {
+  const [debouncedValue, setDebouncedValue] = useState(value)
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value)
+    }, delay)
+
+    return () => {
+      clearTimeout(handler)
+    }
+  }, [value, delay])
+
+  return debouncedValue
+}
+
+const ProductPage = () => {
+  const { searchText } = useProductStore()
+
+  const debouncedSearchText = useDebounce(searchText, 500)
 
   const { data: products, isLoading: productsLoading } = useQuery({
-    queryKey: ['category/products', slug],
-    queryFn: () => getProductsByCategory(slug),
-    enabled: !!slug,
+    queryKey: ['search/products', debouncedSearchText],
+    queryFn: () => getProductsBySearch(debouncedSearchText),
+    enabled: !!debouncedSearchText && debouncedSearchText.length > 0,
   })
 
   const hasProducts = products && Array.isArray(products) && products.length > 0
@@ -36,7 +55,7 @@ const CategoryPage = ({ params }: { params: Promise<{ slug: string }> }) => {
         <div className='flex flex-col items-center justify-center rounded-xl bg-white py-12 text-center shadow-lg'>
           <Package className='text-muted-foreground mb-4 size-16' />
           <h3 className='text-foreground mb-2 text-lg font-semibold'>
-            No products in this category
+            There are no products in the search.
           </h3>
           <p className='text-muted-foreground max-w-sm'>
             We couldn&apos;t find any products in this category. Please check
@@ -48,4 +67,4 @@ const CategoryPage = ({ params }: { params: Promise<{ slug: string }> }) => {
   )
 }
 
-export default CategoryPage
+export default ProductPage

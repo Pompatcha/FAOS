@@ -1,5 +1,4 @@
 'use client'
-
 import { useQuery } from '@tanstack/react-query'
 import { ArrowUpRight, Check } from 'lucide-react'
 import { SocialIcon } from 'react-social-icons'
@@ -86,7 +85,7 @@ const researchLinks = [
   {
     id: 1,
     title: 'Olive oil is beneficial for maternal-fetal health',
-    href: 'https://www.news-medical.net/news/20230103/Olive-oil-is-beneficial-for-maternal-fetal-health.aspx',
+    href: 'https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/precanancy.jpg',
   },
   {
     id: 2,
@@ -101,7 +100,7 @@ const researchLinks = [
   {
     id: 4,
     title: 'Using Greek Honey for Beautiful Skin, Hair, and Anti-Aging',
-    href: 'https://greekreporter.com/2023/07/09/greek-honey-for-beautiful-skin-hair-and-anti-aging/',
+    href: 'https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/Cleopatra%20and%20honey%20skin%20care.jpg',
   },
   {
     id: 5,
@@ -112,7 +111,8 @@ const researchLinks = [
 
 const founder = {
   name: 'Patcharin Chanaphukdee',
-  image: 'https://i.ibb.co/351rJLyB/IMG-8438.jpg',
+  image:
+    'https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/Profiles/pom2.png',
   description:
     'Created for Health, Elegance and Well-Being. Elevate patient care and hospitality with the FAOS Collection, a luxurious blend of Thai-Greek heritage, organic purity and health innovation. Designed for discerning healthcare environments that prioritize natural healing and quality without compromise.',
 }
@@ -143,9 +143,9 @@ const Homepage = () => {
       <ImageSlider
         images={[
           'https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/Celebrating-Beekeeping-Around-the-World-Apimondia.jpg',
-          'https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/Screenshot-2568-06-25-at-06-21-30.png',
-          'https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/104926993.avif',
-          'https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/360_F_1405149352_K4qhIYVahGLumUCry09QJaDyquDaXVrh.jpg',
+          'https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/1.jpg',
+          'https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/2.jpg',
+          'https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/3.jpg',
         ]}
       />
 

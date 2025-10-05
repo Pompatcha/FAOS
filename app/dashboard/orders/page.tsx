@@ -1,8 +1,27 @@
 'use client'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
+import { toast } from 'sonner'
 
+import {
+  getAllOrders,
+  updateOrderStatus,
+  cancelOrder,
+  getOrderStatistics,
+} from '@/actions/order'
 import { HeaderCard } from '@/components/HeaderCard'
 import { IndexLayout } from '@/components/Layout/Index'
+import { Loading } from '@/components/Layout/Loading'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -23,162 +42,222 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { useRequireAuth } from '@/contexts/AuthContext.tsx'
+import { useAuth, useRequireAuth } from '@/contexts/AuthContext.tsx'
 import { formatDate } from '@/lib/date'
 import { formatPrice } from '@/lib/price'
 
-const mockOrders = [
-  {
-    id: 1,
-    order_number: 'ORD-2025-001',
-    status: 'pending',
-    total_amount: 1250.0,
-    subtotal: 1150.0,
-    tax_amount: 100.0,
-    shipping_amount: 0.0,
-    discount_amount: 0.0,
-    shipping_first_name: 'John',
-    shipping_last_name: 'Doe',
-    shipping_address: '123 Sukhumvit Road, Watthana',
-    shipping_city: 'Bangkok',
-    shipping_postal_code: '10110',
-    shipping_phone: '+66-81-234-5678',
-    payment_method: 'credit_card',
-    payment_status: 'unpaid',
-    payment_date: null,
-    notes: 'Please deliver in the morning',
-    created_at: '2025-09-01T10:00:00Z',
-    user: { email: 'john.doe@email.com' },
-    order_items: [
-      {
-        id: 1,
-        product_name: 'Premium Coffee Beans',
-        product_option_details: { size: 'Large', roast: 'Dark' },
-        quantity: 2,
-        unit_price: 450.0,
-        total_price: 900.0,
-      },
-      {
-        id: 2,
-        product_name: 'Coffee Grinder',
-        product_option_details: null,
-        quantity: 1,
-        unit_price: 250.0,
-        total_price: 250.0,
-      },
-    ],
-  },
-  {
-    id: 2,
-    order_number: 'ORD-2025-002',
-    status: 'processing',
-    total_amount: 890.0,
-    subtotal: 820.0,
-    tax_amount: 70.0,
-    shipping_amount: 0.0,
-    discount_amount: 0.0,
-    shipping_first_name: 'Jane',
-    shipping_last_name: 'Smith',
-    shipping_address: '456 Silom Road, Bang Rak',
-    shipping_city: 'Bangkok',
-    shipping_postal_code: '10500',
-    shipping_phone: '+66-82-345-6789',
-    payment_method: 'promptpay',
-    payment_status: 'paid',
-    payment_date: '2025-08-31T15:30:00Z',
-    notes: '',
-    created_at: '2025-08-31T14:00:00Z',
-    user: { email: 'jane.smith@email.com' },
-    order_items: [
-      {
-        id: 3,
-        product_name: 'Espresso Machine',
-        product_option_details: { color: 'Black', warranty: '2 years' },
-        quantity: 1,
-        unit_price: 820.0,
-        total_price: 820.0,
-      },
-    ],
-  },
-]
+type Order = {
+  id: number
+  order_number: string
+  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled'
+  payment_status: 'unpaid' | 'paid' | 'refunded'
+  total_amount: number
+  created_at: string
+  updated_at: string
+  shipping_address?: string | null
+  payment_date?: string | null
+  notes?: string | null
+  users?: {
+    first_name?: string
+    last_name?: string
+    telephone?: string
+    userId?: string
+  }
+  order_items?: Array<{
+    id: number
+    product_name: string
+    quantity: number
+    unit_price: number
+    total_price: number
+    product_option_details?: Record<string, string> | null
+  }>
+}
 
-const paymentMethods = {
-  credit_card: 'Credit Card',
-  promptpay: 'PromptPay',
+const orderStatuses = {
+  pending: 'Pending',
+  processing: 'Processing',
+  shipped: 'Shipped',
+  delivered: 'Delivered',
+  cancelled: 'Cancelled',
+}
+
+const paymentStatuses = {
+  unpaid: 'Unpaid',
+  paid: 'Paid',
+  refunded: 'Refunded',
 }
 
 const OrderPage = () => {
   useRequireAuth()
+  const queryClient = useQueryClient()
+
+  const { userProfile } = useAuth()
   const [trackingNumber, setTrackingNumber] = useState('')
-  const [shippedOrders, setShippedOrders] = useState<string[]>([])
   const [showTrackingDialog, setShowTrackingDialog] = useState(false)
   const [showDetailDialog, setShowDetailDialog] = useState(false)
-  const [selectedOrder, setSelectedOrder] = useState('')
+  const [showCancelDialog, setShowCancelDialog] = useState(false)
+  const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null)
 
-  const getPaymentMethod = (method: string) => {
-    return paymentMethods[method as keyof typeof paymentMethods] || method
+  const { data: ordersResult, isLoading } = useQuery({
+    queryKey: ['orders', 'all'],
+    queryFn: () => getAllOrders({ userId: userProfile?.id ?? 0 }),
+  })
+
+  const { data: statsResult } = useQuery({
+    queryKey: ['orders', 'statistics'],
+    queryFn: () => getOrderStatistics({ userId: userProfile?.id ?? 0 }),
+  })
+
+  const orders = ordersResult?.data || []
+  const stats = statsResult?.data || {
+    totalOrders: 0,
+    pendingOrders: 0,
+    processingOrders: 0,
+    completedOrders: 0,
+    totalRevenue: 0,
   }
 
-  const getOrderStatus = (order: (typeof mockOrders)[0]) => {
-    if (
-      shippedOrders.includes(order.order_number) &&
-      order.status === 'processing'
-    ) {
-      return 'Shipped'
+  const shipOrderMutation = useMutation({
+    mutationFn: ({ orderId, status }: { orderId: number; status: string }) =>
+      updateOrderStatus(orderId, status),
+    onSuccess: (result) => {
+      if (result.success) {
+        queryClient.invalidateQueries({ queryKey: ['orders'] })
+        toast.success('Order shipped successfully!')
+        setShowTrackingDialog(false)
+        setTrackingNumber('')
+      } else {
+        toast.error(result.message || 'Failed to ship order')
+      }
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'An error occurred')
+    },
+  })
+
+  const cancelOrderMutation = useMutation({
+    mutationFn: (orderId: number) => cancelOrder(orderId),
+    onSuccess: (result) => {
+      if (result.success) {
+        queryClient.invalidateQueries({ queryKey: ['orders'] })
+        toast.success('Order cancelled successfully! Stock has been restored.')
+        setShowCancelDialog(false)
+      } else {
+        toast.error(result.message || 'Failed to cancel order')
+      }
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'An error occurred')
+    },
+  })
+
+  const getOrderStatusBadge = (status: string) => {
+    const variants: Record<string, 'default' | 'secondary' | 'destructive'> = {
+      pending: 'secondary',
+      processing: 'default',
+      shipped: 'default',
+      delivered: 'default',
+      cancelled: 'destructive',
     }
-    return order.status.charAt(0).toUpperCase() + order.status.slice(1)
+    return variants[status] || 'default'
   }
 
-  const canShip = (order: (typeof mockOrders)[0]) => {
-    const nonShippable = ['shipped', 'delivered', 'cancelled', 'pending']
-    return (
-      !shippedOrders.includes(order.order_number) &&
-      !nonShippable.includes(order.status)
-    )
+  const getPaymentStatusBadge = (status: string) => {
+    const variants: Record<string, 'default' | 'secondary' | 'destructive'> = {
+      unpaid: 'secondary',
+      paid: 'default',
+      refunded: 'destructive',
+    }
+    return variants[status] || 'default'
   }
 
-  const openShipDialog = (orderNumber: string) => {
-    setSelectedOrder(orderNumber)
-    setShowTrackingDialog(true)
-  }
-
-  const openDetailDialog = (orderNumber: string) => {
-    setSelectedOrder(orderNumber)
+  const openDetailDialog = (orderId: number) => {
+    setSelectedOrderId(orderId)
     setShowDetailDialog(true)
   }
 
+  const openShipDialog = (orderId: number) => {
+    setSelectedOrderId(orderId)
+    setShowTrackingDialog(true)
+  }
+
+  const openCancelDialog = (orderId: number) => {
+    setSelectedOrderId(orderId)
+    setShowCancelDialog(true)
+  }
+
   const confirmShip = () => {
-    if (trackingNumber.trim()) {
-      setShippedOrders((prev) => [...prev, selectedOrder])
-      setTrackingNumber('')
-      setShowTrackingDialog(false)
+    if (trackingNumber.trim() && selectedOrderId) {
+      shipOrderMutation.mutate({
+        orderId: selectedOrderId,
+        status: 'shipped',
+      })
     }
   }
 
-  const cancelShip = () => {
-    setTrackingNumber('')
-    setShowTrackingDialog(false)
+  const confirmCancel = () => {
+    if (selectedOrderId) {
+      cancelOrderMutation.mutate(selectedOrderId)
+    }
   }
 
-  const selectedOrderData = mockOrders.find(
-    (order) => order.order_number === selectedOrder,
-  )
+  const canShip = (order: Order) => {
+    return (
+      userProfile?.role === 'admin' &&
+      order.payment_status === 'paid' &&
+      order.status !== 'shipped' &&
+      order.status !== 'delivered' &&
+      order.status !== 'cancelled'
+    )
+  }
+
+  const canCancel = (order: Order) => {
+    return (
+      userProfile?.role === 'admin' &&
+      order.status !== 'shipped' &&
+      order.status !== 'delivered' &&
+      order.status !== 'cancelled'
+    )
+  }
+
+  const selectedOrder = orders.find((order) => order.id === selectedOrderId)
 
   return (
     <IndexLayout>
+      <Loading isLoading={isLoading} />
+
       <div className='flex justify-between'>
         <div className='flex flex-col gap-2.5 text-white'>
           <span className='text-4xl'>Orders</span>
           <span>
             Track and manage all your customer orders in one place. <br />
-            Process payments, update order status, and ensure timely delivery.
+            Process shipments and ensure timely delivery.
           </span>
         </div>
       </div>
 
       <div>
-        <div className='grid gap-5 text-[#4a2c00] sm:grid-cols-3'>
-          <HeaderCard label='New Orders' value={0} href='/dashboard/orders' />
+        <div className='grid gap-5 text-[#4a2c00] sm:grid-cols-4'>
+          <HeaderCard
+            label='Total Orders'
+            value={stats.totalOrders}
+            href='/dashboard/orders'
+          />
+          <HeaderCard
+            label='Pending Orders'
+            value={stats.pendingOrders}
+            href='/dashboard/orders'
+          />
+          <HeaderCard
+            label='Processing Orders'
+            value={stats.processingOrders}
+            href='/dashboard/orders'
+          />
+          <HeaderCard
+            label='Total Revenue'
+            value={stats.totalRevenue}
+            href='/dashboard/orders'
+          />
         </div>
       </div>
 
@@ -190,7 +269,6 @@ const OrderPage = () => {
               <TableHead>Customer</TableHead>
               <TableHead>Order Status</TableHead>
               <TableHead>Payment Status</TableHead>
-              <TableHead>Payment Method</TableHead>
               <TableHead>Items</TableHead>
               <TableHead className='text-right'>Total Amount</TableHead>
               <TableHead>Order Date</TableHead>
@@ -198,64 +276,98 @@ const OrderPage = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {mockOrders.map((order) => (
-              <TableRow key={order.id}>
-                <TableCell className='font-medium'>
-                  {order.order_number}
-                </TableCell>
-                <TableCell>{`${order.shipping_first_name} ${order.shipping_last_name}`}</TableCell>
-                <TableCell>
-                  <Badge>{getOrderStatus(order)}</Badge>
-                </TableCell>
-                <TableCell>
-                  <Badge>
-                    {order.payment_status.charAt(0).toUpperCase() +
-                      order.payment_status.slice(1)}
-                  </Badge>
-                </TableCell>
-                <TableCell>{getPaymentMethod(order.payment_method)}</TableCell>
-                <TableCell>
-                  {order.order_items.length}{' '}
-                  {order.order_items.length === 1 ? 'item' : 'items'}
-                </TableCell>
-                <TableCell className='text-right'>
-                  {formatPrice(order.total_amount)}
-                </TableCell>
-                <TableCell>{formatDate(order.created_at)}</TableCell>
-                <TableCell className='text-center'>
-                  <div className='flex justify-center gap-2'>
-                    <Button
-                      variant='outline'
-                      onClick={() => openDetailDialog(order.order_number)}
-                    >
-                      View
-                    </Button>
-                    {canShip(order) && (
-                      <Button
-                        onClick={() => openShipDialog(order.order_number)}
-                      >
-                        Ship Order
-                      </Button>
-                    )}
-                  </div>
+            {orders.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={8} className='text-center'>
+                  No orders found
                 </TableCell>
               </TableRow>
-            ))}
+            ) : (
+              orders.map((order) => (
+                <TableRow key={order.id}>
+                  <TableCell className='font-medium'>
+                    {order.order_number}
+                  </TableCell>
+                  <TableCell>
+                    {order.users
+                      ? `${order.users.first_name || ''} ${order.users.last_name || ''}`.trim() ||
+                        'N/A'
+                      : 'N/A'}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={getOrderStatusBadge(order.status)}>
+                      {orderStatuses[
+                        order.status as keyof typeof orderStatuses
+                      ] || order.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant={getPaymentStatusBadge(order.payment_status)}
+                    >
+                      {paymentStatuses[
+                        order.payment_status as keyof typeof paymentStatuses
+                      ] || order.payment_status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {order.order_items?.length || 0}{' '}
+                    {(order.order_items?.length || 0) === 1 ? 'item' : 'items'}
+                  </TableCell>
+                  <TableCell className='text-right'>
+                    {formatPrice(Number(order.total_amount))}
+                  </TableCell>
+                  <TableCell>{formatDate(order.created_at)}</TableCell>
+                  <TableCell className='text-center'>
+                    <div className='flex justify-center gap-2'>
+                      <Button
+                        variant='outline'
+                        size='sm'
+                        onClick={() => openDetailDialog(order.id)}
+                      >
+                        View
+                      </Button>
+
+                      {canShip(order) && (
+                        <Button
+                          variant='default'
+                          size='sm'
+                          onClick={() => openShipDialog(order.id)}
+                        >
+                          Ship
+                        </Button>
+                      )}
+
+                      {canCancel(order) && (
+                        <Button
+                          variant='destructive'
+                          size='sm'
+                          onClick={() => openCancelDialog(order.id)}
+                        >
+                          Cancel
+                        </Button>
+                      )}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </div>
 
-      {/* Order Detail Dialog */}
       <Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>
         <DialogContent className='flex max-h-[90vh] flex-col overflow-hidden sm:max-w-[600px]'>
           <DialogHeader>
-            <DialogTitle>Order Details {selectedOrder}</DialogTitle>
+            <DialogTitle>
+              Order Details {selectedOrder?.order_number}
+            </DialogTitle>
             <DialogDescription>
               Complete information about the selected order
             </DialogDescription>
           </DialogHeader>
 
-          {selectedOrderData && (
+          {selectedOrder && (
             <div className='-mr-2 space-y-6 overflow-y-auto pr-2'>
               <div>
                 <h3 className='mb-3 font-semibold'>Customer Information</h3>
@@ -263,38 +375,33 @@ const OrderPage = () => {
                   <div>
                     <span className='text-gray-600'>Name:</span>
                     <p className='font-medium'>
-                      {`${selectedOrderData.shipping_first_name} ${selectedOrderData.shipping_last_name}`}
-                    </p>
-                  </div>
-                  <div>
-                    <span className='text-gray-600'>Email:</span>
-                    <p className='font-medium'>
-                      {selectedOrderData.user.email}
+                      {selectedOrder.users
+                        ? `${selectedOrder.users.first_name || ''} ${selectedOrder.users.last_name || ''}`.trim() ||
+                          'N/A'
+                        : 'N/A'}
                     </p>
                   </div>
                   <div>
                     <span className='text-gray-600'>Phone:</span>
                     <p className='font-medium'>
-                      {selectedOrderData.shipping_phone}
+                      {selectedOrder.users?.telephone || 'N/A'}
                     </p>
                   </div>
                   <div>
                     <span className='text-gray-600'>Order Date:</span>
                     <p className='font-medium'>
-                      {formatDate(selectedOrderData.created_at)}
+                      {formatDate(selectedOrder.created_at)}
                     </p>
                   </div>
                 </div>
-                <div className='mt-3'>
-                  <span className='text-gray-600'>Shipping Address:</span>
-                  <p className='font-medium'>
-                    {selectedOrderData.shipping_address}
-                    {selectedOrderData.shipping_city &&
-                      `, ${selectedOrderData.shipping_city}`}
-                    {selectedOrderData.shipping_postal_code &&
-                      ` ${selectedOrderData.shipping_postal_code}`}
-                  </p>
-                </div>
+                {selectedOrder.shipping_address && (
+                  <div className='mt-3'>
+                    <span className='text-gray-600'>Shipping Address:</span>
+                    <p className='font-medium'>
+                      {selectedOrder.shipping_address}
+                    </p>
+                  </div>
+                )}
               </div>
 
               <Separator />
@@ -305,31 +412,34 @@ const OrderPage = () => {
                   <div>
                     <span className='text-gray-600'>Order Status:</span>
                     <div className='mt-1'>
-                      <Badge>{getOrderStatus(selectedOrderData)}</Badge>
+                      <Badge
+                        variant={getOrderStatusBadge(selectedOrder.status)}
+                      >
+                        {orderStatuses[
+                          selectedOrder.status as keyof typeof orderStatuses
+                        ] || selectedOrder.status}
+                      </Badge>
                     </div>
                   </div>
                   <div>
                     <span className='text-gray-600'>Payment Status:</span>
                     <div className='mt-1'>
-                      <Badge>
-                        {selectedOrderData.payment_status
-                          .charAt(0)
-                          .toUpperCase() +
-                          selectedOrderData.payment_status.slice(1)}
+                      <Badge
+                        variant={getPaymentStatusBadge(
+                          selectedOrder.payment_status,
+                        )}
+                      >
+                        {paymentStatuses[
+                          selectedOrder.payment_status as keyof typeof paymentStatuses
+                        ] || selectedOrder.payment_status}
                       </Badge>
                     </div>
                   </div>
-                  <div>
-                    <span className='text-gray-600'>Payment Method:</span>
-                    <p className='font-medium'>
-                      {getPaymentMethod(selectedOrderData.payment_method)}
-                    </p>
-                  </div>
-                  {selectedOrderData.payment_date && (
+                  {selectedOrder.payment_date && (
                     <div>
                       <span className='text-gray-600'>Payment Date:</span>
                       <p className='font-medium'>
-                        {formatDate(selectedOrderData.payment_date)}
+                        {formatDate(selectedOrder.payment_date)}
                       </p>
                     </div>
                   )}
@@ -341,38 +451,50 @@ const OrderPage = () => {
               <div>
                 <h3 className='mb-3 font-semibold'>Order Items</h3>
                 <div className='space-y-3'>
-                  {selectedOrderData.order_items.map((item) => (
-                    <div
-                      key={item.id}
-                      className='flex items-start justify-between border-b py-3 last:border-0'
-                    >
-                      <div className='flex-1'>
-                        <p className='font-medium'>{item.product_name}</p>
-                        {item.product_option_details && (
-                          <div className='mt-1 text-sm text-gray-600'>
-                            {Object.entries(item.product_option_details).map(
-                              ([key, value]) => (
+                  {selectedOrder.order_items?.map(
+                    (item: {
+                      id?: number
+                      product_name: string
+                      total_price: number
+                      quantity: number
+                      unit_price: number
+                      product_option_details?: Record<string, string> | null
+                    }) => (
+                      <div
+                        key={item.id}
+                        className='flex items-start justify-between border-b py-3 last:border-0'
+                      >
+                        <div className='flex-1'>
+                          <p className='font-medium'>{item.product_name}</p>
+                          {item.product_option_details && (
+                            <div className='mt-1 text-sm text-gray-600'>
+                              {Object.entries(
+                                item.product_option_details as Record<
+                                  string,
+                                  string
+                                >,
+                              ).map(([key, value]) => (
                                 <span key={key} className='mr-3'>
                                   {key}: {value}
                                 </span>
-                              ),
-                            )}
-                          </div>
-                        )}
-                        <p className='text-sm text-gray-600'>
-                          Quantity: {item.quantity}
-                        </p>
+                              ))}
+                            </div>
+                          )}
+                          <p className='text-sm text-gray-600'>
+                            Quantity: {item.quantity}
+                          </p>
+                        </div>
+                        <div className='text-right'>
+                          <p className='font-medium'>
+                            {formatPrice(Number(item.total_price))}
+                          </p>
+                          <p className='text-sm text-gray-600'>
+                            {formatPrice(Number(item.unit_price))} each
+                          </p>
+                        </div>
                       </div>
-                      <div className='text-right'>
-                        <p className='font-medium'>
-                          {formatPrice(item.total_price)}
-                        </p>
-                        <p className='text-sm text-gray-600'>
-                          {formatPrice(item.unit_price)} each
-                        </p>
-                      </div>
-                    </div>
-                  ))}
+                    ),
+                  )}
                 </div>
               </div>
 
@@ -381,42 +503,22 @@ const OrderPage = () => {
               <div>
                 <h3 className='mb-3 font-semibold'>Order Summary</h3>
                 <div className='space-y-2'>
-                  <div className='flex justify-between'>
-                    <span>Subtotal:</span>
-                    <span>{formatPrice(selectedOrderData.subtotal)}</span>
-                  </div>
-                  <div className='flex justify-between'>
-                    <span>Tax:</span>
-                    <span>{formatPrice(selectedOrderData.tax_amount)}</span>
-                  </div>
-                  <div className='flex justify-between'>
-                    <span>Shipping:</span>
-                    <span>
-                      {formatPrice(selectedOrderData.shipping_amount)}
-                    </span>
-                  </div>
-                  {selectedOrderData.discount_amount > 0 && (
-                    <div className='flex justify-between text-red-600'>
-                      <span>Discount:</span>
-                      <span>
-                        -{formatPrice(selectedOrderData.discount_amount)}
-                      </span>
-                    </div>
-                  )}
                   <div className='flex justify-between border-t pt-2.5 text-lg font-semibold'>
                     <span>Total:</span>
-                    <span>{formatPrice(selectedOrderData.total_amount)}</span>
+                    <span>
+                      {formatPrice(Number(selectedOrder.total_amount))}
+                    </span>
                   </div>
                 </div>
               </div>
 
-              {selectedOrderData.notes && (
+              {selectedOrder.notes && (
                 <>
                   <Separator />
                   <div>
                     <h3 className='mb-2 font-semibold'>Notes</h3>
                     <p className='text-sm text-gray-600'>
-                      {selectedOrderData.notes}
+                      {selectedOrder.notes}
                     </p>
                   </div>
                 </>
@@ -435,14 +537,12 @@ const OrderPage = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Tracking Dialog */}
       <Dialog open={showTrackingDialog} onOpenChange={setShowTrackingDialog}>
         <DialogContent className='sm:max-w-[425px]'>
           <DialogHeader>
-            <DialogTitle>Ship Order {selectedOrder}</DialogTitle>
+            <DialogTitle>Ship Order {selectedOrder?.order_number}</DialogTitle>
             <DialogDescription>
-              Please enter the tracking number for this order. This will update
-              the order status to &quot;Shipped&quot;.
+              Enter tracking number to mark order as shipped
             </DialogDescription>
           </DialogHeader>
           <div className='mt-4 space-y-4'>
@@ -452,21 +552,61 @@ const OrderPage = () => {
                 id='tracking'
                 value={trackingNumber}
                 onChange={(e) => setTrackingNumber(e.target.value)}
-                placeholder='Enter tracking number'
+                placeholder='Enter tracking number (e.g., TH1234567890)'
                 className='mt-1'
               />
+              <p className='mt-2 text-sm text-gray-500'>
+                Once shipped, customers can track their package with the
+                shipping provider.
+              </p>
             </div>
             <div className='flex justify-end space-x-2'>
-              <Button variant='outline' onClick={cancelShip}>
+              <Button
+                variant='outline'
+                onClick={() => {
+                  setShowTrackingDialog(false)
+                  setTrackingNumber('')
+                }}
+              >
                 Cancel
               </Button>
-              <Button onClick={confirmShip} disabled={!trackingNumber.trim()}>
-                Save & Ship
+              <Button
+                onClick={confirmShip}
+                disabled={!trackingNumber.trim() || shipOrderMutation.isPending}
+              >
+                {shipOrderMutation.isPending
+                  ? 'Shipping...'
+                  : 'Mark as Shipped'}
               </Button>
             </div>
           </div>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancel Order</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to cancel order{' '}
+              {selectedOrder?.order_number}? This will restore the stock for all
+              items in this order. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>No, keep order</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmCancel}
+              disabled={cancelOrderMutation.isPending}
+              className='bg-destructive hover:bg-destructive/90 text-white'
+            >
+              {cancelOrderMutation.isPending
+                ? 'Cancelling...'
+                : 'Yes, cancel order'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </IndexLayout>
   )
 }

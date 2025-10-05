@@ -14,6 +14,13 @@ import { Loading } from '@/components/Layout/Loading'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { useAuth } from '@/contexts/AuthContext.tsx'
 import { priceFormatter } from '@/lib/number'
 
@@ -82,8 +89,14 @@ const ProductPage = ({ params }: { params: Promise<{ id: string }> }) => {
     onSuccess: (result) => {
       if (result.success) {
         toast.success('Product added to cart successfully!')
-        queryClient.invalidateQueries({ queryKey: ['cart', user?.id] })
-        queryClient.invalidateQueries({ queryKey: ['cart-count', user?.id] })
+        queryClient.invalidateQueries({
+          queryKey: ['cart', user?.id],
+          exact: true,
+        })
+        queryClient.invalidateQueries({
+          queryKey: ['cart/count', user?.id],
+          exact: true,
+        })
       } else {
         toast.error(result.message || 'Failed to add product to cart')
       }
@@ -174,11 +187,9 @@ const ProductPage = ({ params }: { params: Promise<{ id: string }> }) => {
     <IndexLayout>
       <Loading isLoading={productLoading} />
 
-      <div className='container mx-auto'>
+      <div className='flex flex-col gap-5'>
         <div className='grid grid-cols-1 gap-5 lg:grid-cols-2'>
-          <div className='aspect-square'>
-            <ImageSlider images={images} />
-          </div>
+          <ImageSlider images={images} />
 
           <div className='h-fit rounded-xl border-4 border-[#f3d27a] bg-gradient-to-r from-[#f9e6b3] to-[#f3d27a]'>
             <div className='flex flex-col gap-2.5 p-5'>
@@ -189,17 +200,29 @@ const ProductPage = ({ params }: { params: Promise<{ id: string }> }) => {
 
               <div className='flex items-center gap-2 text-red-800'>
                 <span className='text-3xl font-bold'>
-                  {product?.min_price && product?.max_price
-                    ? product.min_price === product.max_price
-                      ? priceFormatter.format(product.min_price)
-                      : `${priceFormatter.format(product.min_price)} - ${priceFormatter.format(product.max_price)}`
-                    : 'n/a'}
+                  {(() => {
+                    const selectedOption = getSelectedOption()
+
+                    if (selectedOption) {
+                      return priceFormatter.format(
+                        Number(selectedOption.option_price),
+                      )
+                    }
+
+                    if (product?.min_price && product?.max_price) {
+                      return product.min_price === product.max_price
+                        ? priceFormatter.format(product.min_price)
+                        : `${priceFormatter.format(product.min_price)} - ${priceFormatter.format(product.max_price)}`
+                    }
+
+                    return 'n/a'
+                  })()}
                 </span>
               </div>
             </div>
 
             {product?.preorder_enabled && (
-              <Alert variant='destructive'>
+              <Alert variant='destructive' className='mb-2.5'>
                 <Info />
                 <AlertDescription>
                   Pre-Order Item - Ships {product?.preorder_day} days
@@ -220,7 +243,7 @@ const ProductPage = ({ params }: { params: Promise<{ id: string }> }) => {
                   }}
                   className='space-y-6'
                 >
-                  {product?.options && product.options.length > 0 && (
+                  {/* {product?.options && product.options.length > 0 && (
                     <div className='space-y-4'>
                       {Object.entries(
                         (product.options as ProductOptionWithId[]).reduce(
@@ -279,6 +302,68 @@ const ProductPage = ({ params }: { params: Promise<{ id: string }> }) => {
                               </button>
                             ))}
                           </div>
+                        </div>
+                      ))}
+                    </div>
+                  )} */}
+
+                  {product?.options && product.options.length > 0 && (
+                    <div className='space-y-4'>
+                      {Object.entries(
+                        (product.options as ProductOptionWithId[]).reduce(
+                          (
+                            acc: { [key: string]: ProductOptionWithId[] },
+                            option: ProductOptionWithId,
+                          ) => {
+                            if (!acc[option.option_name]) {
+                              acc[option.option_name] = []
+                            }
+                            acc[option.option_name].push(option)
+                            return acc
+                          },
+                          {},
+                        ),
+                      ).map(([optionName, options]) => (
+                        <div key={optionName} className='space-y-2'>
+                          <label className='block text-sm font-medium text-gray-700'>
+                            {optionName}
+                          </label>
+                          <Select
+                            value={
+                              selectedOptions[optionName]?.toString() || ''
+                            }
+                            onValueChange={(value) => {
+                              setSelectedOptions((prev) => ({
+                                ...prev,
+                                [optionName]: Number(value),
+                              }))
+                            }}
+                          >
+                            <SelectTrigger className='w-full'>
+                              <SelectValue
+                                placeholder={`Select ${optionName}`}
+                              />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {options.map((option: ProductOptionWithId) => (
+                                <SelectItem
+                                  key={option.id}
+                                  value={option.id.toString()}
+                                  disabled={Number(option.option_stock) <= 0}
+                                >
+                                  <div className='flex items-center justify-between gap-4'>
+                                    <span className='font-medium'>
+                                      {option.option_value} (
+                                      {priceFormatter.format(
+                                        Number(option.option_price),
+                                      )}
+                                      ) ({option.option_stock} Stock)
+                                    </span>
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </div>
                       ))}
                     </div>
@@ -347,12 +432,22 @@ const ProductPage = ({ params }: { params: Promise<{ id: string }> }) => {
                 </form>
               </CardContent>
             </Card>
-
-            <div className='p-5'>
-              <span>{product?.description}</span>
-            </div>
           </div>
         </div>
+
+        {product?.description && (
+          <section className='flex flex-col'>
+            <div className='bg-secondary flex w-full flex-col rounded-t-lg p-2.5 text-center shadow'>
+              <h2 className='text-2xl font-bold text-red-800'>
+                Product Description
+              </h2>
+            </div>
+
+            <div className='flex w-full flex-col items-center gap-5 rounded-b-lg bg-white p-5 sm:flex-row'>
+              <div className='w-full text-lg'>{product?.description}</div>
+            </div>
+          </section>
+        )}
       </div>
     </IndexLayout>
   )

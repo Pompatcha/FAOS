@@ -4,10 +4,10 @@ import type { FC } from 'react'
 
 import { HeaderCard } from '@/components/HeaderCard'
 import { IndexLayout } from '@/components/Layout/Index'
-import { useRequireAuth } from '@/contexts/AuthContext.tsx'
+import { useRequireAdmin } from '@/contexts/AuthContext.tsx'
 
 const DashboardPage: FC = () => {
-  useRequireAuth()
+  useRequireAdmin()
 
   return (
     <IndexLayout>
