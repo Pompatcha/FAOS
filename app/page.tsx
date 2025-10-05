@@ -77,7 +77,7 @@ const socialPlatforms = [
   {
     id: 5,
     network: 'line.me',
-    name: 'LINE Official',
+    name: 'LINE Official-Order 24 Hours.',
     href: 'https://line.me/R/ti/p/@043kioyk?oat_content=url&ts=07202345',
   },
 ]
