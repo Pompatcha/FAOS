@@ -46,6 +46,33 @@ import { useAuth, useRequireAuth } from '@/contexts/AuthContext.tsx'
 import { formatDate } from '@/lib/date'
 import { formatPrice } from '@/lib/price'
 
+type Order = {
+  id: number
+  order_number: string
+  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled'
+  payment_status: 'unpaid' | 'paid' | 'refunded'
+  total_amount: number
+  created_at: string
+  updated_at: string
+  shipping_address?: string | null
+  payment_date?: string | null
+  notes?: string | null
+  users?: {
+    first_name?: string
+    last_name?: string
+    telephone?: string
+    userId?: string
+  }
+  order_items?: Array<{
+    id: number
+    product_name: string
+    quantity: number
+    unit_price: number
+    total_price: number
+    product_option_details?: Record<string, string> | null
+  }>
+}
+
 const orderStatuses = {
   pending: 'Pending',
   processing: 'Processing',
@@ -174,7 +201,7 @@ const OrderPage = () => {
     }
   }
 
-  const canShip = (order: any) => {
+  const canShip = (order: Order) => {
     return (
       userProfile?.role === 'admin' &&
       order.payment_status === 'paid' &&
@@ -184,7 +211,7 @@ const OrderPage = () => {
     )
   }
 
-  const canCancel = (order: any) => {
+  const canCancel = (order: Order) => {
     return (
       userProfile?.role === 'admin' &&
       order.status !== 'shipped' &&
