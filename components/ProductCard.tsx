@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 
 import type { FC } from 'react'
 
-import { numberFormatter, priceFormatter } from '@/lib/number'
+import { priceFormatter } from '@/lib/number'
 import { cn } from '@/lib/utils'
 
 export interface Product {
@@ -93,19 +93,8 @@ const ProductCard: FC<ProductCardProps> = ({ product }) => {
                 ? priceFormatter.format(product.min_price)
                 : `${priceFormatter.format(
                     product.min_price,
-                  )} - ${priceFormatter.format(product.max_price)}`
-              : 'n/a'}
-          </span>
-
-          <span className='text-sm text-gray-600'>
-            {product?.min_stock !== undefined &&
-            product?.max_stock !== undefined
-              ? product.min_stock === product.max_stock
-                ? `Available ${numberFormatter.format(product.min_stock)} Stock`
-                : `Available ${numberFormatter.format(
-                    product.min_stock,
-                  )} - ${numberFormatter.format(product.max_stock)} Stock`
-              : 'n/a'}
+                  )} - ${priceFormatter.format(product.max_price)}  (Depends on size)`
+              : 'n/a'}{' '}
           </span>
         </div>
       </div>

@@ -1,7 +1,7 @@
 'use client'
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Minus, Plus, Trash2, ShoppingCart } from 'lucide-react'
+import { Minus, Plus, Trash2, ShoppingCart, Info } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { toast } from 'sonner'
@@ -17,6 +17,7 @@ import {
 import { createOrderFromCart } from '@/actions/order'
 import { IndexLayout } from '@/components/Layout/Index'
 import { Loading } from '@/components/Layout/Loading'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -375,6 +376,14 @@ const CartPage: FC = () => {
                   />
                 </div>
               </div>
+
+              <Alert variant='destructive' className='mb-2.5'>
+                <Info />
+                <AlertDescription>
+                  Payment system is currently under development and will be
+                  ready by October 8th, 2025.
+                </AlertDescription>
+              </Alert>
 
               <Button
                 className='bg-primary mt-6 w-full py-6 text-lg'

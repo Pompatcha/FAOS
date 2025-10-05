@@ -1,6 +1,5 @@
 'use client'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Info } from 'lucide-react'
 import { use, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -11,7 +10,6 @@ import { getProduct } from '@/actions/product'
 import { ImageSlider } from '@/components/ImageSlider'
 import { IndexLayout } from '@/components/Layout/Index'
 import { Loading } from '@/components/Layout/Loading'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import {
@@ -212,7 +210,7 @@ const ProductPage = ({ params }: { params: Promise<{ id: string }> }) => {
                     if (product?.min_price && product?.max_price) {
                       return product.min_price === product.max_price
                         ? priceFormatter.format(product.min_price)
-                        : `${priceFormatter.format(product.min_price)} - ${priceFormatter.format(product.max_price)}`
+                        : `${priceFormatter.format(product.min_price)} - ${priceFormatter.format(product.max_price)} (Depends on size)`
                     }
 
                     return 'n/a'
@@ -220,19 +218,6 @@ const ProductPage = ({ params }: { params: Promise<{ id: string }> }) => {
                 </span>
               </div>
             </div>
-
-            {product?.preorder_enabled && (
-              <Alert variant='destructive' className='mb-2.5'>
-                <Info />
-                <AlertDescription>
-                  Pre-Order Item - Ships {product?.preorder_day} days
-                </AlertDescription>
-                <AlertDescription>
-                  This item is available for pre-order. Your order will be
-                  processed and shipped once the product becomes available.
-                </AlertDescription>
-              </Alert>
-            )}
 
             <Card className='shadow-2xl'>
               <CardContent className='p-5'>
@@ -243,70 +228,6 @@ const ProductPage = ({ params }: { params: Promise<{ id: string }> }) => {
                   }}
                   className='space-y-6'
                 >
-                  {/* {product?.options && product.options.length > 0 && (
-                    <div className='space-y-4'>
-                      {Object.entries(
-                        (product.options as ProductOptionWithId[]).reduce(
-                          (
-                            acc: { [key: string]: ProductOptionWithId[] },
-                            option: ProductOptionWithId,
-                          ) => {
-                            if (!acc[option.option_name]) {
-                              acc[option.option_name] = []
-                            }
-                            acc[option.option_name].push(option)
-                            return acc
-                          },
-                          {},
-                        ),
-                      ).map(([optionName, options]) => (
-                        <div key={optionName} className='space-y-2'>
-                          <label className='block text-sm font-medium text-gray-700'>
-                            {optionName}
-                          </label>
-                          <div className='grid gap-2 sm:grid-cols-2'>
-                            {options.map((option: ProductOptionWithId) => (
-                              <button
-                                key={option.id}
-                                type='button'
-                                onClick={() => {
-                                  setSelectedOptions((prev) => ({
-                                    ...prev,
-                                    [optionName]: option.id,
-                                  }))
-                                }}
-                                className={`rounded-lg border p-3 text-sm font-medium transition-all ${
-                                  selectedOptions[optionName] === option.id
-                                    ? 'border-primary text-primary bg-primary/10'
-                                    : 'border-gray-300 bg-white hover:border-gray-400'
-                                } ${
-                                  Number(option.option_stock) <= 0
-                                    ? 'cursor-not-allowed opacity-50'
-                                    : 'cursor-pointer'
-                                } `}
-                                disabled={Number(option.option_stock) <= 0}
-                              >
-                                <div className='text-left'>
-                                  <div className='font-semibold'>
-                                    {option.option_value}
-                                  </div>
-                                  <div className='text-xs text-gray-500'>
-                                    {priceFormatter.format(
-                                      Number(option.option_price),
-                                    )}
-                                  </div>
-                                  <div className='text-xs text-gray-400'>
-                                    Stock: {option.option_stock}
-                                  </div>
-                                </div>
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )} */}
-
                   {product?.options && product.options.length > 0 && (
                     <div className='space-y-4'>
                       {Object.entries(
@@ -357,7 +278,7 @@ const ProductPage = ({ params }: { params: Promise<{ id: string }> }) => {
                                       {priceFormatter.format(
                                         Number(option.option_price),
                                       )}
-                                      ) ({option.option_stock} Stock)
+                                      )
                                     </span>
                                   </div>
                                 </SelectItem>
