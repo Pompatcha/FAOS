@@ -1,117 +1,106 @@
-import "./globals.css";
-import { IBM_Plex_Sans_Thai } from "next/font/google";
+import './globals.css'
+import { IBM_Plex_Sans_Thai } from 'next/font/google'
 
-import type { Metadata } from "next";
-import type { FC, PropsWithChildren } from "react";
+import type { Metadata } from 'next'
+import type { FC, PropsWithChildren } from 'react'
 
 const IBMPlexSansThai = IBM_Plex_Sans_Thai({
-  weight: ["400", "700"],
-});
+  weight: ['400', '700'],
+})
 
-import { Toaster } from "@/components/ui/sonner";
-import { AuthProvider } from "@/contexts/AuthContext.tsx";
+import { Toaster } from '@/components/ui/sonner'
+import { AuthProvider } from '@/contexts/AuthContext.tsx'
 
-import Providers from "../contexts/QueryProviders";
+import Providers from '../contexts/QueryProviders'
 
 const metadata: Metadata = {
   title:
-    "FAOS Premium Organic Collection | Premium Olive Oil and Honey | Organics Olive Oil | Organic Honey",
+    'FAOS Premium Organic Collection | Premium Olive Oil and Honey | Organics Olive Oil | Organic Honey',
   description:
     "Explore our premium honey collection, made from nature's finest sources. Premium organic olive oil and honey collection offering the finest quality products.",
   keywords: [
-<<<<<<< HEAD
-=======
-    "organic olive oil",
-    "premium honey",
-    "raw honey",
-    "thyme honey",
-    "organic Greek products",
-    "Mediterranean organic food",
-    "organic superfoods",
-    "น้ำมันมะกอกบริสุทธิ์",
-    "อาหารเพื่อสุขภาพ",
-    "faos",
->>>>>>> ae976a88c81859e0121b1f7b306790702f3e4c21
-    "ไวน์พรีเมี่ยม",
-    "ขายไวน์",
-    "exclusive product",
-    "wine testing",
-    "ไวน์ออแกนนิกส์",
-    "wine cellar",
-    "wine bar",
-    "แอลกอฮอล์",
-    "ขายไวน์ออนไลน์",
-    "wine & beverage",
-    "ร้านขายไวน์",
-    "ร้านอาหาร",
-    "โรงแรม",
-    "สายไวน์",
-    "อาหาร",
-    "ไวน์กูรู",
-    "wineguru",
-    "wine event",
-    "wine pairing",
-    "wine pairing menu",
-    "จับคู่อาหารกับไวน์",
-    "ไวน์ราคาขายส่ง",
-    "ไวน์ขายส่ง",
-    "ไวน์ราคาพิเศษ",
-    "wine list",
-    "ไวน์สำหรับงานแต่งงาน",
-    "ไวน์สำหรับอีเวนต์",
-    "พิเศษในโรงแรม",
-    "wine connection",
-    "the wine merchant",
-    "scarlettwine",
-    "wine bar",
-    "the bar upstairs",
-    "wine beverage",
-    "mandarin oriental",
-    "capella",
-    "house wine",
-    "น้ำมันมะกอกปลอดสาร",
-    "ไวน์ปลอดสารเคมี",
-    "ไวน์แดง",
-    "ไวน์ขาว",
-    "ไวน์โรส",
-    "ไวน์สปาร์คกิ้ง",
-    "Wellness",
-    "ฟาร์มผึ้ง",
-    "น้ำผึ้งแท้100%",
-    "น้ำผึ้งฟาว์ส",
-    "เบเกอรี่",
-    "น้ำผึ้งกรีก",
-  ].join(", "),
-  authors: [{ name: "Patcharin Chanaphukdee" }],
+    'organic olive oil',
+    'premium honey',
+    'raw honey',
+    'thyme honey',
+    'organic Greek products',
+    'Mediterranean organic food',
+    'organic superfoods',
+    'น้ำมันมะกอกบริสุทธิ์',
+    'อาหารเพื่อสุขภาพ',
+    'faos',
+    'ไวน์พรีเมี่ยม',
+    'ขายไวน์',
+    'exclusive product',
+    'wine testing',
+    'ไวน์ออแกนนิกส์',
+    'wine cellar',
+    'wine bar',
+    'แอลกอฮอล์',
+    'ขายไวน์ออนไลน์',
+    'wine & beverage',
+    'ร้านขายไวน์',
+    'ร้านอาหาร',
+    'โรงแรม',
+    'สายไวน์',
+    'อาหาร',
+    'ไวน์กูรู',
+    'wineguru',
+    'wine event',
+    'wine pairing',
+    'wine pairing menu',
+    'จับคู่อาหารกับไวน์',
+    'ไวน์ราคาขายส่ง',
+    'ไวน์ขายส่ง',
+    'ไวน์ราคาพิเศษ',
+    'wine list',
+    'ไวน์สำหรับงานแต่งงาน',
+    'ไวน์สำหรับอีเวนต์',
+    'พิเศษในโรงแรม',
+    'wine connection',
+    'the wine merchant',
+    'scarlettwine',
+    'wine bar',
+    'the bar upstairs',
+    'wine beverage',
+    'mandarin oriental',
+    'capella',
+    'house wine',
+    'น้ำมันมะกอกปลอดสาร',
+    'ไวน์ปลอดสารเคมี',
+    'ไวน์แดง',
+    'ไวน์ขาว',
+    'ไวน์โรส',
+    'ไวน์สปาร์คกิ้ง',
+    'Wellness',
+    'ฟาร์มผึ้ง',
+    'น้ำผึ้งแท้100%',
+    'น้ำผึ้งฟาว์ส',
+    'เบเกอรี่',
+    'น้ำผึ้งกรีก',
+  ].join(', '),
+  authors: [{ name: 'Patcharin Chanaphukdee' }],
   openGraph: {
-    title: "FAOS Premium Organic Collection | Premium Olive Oil and Honey",
+    title: 'FAOS Premium Organic Collection | Premium Olive Oil and Honey',
     description:
       "Explore our premium honey collection, made from nature's finest sources.",
     images: [
       {
-<<<<<<< HEAD
-        url: "https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/products/Honey.jpg",
-=======
-        url: "https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/italian%20food%20wine%20and%20olive%20oil%20food.%20Greek%20salad,%20hummus%20with%20pita,%20tzatziki,%20tabbouleh.Seafood%20&%20Grilled%20Fish.jpg",
->>>>>>> ae976a88c81859e0121b1f7b306790702f3e4c21
+        url: 'https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/italian%20food%20wine%20and%20olive%20oil%20food.%20Greek%20salad,%20hummus%20with%20pita,%20tzatziki,%20tabbouleh.Seafood%20&%20Grilled%20Fish.jpg',
         width: 1200,
         height: 630,
-        alt: "FAOS Premium Organic Collection",
+        alt: 'FAOS Premium Organic Collection',
       },
     ],
-    type: "website",
+    type: 'website',
   },
   twitter: {
-    card: "summary_large_image",
-    title: "FAOS Premium Organic Collection | Premium Olive Oil and Honey",
+    card: 'summary_large_image',
+    title: 'FAOS Premium Organic Collection | Premium Olive Oil and Honey',
     description:
       "Explore our premium honey collection, made from nature's finest sources.",
     images: [
-<<<<<<< HEAD
-      "https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/products/1.jpg",
-=======
-      "https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/Food%20for%20king%20in%20thailand%20see%20sald%20olive%20oil%20wine%20food%20.%20display%20FAOS%20band%20on%20the%20wine%20bottom%20and%20olive%20oil%20bottom.jpg",
->>>>>>> ae976a88c81859e0121b1f7b306790702f3e4c21
+      'https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/Food%20for%20king%20in%20thailand%20see%20sald%20olive%20oil%20wine%20food%20.%20display%20FAOS%20band%20on%20the%20wine%20bottom%20and%20olive%20oil%20bottom.jpg',
     ],
   },
   robots: {
@@ -119,13 +108,13 @@ const metadata: Metadata = {
     follow: true,
   },
   alternates: {
-    canonical: "/",
+    canonical: '/',
   },
-};
+}
 
 const RootLayout: FC<PropsWithChildren> = ({ children }) => {
   return (
-    <html lang="en">
+    <html lang='en'>
       <body className={`${IBMPlexSansThai.className} antialiased`}>
         <Toaster />
         <Providers>
@@ -133,8 +122,8 @@ const RootLayout: FC<PropsWithChildren> = ({ children }) => {
         </Providers>
       </body>
     </html>
-  );
-};
+  )
+}
 
-export default RootLayout;
-export { metadata };
+export default RootLayout
+export { metadata }
