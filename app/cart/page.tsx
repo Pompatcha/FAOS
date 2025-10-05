@@ -379,7 +379,8 @@ const CartPage: FC = () => {
               <Button
                 className='bg-primary mt-6 w-full py-6 text-lg'
                 onClick={handleCheckout}
-                disabled={checkoutMutation.isPending}
+                // disabled={checkoutMutation.isPending}
+                disabled
               >
                 {checkoutMutation.isPending
                   ? 'Processing...'
