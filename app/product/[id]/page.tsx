@@ -14,6 +14,13 @@ import { Loading } from '@/components/Layout/Loading'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { useAuth } from '@/contexts/AuthContext.tsx'
 import { priceFormatter } from '@/lib/number'
 
@@ -193,11 +200,23 @@ const ProductPage = ({ params }: { params: Promise<{ id: string }> }) => {
 
               <div className='flex items-center gap-2 text-red-800'>
                 <span className='text-3xl font-bold'>
-                  {product?.min_price && product?.max_price
-                    ? product.min_price === product.max_price
-                      ? priceFormatter.format(product.min_price)
-                      : `${priceFormatter.format(product.min_price)} - ${priceFormatter.format(product.max_price)}`
-                    : 'n/a'}
+                  {(() => {
+                    const selectedOption = getSelectedOption()
+
+                    if (selectedOption) {
+                      return priceFormatter.format(
+                        Number(selectedOption.option_price),
+                      )
+                    }
+
+                    if (product?.min_price && product?.max_price) {
+                      return product.min_price === product.max_price
+                        ? priceFormatter.format(product.min_price)
+                        : `${priceFormatter.format(product.min_price)} - ${priceFormatter.format(product.max_price)}`
+                    }
+
+                    return 'n/a'
+                  })()}
                 </span>
               </div>
             </div>
@@ -224,7 +243,7 @@ const ProductPage = ({ params }: { params: Promise<{ id: string }> }) => {
                   }}
                   className='space-y-6'
                 >
-                  {product?.options && product.options.length > 0 && (
+                  {/* {product?.options && product.options.length > 0 && (
                     <div className='space-y-4'>
                       {Object.entries(
                         (product.options as ProductOptionWithId[]).reduce(
@@ -283,6 +302,68 @@ const ProductPage = ({ params }: { params: Promise<{ id: string }> }) => {
                               </button>
                             ))}
                           </div>
+                        </div>
+                      ))}
+                    </div>
+                  )} */}
+
+                  {product?.options && product.options.length > 0 && (
+                    <div className='space-y-4'>
+                      {Object.entries(
+                        (product.options as ProductOptionWithId[]).reduce(
+                          (
+                            acc: { [key: string]: ProductOptionWithId[] },
+                            option: ProductOptionWithId,
+                          ) => {
+                            if (!acc[option.option_name]) {
+                              acc[option.option_name] = []
+                            }
+                            acc[option.option_name].push(option)
+                            return acc
+                          },
+                          {},
+                        ),
+                      ).map(([optionName, options]) => (
+                        <div key={optionName} className='space-y-2'>
+                          <label className='block text-sm font-medium text-gray-700'>
+                            {optionName}
+                          </label>
+                          <Select
+                            value={
+                              selectedOptions[optionName]?.toString() || ''
+                            }
+                            onValueChange={(value) => {
+                              setSelectedOptions((prev) => ({
+                                ...prev,
+                                [optionName]: Number(value),
+                              }))
+                            }}
+                          >
+                            <SelectTrigger className='w-full'>
+                              <SelectValue
+                                placeholder={`Select ${optionName}`}
+                              />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {options.map((option: ProductOptionWithId) => (
+                                <SelectItem
+                                  key={option.id}
+                                  value={option.id.toString()}
+                                  disabled={Number(option.option_stock) <= 0}
+                                >
+                                  <div className='flex items-center justify-between gap-4'>
+                                    <span className='font-medium'>
+                                      {option.option_value} (
+                                      {priceFormatter.format(
+                                        Number(option.option_price),
+                                      )}
+                                      ) ({option.option_stock} Stock)
+                                    </span>
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </div>
                       ))}
                     </div>
