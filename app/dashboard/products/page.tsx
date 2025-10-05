@@ -417,6 +417,7 @@ const ProductPage = () => {
                   </CardContent>
                 </Card>
 
+                {/* Product Options */}
                 <Card>
                   <CardContent className='p-6'>
                     <div className='mb-4 flex items-center justify-between'>
@@ -585,6 +586,7 @@ const ProductPage = () => {
                   </CardContent>
                 </Card>
 
+                {/* Product Images */}
                 <Card>
                   <CardContent className='p-6'>
                     <div className='mb-4 flex items-center justify-between'>
@@ -651,6 +653,17 @@ const ProductPage = () => {
                               <Controller
                                 name={`productImages.${index}.alt_text`}
                                 control={control}
+                                rules={{
+                                  required: 'Alt text is required',
+                                  minLength: {
+                                    value: 3,
+                                    message: 'Must be at least 3 characters',
+                                  },
+                                  maxLength: {
+                                    value: 100,
+                                    message: 'Must not exceed 100 characters',
+                                  },
+                                }}
                                 render={({ field, fieldState }) => (
                                   <div>
                                     <Input
