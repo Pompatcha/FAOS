@@ -17,7 +17,7 @@ const CartBox = () => {
 
   return (
     <div
-      className='relative cursor-pointer rounded-full border p-2'
+      className='relative w-fit cursor-pointer rounded-full border p-2'
       onClick={() => {
         router.push('/cart')
       }}

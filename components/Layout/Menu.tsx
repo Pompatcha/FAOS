@@ -11,7 +11,6 @@ import { useAuth } from '@/contexts/AuthContext.tsx'
 import { CartBox } from '../CartBox'
 import GoogleTranslate from '../GoogleTranslate'
 import { ProfileBox } from '../ProfileBox'
-import { SearchBar } from '../SearchBar'
 
 interface SubMenuItem {
   title: string
@@ -51,10 +50,7 @@ const Menu = () => {
       baseItems.push(...categoryItems)
     }
 
-    baseItems.push(
-      { title: 'Country', href: '/ourshop' },
-      { title: 'About me', href: '/about' },
-    )
+    baseItems.push({ title: 'About me', href: '/about' })
 
     if (!user) {
       baseItems.push({ title: 'Login/Register', href: '/login' })
@@ -127,7 +123,6 @@ const Menu = () => {
 
   return (
     <div className='sticky top-0 z-40'>
-      {/* Logo Section */}
       <div className='bg-secondary flex w-full justify-center'>
         <Image
           src='/logo.png'
@@ -144,64 +139,66 @@ const Menu = () => {
       </div>
 
       <nav className='bg-primary w-full p-2.5 shadow-lg'>
-        {/* Desktop Navigation */}
-        <div className='hidden items-center justify-center gap-7 p-5 lg:flex'>
-          {NAVIGATION_MENU_ITEMS.map((item) => (
-            <div
-              key={item.title}
-              className='group relative'
-              onMouseEnter={() => item.submenu && setActiveSubmenu(item.title)}
-              onMouseLeave={() => item.submenu && setActiveSubmenu(null)}
-            >
-              <button
-                className='hover:bg-primary/80 flex cursor-pointer items-center gap-2.5 font-bold text-white transition-colors duration-200 hover:underline'
-                onClick={() => !item.submenu && handleMenuClick(item)}
-                type='button'
+        <div className='hidden flex-col items-center lg:flex'>
+          <div className='flex items-center justify-center gap-7 p-5'>
+            {NAVIGATION_MENU_ITEMS.map((item) => (
+              <div
+                key={item.title}
+                className='group relative'
+                onMouseEnter={() =>
+                  item.submenu && setActiveSubmenu(item.title)
+                }
+                onMouseLeave={() => item.submenu && setActiveSubmenu(null)}
               >
-                <span className='font-medium whitespace-nowrap'>
-                  {item.title}
-                </span>
-                {item.submenu && (
-                  <ChevronDown
-                    className={`transition-transform duration-200 ${
-                      activeSubmenu === item.title ? 'rotate-180' : ''
-                    }`}
-                  />
-                )}
-              </button>
-
-              {/* Desktop Submenu */}
-              {item.submenu && (
-                <div
-                  className={`bg-primary absolute top-full left-0 z-50 min-w-[200px] origin-top rounded-xl border-2 border-[#f3d27a] shadow-xl transition-all duration-200 ${
-                    activeSubmenu === item.title
-                      ? 'visible scale-y-100 opacity-100'
-                      : 'invisible scale-y-0 opacity-0'
-                  }`}
+                <button
+                  className='hover:bg-primary/80 flex cursor-pointer items-center gap-2.5 font-bold text-white transition-colors duration-200 hover:underline'
+                  onClick={() => !item.submenu && handleMenuClick(item)}
+                  type='button'
                 >
-                  <div className='py-2'>
-                    {item.submenu.map((subItem, index) => (
-                      <button
-                        key={subItem.href || subItem.title || index}
-                        onClick={() => handleMenuClick(subItem)}
-                        className='hover:bg-primary/80 block w-full cursor-pointer px-4 py-3 text-left text-white transition-colors duration-150 hover:underline'
-                        type='button'
-                      >
-                        {subItem.title}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
+                  <span className='font-medium whitespace-nowrap'>
+                    {item.title}
+                  </span>
+                  {item.submenu && (
+                    <ChevronDown
+                      className={`transition-transform duration-200 ${
+                        activeSubmenu === item.title ? 'rotate-180' : ''
+                      }`}
+                    />
+                  )}
+                </button>
 
-          <SearchBar className='hidden xl:flex' />
-          <CartBox />
-          {user && <ProfileBox />}
+                {item.submenu && (
+                  <div
+                    className={`bg-primary absolute top-full left-0 z-50 min-w-[200px] origin-top rounded-xl border-2 border-[#f3d27a] shadow-xl transition-all duration-200 ${
+                      activeSubmenu === item.title
+                        ? 'visible scale-y-100 opacity-100'
+                        : 'invisible scale-y-0 opacity-0'
+                    }`}
+                  >
+                    <div className='py-2'>
+                      {item.submenu.map((subItem, index) => (
+                        <button
+                          key={subItem.href || subItem.title || index}
+                          onClick={() => handleMenuClick(subItem)}
+                          className='hover:bg-primary/80 block w-full cursor-pointer px-4 py-3 text-left text-white transition-colors duration-150 hover:underline'
+                          type='button'
+                        >
+                          {subItem.title}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <div className='flex gap-2'>
+            <CartBox />
+            {user && <ProfileBox />}
+          </div>
         </div>
 
-        {/* Mobile Navigation Header */}
         <div className='flex items-center justify-between px-4 py-3 lg:hidden'>
           <span className='text-lg font-bold text-white'>FAOS Co.,Ltd.</span>
           <div className='flex gap-2.5'>
@@ -223,7 +220,6 @@ const Menu = () => {
           </div>
         </div>
 
-        {/* Mobile Menu Overlay */}
         {isMobileMenuOpen && (
           <div
             className='fixed inset-0 z-40 bg-black/50 lg:hidden'
@@ -231,7 +227,6 @@ const Menu = () => {
           />
         )}
 
-        {/* Mobile Menu Sidebar */}
         <div
           className={`bg-primary fixed top-0 right-0 z-50 h-full w-80 max-w-[85vw] transform border-l-8 border-[#f3d27a] shadow-2xl transition-transform duration-300 lg:hidden ${
             isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
@@ -272,7 +267,6 @@ const Menu = () => {
                   )}
                 </button>
 
-                {/* Mobile Submenu */}
                 {item.submenu && (
                   <div
                     className={`overflow-hidden transition-all duration-300 ${

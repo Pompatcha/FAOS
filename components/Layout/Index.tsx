@@ -4,7 +4,6 @@ import type { FC, PropsWithChildren } from 'react'
 
 import { Footer } from './Footer'
 import { Menu } from './Menu'
-import { SearchBar } from '../SearchBar'
 import { Alert, AlertDescription } from '../ui/alert'
 
 const IndexLayout: FC<PropsWithChildren> = ({ children }) => {
@@ -22,7 +21,6 @@ const IndexLayout: FC<PropsWithChildren> = ({ children }) => {
           </AlertDescription>
         </Alert>
 
-        <SearchBar className='xl:hidden' />
         {children}
       </div>
       <Footer />

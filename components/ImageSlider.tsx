@@ -54,14 +54,13 @@ const ImageSlider: FC<ImageSliderProps> = ({ images = [] }) => {
                 <img
                   src={image}
                   alt={`Slide ${index + 1}`}
-                  className='h-[550px] w-full rounded-lg object-cover'
+                  className='h-[450px] w-full rounded-lg object-cover'
                 />
               </div>
             ))}
         </div>
       </div>
 
-      {/* Previous Button */}
       <button
         className={`absolute top-1/2 left-4 flex size-10 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-white/80 shadow-lg transition-all hover:bg-white ${
           !canScrollPrev ? 'cursor-not-allowed opacity-50' : 'hover:scale-110'
@@ -73,7 +72,6 @@ const ImageSlider: FC<ImageSliderProps> = ({ images = [] }) => {
         <ChevronLeft className='h-5 w-5 text-gray-700' />
       </button>
 
-      {/* Next Button */}
       <button
         className={`absolute top-1/2 right-4 flex size-10 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-white/80 shadow-lg transition-all hover:bg-white ${
           !canScrollNext ? 'cursor-not-allowed opacity-50' : 'hover:scale-110'
@@ -85,7 +83,6 @@ const ImageSlider: FC<ImageSliderProps> = ({ images = [] }) => {
         <ChevronRight className='h-5 w-5 text-gray-700' />
       </button>
 
-      {/* Pagination Dots */}
       <div className='mt-4 flex justify-center space-x-2'>
         {images?.map((_, index) => (
           <button

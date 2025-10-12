@@ -10,6 +10,7 @@ import { getProduct } from '@/actions/product'
 import { ImageSlider } from '@/components/ImageSlider'
 import { IndexLayout } from '@/components/Layout/Index'
 import { Loading } from '@/components/Layout/Loading'
+import { SearchBar } from '@/components/SearchBar'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import {
@@ -183,6 +184,7 @@ const ProductPage = ({ params }: { params: Promise<{ id: string }> }) => {
 
   return (
     <IndexLayout>
+      <SearchBar />
       <Loading isLoading={productLoading} />
 
       <div className='flex flex-col gap-5'>

@@ -8,6 +8,7 @@ import { IndexLayout } from '@/components/Layout/Index'
 import { Loading } from '@/components/Layout/Loading'
 import { NatureGoldBanner } from '@/components/NatureGoldBanner'
 import { ProductCard } from '@/components/ProductCard'
+import { SearchBar } from '@/components/SearchBar'
 import { useProductStore } from '@/stores/product'
 
 const useDebounce = (value: string, delay: number) => {
@@ -41,6 +42,7 @@ const ProductPage = () => {
 
   return (
     <IndexLayout>
+      <SearchBar />
       <Loading isLoading={productsLoading} />
 
       <NatureGoldBanner />
