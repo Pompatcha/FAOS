@@ -276,11 +276,7 @@ const ProductPage = ({ params }: { params: Promise<{ id: string }> }) => {
                                 >
                                   <div className='flex items-center justify-between gap-4'>
                                     <span className='font-medium'>
-                                      {option.option_value} (
-                                      {priceFormatter.format(
-                                        Number(option.option_price),
-                                      )}
-                                      )
+                                      {option.option_value}
                                     </span>
                                   </div>
                                 </SelectItem>

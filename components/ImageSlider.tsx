@@ -41,7 +41,7 @@ const ImageSlider: FC<ImageSliderProps> = ({ images = [] }) => {
   }, [emblaApi])
 
   return (
-    <div className='relative w-full'>
+    <div className='relative w-full cursor-grab'>
       <div className='embla overflow-hidden' ref={emblaRef}>
         <div className='embla__container flex'>
           {Array.isArray(images) &&
@@ -69,7 +69,7 @@ const ImageSlider: FC<ImageSliderProps> = ({ images = [] }) => {
         disabled={!canScrollPrev}
         aria-label='Previous slide'
       >
-        <ChevronLeft className='h-5 w-5 text-gray-700' />
+        <ChevronLeft className='size-5 text-gray-700' />
       </button>
 
       <button
@@ -80,7 +80,7 @@ const ImageSlider: FC<ImageSliderProps> = ({ images = [] }) => {
         disabled={!canScrollNext}
         aria-label='Next slide'
       >
-        <ChevronRight className='h-5 w-5 text-gray-700' />
+        <ChevronRight className='size-5 text-gray-700' />
       </button>
 
       <div className='mt-4 flex justify-center space-x-2'>

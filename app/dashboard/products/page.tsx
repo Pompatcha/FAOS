@@ -266,7 +266,6 @@ const ProductPage = () => {
               </DialogHeader>
 
               <form className='space-y-6' onSubmit={handleSubmit(onSubmit)}>
-                {/* Basic Information */}
                 <Card>
                   <CardContent className='p-6'>
                     <h3 className='mb-4 text-lg font-semibold'>
@@ -417,7 +416,6 @@ const ProductPage = () => {
                   </CardContent>
                 </Card>
 
-                {/* Product Options */}
                 <Card>
                   <CardContent className='p-6'>
                     <div className='mb-4 flex items-center justify-between'>
@@ -586,7 +584,6 @@ const ProductPage = () => {
                   </CardContent>
                 </Card>
 
-                {/* Product Images */}
                 <Card>
                   <CardContent className='p-6'>
                     <div className='mb-4 flex items-center justify-between'>

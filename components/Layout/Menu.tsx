@@ -26,7 +26,7 @@ interface MenuItem {
 }
 
 const Menu = () => {
-  const { user, signOut } = useAuth()
+  const { user } = useAuth()
   const { data: categories } = useQuery({
     queryKey: ['categories'],
     queryFn: () => getCategories(),
@@ -54,20 +54,6 @@ const Menu = () => {
 
     if (!user) {
       baseItems.push({ title: 'Login/Register', href: '/login' })
-    }
-
-    if (user) {
-      baseItems.push(
-        {
-          title: 'Control Panel',
-          submenu: [
-            { title: 'Dashboard', href: '/dashboard' },
-            { title: 'Products', href: '/dashboard/products' },
-            { title: 'Orders', href: '/dashboard/orders' },
-          ],
-        },
-        { title: 'Logout', onClick: signOut },
-      )
     }
 
     return baseItems
@@ -193,17 +179,23 @@ const Menu = () => {
             ))}
           </div>
 
-          <div className='flex gap-2'>
-            <CartBox />
-            {user && <ProfileBox />}
-          </div>
+          {user && (
+            <div className='flex gap-2'>
+              <CartBox />
+              <ProfileBox />
+            </div>
+          )}
         </div>
 
         <div className='flex items-center justify-between px-4 py-3 lg:hidden'>
           <span className='text-lg font-bold text-white'>FAOS Co.,Ltd.</span>
           <div className='flex gap-2.5'>
-            <CartBox />
-            {user && <ProfileBox />}
+            {user && (
+              <>
+                <CartBox />
+                <ProfileBox />
+              </>
+            )}
 
             <button
               onClick={toggleMobileMenu}

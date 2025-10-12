@@ -53,22 +53,22 @@ const shoppingPlatforms = [
   {
     id: 1,
     name: 'Shopee',
-    href: 'https://shopee.com', // Replace with your actual Shopee store link
+    href: 'https://shopee.com',
   },
   {
     id: 2,
     name: 'TikTok Shop',
-    href: 'https://www.tiktok.com', // Replace with your actual TikTok shop link
+    href: 'https://www.tiktok.com',
   },
   {
     id: 3,
     name: 'Lazada',
-    href: 'https://lazada.com', // Replace with your actual Lazada store link
+    href: 'https://lazada.com',
   },
   {
     id: 4,
     name: 'Amazon',
-    href: 'https://amazon.com', // Replace with your actual Amazon store link
+    href: 'https://amazon.com',
   },
 ]
 
@@ -174,7 +174,6 @@ const Homepage = () => {
         ]}
       />
 
-      {/* Recommended products Section */}
       <div className='bg-secondary flex w-full flex-col rounded-lg p-2.5 text-center shadow'>
         <h2 className='text-2xl font-bold text-red-800'>
           Recommended products
@@ -189,7 +188,6 @@ const Homepage = () => {
         </div>
       ) : null}
 
-      {/* Company Description Section */}
       <section className='flex flex-col'>
         <SectionHeader title='FAOS Premium Organic Collection – Premium Olive Oil and Real Honey' />
         <div className='flex w-full flex-col items-center gap-5 rounded-b-lg bg-white p-5 sm:flex-row'>
@@ -205,7 +203,6 @@ const Homepage = () => {
         </div>
       </section>
 
-      {/* Hospital Benefits Section */}
       <section className='flex flex-col'>
         <SectionHeader title='Why FAOS is Needed for Private Hospitals?' />
         <div className='flex w-full flex-col gap-2.5 rounded-b-lg bg-white p-5'>
@@ -225,7 +222,6 @@ const Homepage = () => {
 
       <Benefit />
 
-      {/* Certifications Section */}
       <section className='flex flex-col'>
         <SectionHeader title='Certification compliance with organic, safety, and hygiene standards' />
         <div className='flex w-full flex-col gap-5 rounded-b-lg bg-white p-5'>
@@ -243,37 +239,60 @@ const Homepage = () => {
         </div>
       </section>
 
-      {/* Social Media & Research Section */}
       <div className='flex flex-col justify-between gap-5 lg:flex-row'>
-        {/* Follow Us */}
-        <section className='flex w-full flex-col'>
-          <SectionHeader title='Follow Us' />
-          <div className='grid w-full grid-cols-1 gap-5 rounded-b-lg bg-white p-5 sm:grid-cols-2'>
-            {socialPlatforms.map((platform) => (
-              <div
-                key={platform.id}
-                className='flex cursor-pointer items-center gap-2.5 transition-opacity hover:opacity-80'
-                onClick={() => openLink(platform.href)}
-                role='button'
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault()
-                    openLink(platform.href)
-                  }
-                }}
-              >
-                <SocialIcon
-                  network={platform.network}
-                  style={{ width: 38, height: 38 }}
-                />
-                <span>{platform.name}</span>
-              </div>
-            ))}
-          </div>
-        </section>
+        <div className='flex w-full flex-col gap-5'>
+          <section className='flex w-full flex-col'>
+            <SectionHeader title='Follow Us' />
+            <div className='grid w-full grid-cols-1 gap-5 rounded-b-lg bg-white p-5 sm:grid-cols-2'>
+              {socialPlatforms.map((platform) => (
+                <div
+                  key={platform.id}
+                  className='flex cursor-pointer items-center gap-2.5 transition-opacity hover:opacity-80'
+                  onClick={() => openLink(platform.href)}
+                  role='button'
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      openLink(platform.href)
+                    }
+                  }}
+                >
+                  <SocialIcon
+                    network={platform.network}
+                    style={{ width: 38, height: 38 }}
+                  />
+                  <span>{platform.name}</span>
+                </div>
+              ))}
+            </div>
+          </section>
 
-        {/* Research & References */}
+          <section className='flex w-full flex-col'>
+            <SectionHeader title='Shopping platforms' />
+            <div className='grid w-full grid-cols-1 gap-5 rounded-b-lg bg-white p-5 sm:grid-cols-2'>
+              {shoppingPlatforms.map((platform) => (
+                <div
+                  key={platform.id}
+                  className='flex cursor-pointer items-center gap-2.5 transition-opacity hover:opacity-80'
+                  onClick={() => openLink(platform.href)}
+                  role='button'
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      openLink(platform.href)
+                    }
+                  }}
+                >
+                  <SocialIcon style={{ width: 38, height: 38 }} />
+                  <span>{platform.name}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+
         <section className='flex w-full flex-col'>
           <SectionHeader title='Research & References' />
           <div className='flex w-full flex-col gap-5 rounded-b-lg bg-white p-5'>
