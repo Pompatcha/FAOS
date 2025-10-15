@@ -33,6 +33,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null)
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
+  const [initialized, setInitialized] = useState(false)
   const supabase = createClient()
 
   const fetchUserProfile = async (userId: string) => {
@@ -78,13 +79,31 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }
 
   useEffect(() => {
-    const loadUser = async () => {
-      setLoading(true)
-      await refreshUser()
-      setLoading(false)
+    const initAuth = async () => {
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession()
+
+        if (session?.user) {
+          setUser(session.user)
+          const profile = await fetchUserProfile(session.user.id)
+          setUserProfile(profile)
+        } else {
+          setUser(null)
+          setUserProfile(null)
+        }
+      } catch (error) {
+        console.error('Error initializing auth:', error)
+        setUser(null)
+        setUserProfile(null)
+      } finally {
+        setLoading(false)
+        setInitialized(true)
+      }
     }
 
-    loadUser()
+    initAuth()
 
     const {
       data: { subscription },
@@ -99,18 +118,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(null)
         setUserProfile(null)
       }
-      setLoading(false)
     })
 
     return () => {
       subscription.unsubscribe()
     }
-  }, [refreshUser, supabase.auth])
+  }, [supabase.auth])
 
   const value = {
     user,
     userProfile,
-    loading,
+    loading: loading || !initialized,
     refreshUser,
     signOut,
   }
