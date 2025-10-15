@@ -7,14 +7,14 @@ const benefitData = {
       title: "High olive oil consumption associated with longevity",
       href: "https://www.health.harvard.edu/staying-healthy/harvard-study-high-olive-oil-consumption-associated-with-longevity",
       image:
-        'https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/Longevity-By-Aspira-Aesthetic-Center-Corp-in-FALL-RIVER-MA-1-qf3mmqufpzghgabxyk3vkfparc8mgbv9docbwy38ts.webp',
+        "https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/Longevity-By-Aspira-Aesthetic-Center-Corp-in-FALL-RIVER-MA-1-qf3mmqufpzghgabxyk3vkfparc8mgbv9docbwy38ts.webp",
     },
     {
       id: 2,
-      title: 'Benefits of olive oil for the skin and face',
-      href: 'https://www.siam10winery.com/Olive_benfefit.html',
+      title: "Benefits of olive oil for the skin and face",
+      href: "https://www.siam10winery.com/Olive_benfefit.html",
       image:
-        'https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/3-1-about-your-babys-skin-en-ae.jpg',
+        "https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/3-1-about-your-babys-skin-en-ae.jpg",
     },
     {
       id: 3,
@@ -25,10 +25,24 @@ const benefitData = {
     },
     {
       id: 4,
-      title: 'Mediterranean diet food with olive oil',
-      href: 'https://nycancer.com/news/olive-oil-key-component-mediterranean-diet',
+      title: "Mediterranean diet food with olive oil",
+      href: "https://nycancer.com/news/olive-oil-key-component-mediterranean-diet",
       image:
-        'https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/Dad-s-Greek-Salad_EXPS_TOHAM25_189184_P2_MD_03_01_7b-e1724861544942.jpg',
+        "https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/Dad-s-Greek-Salad_EXPS_TOHAM25_189184_P2_MD_03_01_7b-e1724861544942.jpg",
+    },
+    {
+      id: 5,
+      title: "Beautyful of Olive Tree in Greek ",
+      href: "https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/Olive%20oil%20tree.jpg",
+      image:
+        "https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/Olive%20oil%20tree.jpg",
+    },
+    {
+      id: 6,
+      title: "Ancient greek food delicious and nutritious dishes.",
+      href: "https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/Greek%20food.png",
+      image:
+        "https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/Greek%20food.png",
     },
   ],
   honey: [
@@ -49,10 +63,11 @@ const benefitData = {
     },
     {
       id: 3,
-      title: "Using Natural Honey for Beautiful Skin, Hair, and Anti-Aging",
-      href: "https://greekreporter.com/2023/07/09/greek-honey-for-beautiful-skin-hair-and-anti-aging/",
+      title:
+        "Honey is used in medicine for wound healing and as a remedy for coughs and sore throats due to its antibacterial, anti-inflammatory, and antioxidant properties. ",
+      href: "https://www.medicalnewstoday.com/articles/264667#medicinal-uses",
       image:
-        'https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/Honey_Greece_Greek_honey_credit_GR_AP.webp',
+        "https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/HoneyLemon.png",
     },
   ],
   wine: [
@@ -84,7 +99,7 @@ const benefitData = {
       title: "Wine healthy and Thai Food",
       href: "https://www.lifestyleasia.com/bk/dining/drinks/pair-wine-with-thai-food-like-a-pro/",
       image:
-        'https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/4721.avif',
+        "https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/4721.avif",
     },
   ],
 };
