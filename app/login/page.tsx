@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { SocialIcon } from 'react-social-icons'
 import { toast } from 'sonner'
@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { useAuth } from '@/contexts/AuthContext.tsx'
 
 interface LoginFormData {
   email: string
@@ -27,6 +28,13 @@ const socialProviders = [
 const LoginPage = () => {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const { user, loading } = useAuth()
+
+  useEffect(() => {
+    if (!loading && user) {
+      router.push('/')
+    }
+  }, [user, loading, router])
 
   const {
     register,
