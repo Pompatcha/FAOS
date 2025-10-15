@@ -54,21 +54,25 @@ const shoppingPlatforms = [
     id: 1,
     name: 'Shopee',
     href: 'https://shopee.com',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Shopee_logo.svg/2560px-Shopee_logo.svg.png',
   },
   {
     id: 2,
     name: 'TikTok Shop',
     href: 'https://www.tiktok.com',
+    logo: 'https://sf-tb-sg.ibytedtos.com/obj/eden-sg/uhtyvueh7nulogpoguhm/tiktok-icon2.png',
   },
   {
     id: 3,
     name: 'Lazada',
     href: 'https://lazada.com',
+    logo: 'https://play-lh.googleusercontent.com/9uh76LzzvIG4OrcZnrh19aV_Eskqbjn45zqQco36rvjasebQ-DN3XEb3Ar2lY2TBvtGKBCaeZhZ9eDbaveJmxg=w240-h480-rw',
   },
   {
     id: 4,
     name: 'Amazon',
     href: 'https://amazon.com',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Amazon_logo.svg/2560px-Amazon_logo.svg.png',
   },
 ]
 
@@ -270,7 +274,7 @@ const Homepage = () => {
 
           <section className='flex w-full flex-col'>
             <SectionHeader title='Shopping platforms' />
-            <div className='grid w-full grid-cols-1 gap-5 rounded-b-lg bg-white p-5 sm:grid-cols-2'>
+            <div className='flex w-full grid-cols-1 gap-5 rounded-b-lg bg-white p-5 sm:grid-cols-4'>
               {shoppingPlatforms.map((platform) => (
                 <div
                   key={platform.id}
@@ -285,8 +289,11 @@ const Homepage = () => {
                     }
                   }}
                 >
-                  <SocialIcon style={{ width: 38, height: 38 }} />
-                  <span>{platform.name}</span>
+                  <img
+                    src={platform.logo}
+                    alt={`${platform.name} logo`}
+                    className='size-[38px] rounded-full object-contain'
+                  />
                 </div>
               ))}
             </div>
