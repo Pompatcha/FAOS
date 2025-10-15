@@ -381,7 +381,7 @@ const CartPage: FC = () => {
                 <Info />
                 <AlertDescription>
                   Payment system is currently under development and will be
-                  ready by October 8th, 2025.
+                  ready by October 19th, 2025.
                 </AlertDescription>
               </Alert>
 
