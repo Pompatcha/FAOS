@@ -102,7 +102,11 @@ const ProductPage = () => {
     queryFn: getProducts,
   })
 
-  const { data: product, isLoading: productLoading } = useQuery({
+  const {
+    data: product,
+    isLoading: productLoading,
+    refetch,
+  } = useQuery({
     queryKey: ['product', selectedId],
     queryFn: () => getProduct(selectedId),
     enabled: !!selectedId,
@@ -115,9 +119,9 @@ const ProductPage = () => {
 
   const { mutate: createMutate, isPending: createPending } = useMutation({
     mutationFn: createProduct,
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       toast.success(data?.message)
-      refetchProducts()
+      await Promise.all([refetch(), refetchProducts()])
       closeDialog()
     },
     onError: (error: unknown) =>
@@ -133,9 +137,9 @@ const ProductPage = () => {
       if (!selectedId) throw new Error('No product ID selected')
       return updateProduct({ productId: selectedId, ...data })
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       toast.success(data?.message)
-      refetchProducts()
+      await Promise.all([refetch(), refetchProducts()])
       closeDialog()
     },
     onError: (error: unknown) =>
@@ -172,8 +176,32 @@ const ProductPage = () => {
           preorder_enabled: product.preorder_enabled ?? false,
           preorder_day: product.preorder_day,
         },
-        productOptions: product.options ?? [],
-        productImages: product.images ?? [],
+        productOptions:
+          product.options?.map(
+            (option: {
+              option_name: string
+              option_value: string
+              option_price: string
+              option_stock: string
+            }) => ({
+              option_name: option.option_name,
+              option_value: option.option_value,
+              option_price: option.option_price,
+              option_stock: option.option_stock,
+            }),
+          ) ?? [],
+        productImages:
+          product.images?.map(
+            (image: {
+              image_url: string
+              alt_text: string
+              is_primary: string
+            }) => ({
+              image_url: image.image_url,
+              alt_text: image.alt_text,
+              is_primary: image.is_primary,
+            }),
+          ) ?? [],
       })
     }
   }, [product, reset])
@@ -650,17 +678,6 @@ const ProductPage = () => {
                               <Controller
                                 name={`productImages.${index}.alt_text`}
                                 control={control}
-                                rules={{
-                                  required: 'Alt text is required',
-                                  minLength: {
-                                    value: 3,
-                                    message: 'Must be at least 3 characters',
-                                  },
-                                  maxLength: {
-                                    value: 100,
-                                    message: 'Must not exceed 100 characters',
-                                  },
-                                }}
                                 render={({ field, fieldState }) => (
                                   <div>
                                     <Input
