@@ -30,6 +30,20 @@ const benefitData = {
       image:
         'https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/Dad-s-Greek-Salad_EXPS_TOHAM25_189184_P2_MD_03_01_7b-e1724861544942.jpg',
     },
+    {
+      id: 5,
+      title: 'Beautyful of Olive Tree in Greek ',
+      href: 'https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/Olive%20oil%20tree.jpg',
+      image:
+        'https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/Olive%20oil%20tree.jpg',
+    },
+    {
+      id: 6,
+      title: 'Ancient greek food delicious and nutritious dishes.',
+      href: 'https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/Greek%20food.png',
+      image:
+        'https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/Greek%20food.png',
+    },
   ],
   honey: [
     {
@@ -49,10 +63,11 @@ const benefitData = {
     },
     {
       id: 3,
-      title: 'Using Natural Honey for Beautiful Skin, Hair, and Anti-Aging',
-      href: 'https://greekreporter.com/2023/07/09/greek-honey-for-beautiful-skin-hair-and-anti-aging/',
+      title:
+        'Honey is used in medicine for wound healing and as a remedy for coughs and sore throats due to its antibacterial, anti-inflammatory, and antioxidant properties. ',
+      href: 'https://www.medicalnewstoday.com/articles/264667#medicinal-uses',
       image:
-        'https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/Honey_Greece_Greek_honey_credit_GR_AP.webp',
+        'https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/HoneyLemon.png',
     },
   ],
   wine: [

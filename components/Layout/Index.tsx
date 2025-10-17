@@ -15,9 +15,8 @@ const IndexLayout: FC<PropsWithChildren> = ({ children }) => {
         <Alert variant='destructive' className='gap-0'>
           <Info />
           <AlertDescription className='text-lg'>
-            Dear customer, we are acceptable an order via Line offcial and
-            What&apos;s app (add) me +6689 693 1668 ;Payment Online development
-            is on proces. acceptable by credit card.
+            Notification: The Product is havesting. Stock plan to ready on
+            November 2025.
           </AlertDescription>
         </Alert>
 
