@@ -11,6 +11,7 @@ import { useAuth } from '@/contexts/AuthContext.tsx'
 import { CartBox } from '../CartBox'
 import GoogleTranslate from '../GoogleTranslate'
 import { ProfileBox } from '../ProfileBox'
+import { SearchBar } from '../SearchBar'
 
 interface SubMenuItem {
   title: string
@@ -183,6 +184,7 @@ const Menu = () => {
             <div className='flex gap-2'>
               <CartBox />
               <ProfileBox />
+              <SearchBar />
             </div>
           )}
         </div>

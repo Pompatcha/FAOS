@@ -42,7 +42,7 @@ const ProductPage = () => {
 
   return (
     <IndexLayout>
-      <SearchBar />
+      <SearchBar className='lg:hidden' />
       <Loading isLoading={productsLoading} />
 
       <NatureGoldBanner />

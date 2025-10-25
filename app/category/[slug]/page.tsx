@@ -23,7 +23,7 @@ const CategoryPage = ({ params }: { params: Promise<{ slug: string }> }) => {
 
   return (
     <IndexLayout>
-      <SearchBar />
+      <SearchBar className='lg:hidden' />
       <Loading isLoading={productsLoading} />
 
       <NatureGoldBanner />

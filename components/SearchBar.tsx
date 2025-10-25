@@ -20,7 +20,9 @@ const SearchBar: FC<ComponentProps<'div'>> = ({ className }) => {
   }
 
   return (
-    <div className={cn('mx-auto flex min-w-[350px] gap-2.5', className)}>
+    <div
+      className={cn('mx-auto flex w-full gap-2.5 lg:min-w-[350px]', className)}
+    >
       <Input
         className='!bg-white'
         placeholder='Search for product...'

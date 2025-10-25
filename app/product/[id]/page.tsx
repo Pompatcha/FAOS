@@ -184,7 +184,7 @@ const ProductPage = ({ params }: { params: Promise<{ id: string }> }) => {
 
   return (
     <IndexLayout>
-      <SearchBar />
+      <SearchBar className='lg:hidden' />
       <Loading isLoading={productLoading} />
 
       <div className='flex flex-col gap-5'>
