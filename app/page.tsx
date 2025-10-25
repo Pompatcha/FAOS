@@ -1,7 +1,6 @@
 'use client'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowUpRight, Check } from 'lucide-react'
-import Image from 'next/image'
 import { SocialIcon } from 'react-social-icons'
 
 import { getRecommendedProducts } from '@/actions/product'
@@ -170,14 +169,6 @@ const Homepage = () => {
     <IndexLayout>
       <SearchBar className='lg:hidden' />
       <NatureGoldBanner />
-
-      <Image
-        src='/mourning-the-queen.jpg'
-        className='mx-auto size-full border-4 border-gray-500 lg:size-[500px]'
-        width={500}
-        height={500}
-        alt='mourning-the-queen'
-      />
 
       <ImageSlider
         images={[
