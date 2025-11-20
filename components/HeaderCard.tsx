@@ -17,7 +17,7 @@ const HeaderCard: FC<HeaderCardProps> = ({ label, value, href }) => {
   return (
     <div className='flex flex-col justify-between rounded-xl bg-white p-5'>
       <div className='flex justify-between'>
-        <span className='text-[#4a2c00]'>{label}</span>
+        <span className='text-[#0730e9]'>{label}</span>
 
         {href && (
           <div

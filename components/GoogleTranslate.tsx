@@ -153,7 +153,7 @@ const GoogleTranslate = () => {
   .goog-te-gadget-simple .goog-te-menu-value:before {
     content: 'Translate';
     color: #666;
-    margin-right: 4px !important;
+    margin-right: 7px !important;
   }
 
   /* Fix inline color span */
@@ -172,7 +172,7 @@ const GoogleTranslate = () => {
 
   /* Optional: Adjust dropdown menu width */
   .goog-te-menu-frame {
-    width: 200px !important; /* Adjust this as needed */
+    width: 400px !important; /* Adjust this as needed */
   }
 `}</style>
 

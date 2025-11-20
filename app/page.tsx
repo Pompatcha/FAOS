@@ -142,7 +142,7 @@ const founder = {
   image:
     'https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/Profiles/pom2.png',
   description:
-    'Created for Health, Elegance and Well-Being. Elevate patient care and hospitality with the FAOS Collection, a luxurious blend of Thai-Greek heritage, organic purity and health innovation. Designed for discerning healthcare environments that prioritize natural healing and quality without compromise.',
+    'Created for Health, Elegance and Well-Being. Elevate patient care and hospitality with the FAOS Collection, a luxurious blend of Thai-Greek heritage, organic purity and health innovation. Designed for discerning healthcare environments that prioritize natural healing and quality without compromise.Eating a balanced diet rich in vitamins and antioxidants can help support your body’s natural detoxification processes. Incorporate FAOS’s premium organic olive oil and honey into your meals to enhance flavor while promoting overall wellness.',
 }
 
 const SectionHeader = ({ title }: { title: string }) => (
@@ -169,7 +169,6 @@ const Homepage = () => {
     <IndexLayout>
       <SearchBar className='lg:hidden' />
       <NatureGoldBanner />
-
       <ImageSlider
         images={[
           'https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/Celebrating-Beekeeping-Around-the-World-Apimondia.jpg',
@@ -194,7 +193,7 @@ const Homepage = () => {
       ) : null}
 
       <section className='flex flex-col'>
-        <SectionHeader title='FAOS Premium Organic Collection – Premium Olive Oil and Real Honey' />
+        <SectionHeader title='FAOS Premium Organic Collection – Premium Natrual Material ' />
         <div className='flex w-full flex-col items-center gap-5 rounded-b-lg bg-white p-5 sm:flex-row'>
           <div className='flex shrink-0 flex-col gap-2.5 text-center'>
             <img
@@ -209,11 +208,11 @@ const Homepage = () => {
       </section>
 
       <section className='flex flex-col'>
-        <SectionHeader title='Why FAOS is Needed for Private Hospitals?' />
+        <SectionHeader title='Food safety for Healthy and Wellness' />
         <div className='flex w-full flex-col gap-2.5 rounded-b-lg bg-white p-5'>
           {hospitalBenefits.map((benefit) => (
             <div key={benefit.id} className='flex gap-2.5'>
-              <div className='flex size-8 flex-shrink-0 items-center justify-center rounded-full border border-[#f3d27a]'>
+              <div className='flex size-8 `shrink-0` items-center justify-center rounded-full border border-[#f3d27a]'>
                 <Check className='text-primary' />
               </div>
               <span className='w-full text-xl'>
@@ -228,7 +227,7 @@ const Homepage = () => {
       <Benefit />
 
       <section className='flex flex-col'>
-        <SectionHeader title='Certification compliance with organic, safety, and hygiene standards' />
+        <SectionHeader title='Foods to Natrually Detox. FAOS foods that are rich in vitamin and antioxidants can assist your body.' />
         <div className='flex w-full flex-col gap-5 rounded-b-lg bg-white p-5'>
           <div className='flex justify-center gap-5'>
             {certifications.map((cert) => (
@@ -318,7 +317,7 @@ const Homepage = () => {
                   }
                 }}
               >
-                <div className='flex size-8 flex-shrink-0 items-center justify-center rounded-full border border-[#f3d27a]'>
+                <div className='flex size-8 `shrink-0` items-center justify-center rounded-full border border-[#f3d27a]'>
                   <ArrowUpRight className='text-primary' />
                 </div>
                 <span className='w-full text-xl'>{link.title}</span>

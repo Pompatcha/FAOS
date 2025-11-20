@@ -82,17 +82,18 @@ const benefitData = {
     {
       id: 2,
       title:
-        'Food for thought: Thailand Tom yum kung gets the nod from UNESCO pairing with Greek wine',
+        'Traditional Greek Organics food is safety for your healthy.',
+
       href: 'https://www.nationthailand.com/life/food/40043849',
       image:
-        'https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/eve6.jpg',
+        'https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/pomfood.jpg',
     },
     {
       id: 3,
-      title: 'Wine healthy and benefit',
-      href: 'https://www.siam10winery.com/xxxx',
+      title: 'The olive variety Athinoelia',
+      href: 'https://en.wikipedia.org/wiki/List_of_olive_cultivars',
       image:
-        'https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/wine-and-health-hope-hype-winefolly.jpg',
+        'https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/products/greek%20olive%20tree.png',
     },
     {
       id: 4,
