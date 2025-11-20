@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 'use client'
 
 import { useEffect, useRef, useCallback } from 'react'
@@ -121,45 +122,60 @@ const GoogleTranslate = () => {
       />
 
       <style jsx global>{`
-        .google-translate-widget .goog-te-gadget {
-          font-family: inherit !important;
-          font-size: 12px !important;
-        }
-        .google-translate-widget .goog-te-gadget-simple {
-          background-color: #fff !important;
-          border: 1px solid #ccc !important;
-          border-radius: 4px !important;
-          padding: 2px 4px !important;
-          font-size: 12px !important;
-          display: flex !important;
-          align-items: center !important;
-        }
-        .google-translate-widget .goog-te-gadget-simple .goog-te-menu-value {
-          color: #666 !important;
-          display: flex !important;
-          align-items: center !important;
-          white-space: nowrap !important;
-        }
-        .goog-te-gadget-simple .goog-te-menu-value span:first-child {
-          display: none;
-        }
-        .goog-te-gadget-simple .goog-te-menu-value:before {
-          content: 'Translate';
-          color: #666;
-          margin-right: 4px !important;
-        }
-        .goog-te-gadget-simple
-          .goog-te-menu-value
-          span[style='color: rgb(68, 68, 68);'] {
-          display: inline !important;
-        }
-        .goog-te-banner-frame.skiptranslate {
-          display: none !important;
-        }
-        body {
-          top: 0px !important;
-        }
-      `}</style>
+  /* Google Translate widget styling */
+  .google-translate-widget .goog-te-gadget {
+    font-family: inherit !important;
+    font-size: 12px !important;
+  }
+  .google-translate-widget .goog-te-gadget-simple {
+    background-color: #fff !important;
+    border: 1px solid #ccc !important;
+    border-radius: 4px !important;
+    padding: 2px 4px !important;
+    font-size: 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    min-width: 120px !important; /* Set minimum width */
+  }
+
+  .google-translate-widget .goog-te-gadget-simple .goog-te-menu-value {
+    color: #666 !important;
+    display: flex !important;
+    align-items: center !important;
+    white-space: nowrap !important;
+    width: 100% !important; /* Make menu fill container */
+  }
+
+  .goog-te-gadget-simple .goog-te-menu-value span:first-child {
+    display: none;
+  }
+
+  .goog-te-gadget-simple .goog-te-menu-value:before {
+    content: 'Translate';
+    color: #666;
+    margin-right: 4px !important;
+  }
+
+  /* Fix inline color span */
+  .goog-te-gadget-simple .goog-te-menu-value span[style*='color: rgb(68, 68, 68)'] {
+    display: inline !important;
+  }
+
+  /* Hide Google Translate banner */
+  .goog-te-banner-frame.skiptranslate {
+    display: none !important;
+  }
+
+  body {
+    top: 0px !important;
+  }
+
+  /* Optional: Adjust dropdown menu width */
+  .goog-te-menu-frame {
+    width: 200px !important; /* Adjust this as needed */
+  }
+`}</style>
+
     </div>
   )
 }
