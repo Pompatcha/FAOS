@@ -79,7 +79,6 @@ const DialogContent = ({
     </DialogPortal>
   )
 }
-
 const DialogHeader = ({ className, ...props }: React.ComponentProps<'div'>) => {
   return (
     <div
@@ -89,7 +88,6 @@ const DialogHeader = ({ className, ...props }: React.ComponentProps<'div'>) => {
     />
   )
 }
-
 const DialogFooter = ({ className, ...props }: React.ComponentProps<'div'>) => {
   return (
     <div

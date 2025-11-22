@@ -120,6 +120,7 @@ const Benefit = () => {
     <div className='flex w-full flex-col gap-2.5'>
       {sections.map((section, sectionIndex) => (
         <section
+          // eslint-disable-next-line react/no-array-index-key
           key={`benefit-section-${sectionIndex}`}
           className='flex w-full flex-col gap-5'
         >

@@ -42,7 +42,7 @@ const IndexLayout: FC<PropsWithChildren> = ({ children }) => {
           <Info />
           <AlertDescription className='text-lg'>
             Notification: The Product is havesting. Stock plan to ready on
-            November 2025.
+            Febuary  2026.
           </AlertDescription>
         </Alert>
 
