@@ -82,11 +82,11 @@ const benefitData = {
     {
       id: 2,
       title:
-        'Traditional Greek Organics food is safety for your healthy.',
+        'The simply support the body’s natural detox, immune, and anti-inflammatory processes.',
 
-      href: 'https://www.nationthailand.com/life/food/40043849',
+      href: '/article/the-simply-support-the-bodys-natural-detox-immune-and-anti-inflammatory-processes',
       image:
-        'https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/pomfood.jpg',
+        'https://oeisobmqacdbiotylrwm.supabase.co/storage/v1/object/public/images/homepage/detox.jpg',
     },
     {
       id: 3,
