@@ -15,7 +15,7 @@ import Providers from '../contexts/QueryProviders'
 
 const metadata: Metadata = {
   title:
-    'FAOS Premium Olive Oil Extra Virgin Olive Oil and Rare Honey in Thailand - Only Olive Oil and honey from Organic Farms',
+    'FAOS Premium Greek Olive Oil Extra Virgin Olive Oil and Rare Honey in Thailand - Only Greek Olive Oil and honey from Organic Farms',
   description:
     "Explore our premium honey collection, made from nature's finest sources. Premium organic olive oil and honey collection offering the finest quality products.",
   keywords: [
@@ -104,7 +104,7 @@ const metadata: Metadata = {
   ].join(', '),
   authors: [{ name: 'Patcharin Chanaphukdee' }],
   openGraph: {
-    title: 'FAOS Premium Organic Collection | Premium Olive Oil and Honey',
+    title: 'FAOS Premium Greek Olive Oil Extra Virgin Olive Oil and Rare Honey in Thailand - Only Greek Olive Oil and honey from Organic Farms',
     description:
       "Explore our premium honey collection, made from nature's finest sources.",
     images: [
