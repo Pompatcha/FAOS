@@ -15,7 +15,7 @@ import Providers from '../contexts/QueryProviders'
 
 const metadata: Metadata = {
   title:
-    'FAOS Premium Organic Collection | Premium Olive Oil and Honey | Organics Olive Oil | Organic Honey',
+    'FAOS Premium Olive Oil Extra Virgin Olive Oil and Rare Honey in Thailand - Only Olive Oil and honey from Organic Farms',
   description:
     "Explore our premium honey collection, made from nature's finest sources. Premium organic olive oil and honey collection offering the finest quality products.",
   keywords: [
@@ -64,7 +64,7 @@ const metadata: Metadata = {
     'the bar upstairs',
     'wine beverage',
     'mandarin oriental',
-    'capella',
+    'Extra Virgin Olive Oil',
     'house wine',
     'น้ำมันมะกอกปลอดสาร',
     'ไวน์ปลอดสารเคมี',
@@ -78,6 +78,29 @@ const metadata: Metadata = {
     'น้ำผึ้งฟาว์ส',
     'เบเกอรี่',
     'น้ำผึ้งกรีก',
+    'Greek Honey',
+    'Greek Olive Oil',
+    'Philosophy',
+    'Philosophy of FAOS',
+    'Vinegar',
+    'Best Olive Oil',
+    'Olive oil soap',
+    'Olive oil skincare',
+    'Athonelia',
+    'Koroneiki',
+    'Maneki',
+    'Oliveoil variety',
+    'Olympic olive oil',
+    'Greek olive oil',
+    'Cold Pressed Olive Oil',
+    'Pholyphenol-rich Olive Oil',
+    'Pholyphenol',
+    '焕颜初榨橄榄皂',
+    'antioxidant',
+    'handcrafted soap',
+    '橄榄油 护肤品',
+    '特级初榨橄榄油',
+    '橄榄油瓶装设计',
   ].join(', '),
   authors: [{ name: 'Patcharin Chanaphukdee' }],
   openGraph: {
